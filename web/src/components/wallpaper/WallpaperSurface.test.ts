@@ -76,10 +76,22 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
     assertMatch(gradient, /data-substrate="canvas"/);
     assertMatch(scene, /data-substrate="canvas"/);
     assertMatch(scene, /data-wallpaper-scene="ginkgo"/);
+    assertMatch(scene, /data-scene-side="right"/);
     assertNotMatch(scene, /wallpaper-surface__image/);
     assertMatch(combined, /data-substrate="image"/);
     assertMatch(combined, /data-wallpaper-scene="plum"/);
     assertMatch(combined, /wallpaper-surface__image/);
+
+    const leftFocalScene = renderToStaticMarkup(
+        createElement(WallpaperSurface, {
+            source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
+            botanicalScene: "plum",
+            presentation: {
+                composition: { focalX: 0.22, focalY: 0.5 },
+            },
+        }),
+    );
+    assertMatch(leftFocalScene, /data-scene-side="left"/);
     assertNotMatch(disabledScene, /data-wallpaper-scene/);
     assertNotMatch(rejected, /wallpaper-surface__image/);
     assertNotMatch(gradient, /wallpaper-surface__image/);

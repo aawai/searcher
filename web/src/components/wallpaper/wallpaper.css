@@ -77,6 +77,11 @@
     opacity: var(--wallpaper-grain-opacity);
 }
 
+:root:not([data-theme="dark"]):not([data-contrast="more"]) .wallpaper-surface[data-wallpaper-mode="canvas"][data-wallpaper-scene] .wallpaper-surface__grain {
+    opacity: var(--wallpaper-scene-light-grain-opacity);
+    mix-blend-mode: multiply;
+}
+
 .wallpaper-surface:not(.wallpaper-surface--derived):not(.wallpaper-surface--embedded)::after {
     content: "";
     position: absolute;

@@ -1,4 +1,8 @@
 import type { BotanicalSpecies } from "@shared/wallpaper.ts";
+import {
+    oklchToSrgb,
+    srgbToOklch,
+} from "../../design-system/wallpaper-accent.ts";
 import type { BotanicalResonanceKind } from "./botanical-resonance.ts";
 
 export type ConcreteBotanicalSpecies = Exclude<BotanicalSpecies, "auto">;
@@ -42,6 +46,9 @@ interface BranchData {
     phase: number;
     waveLag?: number;
     ghost: boolean;
+    midground?: boolean;
+    brushStyle?: "standard" | "iron-plum" | "orchid-blade";
+    twistU?: number;
     bambooNodes?: readonly number[];
     snowCushions?: boolean;
     parentRef: BranchParentRef | null;
@@ -49,10 +56,20 @@ interface BranchData {
     worldCache: WorldSample[] | null;
 }
 
+interface RockStroke {
+    points: Point2D[];
+    mossDots: Array<
+        { x: number; y: number; rx: number; ry: number; rot: number }
+    >;
+    t0: number;
+    t1: number;
+}
+
 interface BaseOrnament {
     branch: BranchData;
     idx: number;
     ghost: boolean;
+    midground?: boolean;
     t0: number;
     t1: number;
     phase: number;
@@ -81,6 +98,7 @@ interface PlumOrnament extends BaseOrnament {
     kind: "plumBlossom" | "plumBud";
     size: number;
     rotation: number;
+    pose?: "frontal" | "side" | "upward" | "back";
 }
 
 interface FernPinnaOrnament extends BaseOrnament {
@@ -207,6 +225,11 @@ export interface BotanicalRuntimeState {
     dewImpactX: number;
     dewImpactY: number;
     fireflyBoostStartSec: number;
+    gustStartSec: number;
+    gustDurationSec: number;
+    gustStrength: number;
+    nextGustSec: number;
+    lastInteractionSec: number;
 }
 
 export function createBotanicalRuntimeState(): BotanicalRuntimeState {
@@ -228,13 +251,122 @@ export function createBotanicalRuntimeState(): BotanicalRuntimeState {
         dewImpactX: 0,
         dewImpactY: 0,
         fireflyBoostStartSec: -999,
+        gustStartSec: -999,
+        gustDurationSec: 4.8,
+        gustStrength: 0,
+        nextGustSec: -999,
+        lastInteractionSec: -999,
     };
+}
+
+export function triggerBotanicalGust(
+    runtime: BotanicalRuntimeState,
+    timeSec: number,
+    strength = 0.88,
+    durationSec = 4.6,
+): void {
+    runtime.gustStartSec = timeSec;
+    runtime.gustDurationSec = durationSec;
+    runtime.gustStrength = strength;
+    runtime.nextGustSec = timeSec + durationSec + 13.5;
+}
+
+export function isBotanicalSceneActive(params: {
+    runtime?: BotanicalRuntimeState;
+    rawProgress: number;
+    timeSec: number;
+    scene: BotanicalScene | null;
+    drifters: readonly Drifter[];
+    reducedMotion: boolean;
+    embedded: boolean;
+}): boolean {
+    const {
+        runtime,
+        rawProgress,
+        timeSec,
+        scene,
+        drifters,
+        reducedMotion,
+        embedded,
+    } = params;
+    if (embedded || reducedMotion) return false;
+    if (rawProgress < 1) return true;
+    if (drifters.length > 0) return true;
+    if (
+        scene &&
+        scene.ornaments.some((o) =>
+            Math.abs(o.push) > 0.0025 || Math.abs(o.vel) > 0.0025
+        )
+    ) {
+        return true;
+    }
+    if (!runtime) return false;
+    if (
+        timeSec >= runtime.gustStartSec &&
+        timeSec <= runtime.gustStartSec + runtime.gustDurationSec
+    ) {
+        return true;
+    }
+    if (
+        timeSec >= runtime.breezeImpulseStartSec &&
+        timeSec <= runtime.breezeImpulseStartSec + 2.6
+    ) {
+        return true;
+    }
+    if (
+        runtime.awakened &&
+        timeSec >= runtime.awakenStartSec &&
+        timeSec <= runtime.awakenStartSec + 1.9
+    ) {
+        return true;
+    }
+    if (
+        timeSec >= runtime.haloPulseStartSec &&
+        timeSec <= runtime.haloPulseStartSec + 1.45
+    ) {
+        return true;
+    }
+    if (
+        timeSec >= runtime.fireflyBoostStartSec &&
+        timeSec <= runtime.fireflyBoostStartSec + 1.85
+    ) {
+        return true;
+    }
+    if (
+        timeSec >= runtime.lastInteractionSec &&
+        timeSec <= runtime.lastInteractionSec + 2.2
+    ) {
+        return true;
+    }
+    if (runtime.visitorMode !== "perched") return true;
+    if (runtime.dewState !== "hanging") return true;
+    return false;
+}
+
+export function nextBotanicalWakeDelayMs(
+    runtime: BotanicalRuntimeState | undefined,
+    timeSec: number,
+): number {
+    if (!runtime) return 14_000;
+    const candidates: number[] = [];
+    if (runtime.nextGustSec > timeSec) {
+        candidates.push((runtime.nextGustSec - timeSec) * 1000);
+    }
+    if (runtime.dewState === "hanging" && runtime.dewStateStartSec > -100) {
+        const dewDropAt = runtime.dewStateStartSec + 26.1;
+        if (dewDropAt > timeSec) {
+            candidates.push((dewDropAt - timeSec) * 1000);
+        }
+    }
+    if (candidates.length === 0) return 12_000;
+    return Math.round(clamp(Math.min(...candidates), 250, 18_000));
 }
 
 export interface BotanicalScene {
     species: ConcreteBotanicalSpecies;
     branches: BranchData[];
     ornaments: BotanicalOrnament[];
+    rocks: RockStroke[];
     scale: number;
     visitorAnchor: BotanicalVisitorAnchor | null;
     rewardAnchor: BotanicalRewardAnchor | null;
@@ -275,7 +407,21 @@ export interface BotanicalPalette {
     vein: (tint: TintRole, alpha?: number) => string;
     fill: (tint: TintRole, alpha?: number) => string;
     wash: (tint: TintRole, alpha?: number) => string;
+    waterline: (tint: TintRole, alpha?: number) => string;
+    inkGrade: (
+        grade: "jiao" | "nong" | "zhong" | "dan" | "qing",
+        alpha?: number,
+    ) => string;
+    cinnabar: (alpha?: number) => string;
+    goldDust: (alpha?: number) => string;
     highlight: (alpha?: number) => string;
+}
+
+export interface BotanicalDockInsets {
+    readonly top: number;
+    readonly right: number;
+    readonly bottom: number;
+    readonly left: number;
 }
 
 export interface BotanicalPointerState {
@@ -308,15 +454,20 @@ export interface BotanicalRenderParams {
     sceneSide?: "left" | "right";
     dateKey?: string;
     localHour?: number;
+    dockInsets?: BotanicalDockInsets;
 }
+
+export type PhenologyStage = "budding" | "lush" | "turning" | "frost";
 
 export interface SolarTermInfo {
     readonly term: string;
     readonly season: "spring" | "summer" | "autumn" | "winter";
     readonly isSnowSeason: boolean;
+    readonly termIndex: number;
+    readonly phenologyStage: PhenologyStage;
 }
 
-const SOLAR_TERMS_BY_MMDD: ReadonlyArray<{
+export const SOLAR_TERMS_BY_MMDD: ReadonlyArray<{
     readonly mmdd: number;
     readonly term: string;
     readonly season: "spring" | "summer" | "autumn" | "winter";
@@ -350,15 +501,28 @@ const SOLAR_TERMS_BY_MMDD: ReadonlyArray<{
 export function resolveSolarTerm(dateKey: string): SolarTermInfo {
     const match = dateKey.match(/^\d{4}-(\d{2})-(\d{2})$/);
     const mmdd = match ? Number(match[1]) * 100 + Number(match[2]) : 1122;
-    let chosen = SOLAR_TERMS_BY_MMDD[SOLAR_TERMS_BY_MMDD.length - 1];
-    for (const entry of SOLAR_TERMS_BY_MMDD) {
-        if (mmdd >= entry.mmdd) chosen = entry;
+    let chosenIdx = SOLAR_TERMS_BY_MMDD.length - 1;
+    for (let i = 0; i < SOLAR_TERMS_BY_MMDD.length; i++) {
+        if (mmdd >= SOLAR_TERMS_BY_MMDD[i].mmdd) chosenIdx = i;
     }
+    const chosen = SOLAR_TERMS_BY_MMDD[chosenIdx];
     const isSnowSeason = mmdd >= 1122 || mmdd < 219;
+    let phenologyStage: PhenologyStage;
+    if (chosenIdx >= 2 && chosenIdx <= 4) {
+        phenologyStage = "budding";
+    } else if (chosenIdx >= 5 && chosenIdx <= 13) {
+        phenologyStage = "lush";
+    } else if (chosenIdx >= 14 && chosenIdx <= 18) {
+        phenologyStage = "turning";
+    } else {
+        phenologyStage = "frost";
+    }
     return {
         term: chosen.term,
         season: chosen.season,
         isSnowSeason,
+        termIndex: chosenIdx,
+        phenologyStage,
     };
 }
 
@@ -494,45 +658,46 @@ function parseCssColorToRgb(
             clamp(Math.round(Number(rgbMatch[3])), 0, 255),
         ];
     }
-    return fallback;
-}
-
-function shiftHueRgb(rgb: Rgb, degrees: number): Rgb {
-    const r = rgb[0] / 255;
-    const g = rgb[1] / 255;
-    const b = rgb[2] / 255;
-    const max = Math.max(r, g, b);
-    const min = Math.min(r, g, b);
-    const d = max - min;
-    const l = (max + min) / 2;
-    if (d < 0.01) {
-        return rgb;
+    const oklchMatch = trimmed.match(
+        /^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)\s+([\d.-]+)(?:deg)?/i,
+    );
+    if (oklchMatch) {
+        const rawL = Number(oklchMatch[1]);
+        const L = oklchMatch[2] === "%" ? rawL / 100 : rawL;
+        const C = Number(oklchMatch[3]);
+        const H = ((Number(oklchMatch[4]) % 360) + 360) % 360;
+        if (Number.isFinite(L) && Number.isFinite(C) && Number.isFinite(H)) {
+            return oklchToSrgb(clamp(L, 0, 1), Math.max(0, C), H);
+        }
     }
-    const s = d / (1 - Math.abs(2 * l - 1));
-    let h = 0;
-    if (max === r) h = ((g - b) / d) % 6;
-    else if (max === g) h = (b - r) / d + 2;
-    else h = (r - g) / d + 4;
-    h = (h * 60 + degrees + 360) % 360;
-
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = l - c / 2;
-    let r1 = 0;
-    let g1 = 0;
-    let b1 = 0;
-    if (h < 60) [r1, g1, b1] = [c, x, 0];
-    else if (h < 120) [r1, g1, b1] = [x, c, 0];
-    else if (h < 180) [r1, g1, b1] = [0, c, x];
-    else if (h < 240) [r1, g1, b1] = [0, x, c];
-    else if (h < 300) [r1, g1, b1] = [x, 0, c];
-    else [r1, g1, b1] = [c, 0, x];
-
-    return [
-        clamp(Math.round((r1 + m) * 255), 0, 255),
-        clamp(Math.round((g1 + m) * 255), 0, 255),
-        clamp(Math.round((b1 + m) * 255), 0, 255),
-    ];
+    const oklabMatch = trimmed.match(
+        /^oklab\(\s*([\d.]+)(%?)\s+([\d.-]+)\s+([\d.-]+)/i,
+    );
+    if (oklabMatch) {
+        const rawL = Number(oklabMatch[1]);
+        const L = oklabMatch[2] === "%" ? rawL / 100 : rawL;
+        const a = Number(oklabMatch[3]);
+        const b = Number(oklabMatch[4]);
+        if (Number.isFinite(L) && Number.isFinite(a) && Number.isFinite(b)) {
+            const C = Math.hypot(a, b);
+            const H = C < 1e-6
+                ? 0
+                : ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360;
+            return oklchToSrgb(clamp(L, 0, 1), C, H);
+        }
+    }
+    const srgbMatch = trimmed.match(
+        /^color\(\s*srgb\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)/i,
+    );
+    if (srgbMatch) {
+        const r = clamp(Math.round(Number(srgbMatch[1]) * 255), 0, 255);
+        const g = clamp(Math.round(Number(srgbMatch[2]) * 255), 0, 255);
+        const b = clamp(Math.round(Number(srgbMatch[3]) * 255), 0, 255);
+        if (Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b)) {
+            return [r, g, b];
+        }
+    }
+    return fallback;
 }
 
 export function formatLocalDateKey(date: Date): string {
@@ -552,60 +717,275 @@ export function resolveBotanicalSpecies(
     return pool[hashString(dateKey) % pool.length];
 }
 
+function blendOklabRgb(
+    intrinsicRgb: Rgb,
+    themeRgb: Rgb,
+    themeWeight: number,
+    minC: number,
+    maxC: number,
+    targetL: number,
+): Rgb {
+    const [, c1, h1] = srgbToOklch(
+        intrinsicRgb[0],
+        intrinsicRgb[1],
+        intrinsicRgb[2],
+    );
+    const [, c2, h2] = srgbToOklch(themeRgb[0], themeRgb[1], themeRgb[2]);
+    const r1 = (h1 * Math.PI) / 180;
+    const r2 = (h2 * Math.PI) / 180;
+    const w = clamp(themeWeight, 0, 1);
+    const a = c1 * Math.cos(r1) * (1 - w) + c2 * Math.cos(r2) * w;
+    const b = c1 * Math.sin(r1) * (1 - w) + c2 * Math.sin(r2) * w;
+    const c = clamp(Math.hypot(a, b), minC, maxC);
+    const h = Math.hypot(a, b) < 1e-6
+        ? h1
+        : ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360;
+    return oklchToSrgb(clamp(targetL, 0.2, 0.92), c, h);
+}
+
 export function buildBotanicalPalette(
     isDark: boolean,
     accentCss: string,
     foregroundCss: string,
     overPhoto = false,
     localHour?: number,
+    species?: ConcreteBotanicalSpecies,
 ): BotanicalPalette {
     const fallbackAccent: Rgb = isDark ? [93, 169, 255] : [10, 102, 194];
     const fallbackInk: Rgb = isDark ? [232, 234, 240] : [28, 30, 34];
     const rawAccRgb = parseCssColorToRgb(accentCss, fallbackAccent, isDark);
-    const accRgb = isDark
-        ? mixRgb(rawAccRgb, [212, 214, 224], 0.10)
-        : mixRgb(rawAccRgb, [236, 232, 224], 0.12);
-    const shiftedSub = shiftHueRgb(accRgb, -12);
-    let subRgb = isDark
-        ? mixRgb(shiftedSub, [186, 192, 206], 0.18)
-        : mixRgb(shiftedSub, [244, 240, 234], 0.22);
-    const baseInk = parseCssColorToRgb(foregroundCss, fallbackInk, isDark);
+    const [rawL, rawC, rawH] = srgbToOklch(
+        rawAccRgb[0],
+        rawAccRgb[1],
+        rawAccRgb[2],
+    );
+    const isNeutralAccent = rawC < 0.022;
+    const accL = isDark ? clamp(rawL, 0.66, 0.80) : clamp(rawL, 0.45, 0.62);
+    const accC = isNeutralAccent ? 0.016 : clamp(rawC * 0.94, 0.035, 0.185);
+    const accH = isNeutralAccent ? 56 : rawH;
+    let accRgb = oklchToSrgb(accL, accC, accH);
 
-    // Moonlight silver-slate ink in dark mode; warm pine-soot ink in light mode
+    // Oriental mineral companion pigment (warm/cool complementary shift in OKLCH)
+    const isWarmHue = accH < 105 || accH > 315;
+    let subH: number;
+    let subC: number;
+    let subL: number;
+    if (isNeutralAccent) {
+        subH = 62;
+        subC = 0.024;
+        subL = isDark ? 0.70 : 0.56;
+    } else if (isWarmHue) {
+        // Warm pigments (cinnabar/ochre/amber) pair with mineral ochre-gold or muted celadon
+        subH = accH >= 315 ? (accH + 34) % 360 : (accH - 26 + 360) % 360;
+        subC = clamp(accC * 0.64, 0.025, 0.115);
+        subL = isDark
+            ? clamp(accL - 0.04, 0.62, 0.78)
+            : clamp(accL + 0.05, 0.48, 0.66);
+    } else {
+        // Cool pigments (azurite/malachite/violet) pair with warm ochre/gamboge
+        subH = (accH + 34) % 360;
+        subC = clamp(accC * 0.58, 0.025, 0.105);
+        subL = isDark
+            ? clamp(accL + 0.02, 0.64, 0.80)
+            : clamp(accL + 0.04, 0.48, 0.65);
+    }
+    let subRgb = oklchToSrgb(subL, subC, subH);
+
+    // 植物博物本色基因融合：保留品种自然生命色相并与系统强调色雅致共生
+    if (species) {
+        if (isNeutralAccent) {
+            const neutralHueMap: Record<
+                ConcreteBotanicalSpecies,
+                [number, number]
+            > = {
+                plum: [18, 138],
+                ginkgo: [80, 118],
+                eucalyptus: [164, 195],
+                maple: [29, 72],
+                orchid: [350, 126],
+                bamboo: [142, 138],
+                fern: [134, 88],
+            };
+            const [ah, sh] = neutralHueMap[species];
+            accRgb = oklchToSrgb(accL, 0.024, ah);
+            subRgb = oklchToSrgb(subL, 0.024, sh);
+        } else if (species === "plum") {
+            // 暖/绯/金珀色域保持原味，青/蓝/绿冷色域则保护为宋画「宫粉胭脂梅 × 绿萼青玉」
+            if (accH > 88 && accH < 312) {
+                const plumL = isDark ? 0.71 : 0.54;
+                const calyxL = isDark ? 0.74 : 0.58;
+                accRgb = blendOklabRgb(
+                    oklchToSrgb(plumL, 0.145, 18),
+                    accRgb,
+                    0.18,
+                    0.075,
+                    0.138,
+                    plumL,
+                );
+                subRgb = blendOklabRgb(
+                    oklchToSrgb(calyxL, 0.056, 145),
+                    subRgb,
+                    0.32,
+                    0.032,
+                    0.076,
+                    calyxL,
+                );
+            }
+        } else if (species === "ginkgo") {
+            const goldL = isDark ? 0.77 : 0.62;
+            const jadeL = isDark ? 0.72 : 0.56;
+            accRgb = blendOklabRgb(
+                oklchToSrgb(goldL, 0.138, 80),
+                accRgb,
+                0.26,
+                0.095,
+                0.145,
+                goldL,
+            );
+            subRgb = blendOklabRgb(
+                oklchToSrgb(jadeL, 0.075, 118),
+                subRgb,
+                0.28,
+                0.045,
+                0.095,
+                jadeL,
+            );
+        } else if (species === "eucalyptus") {
+            const celadonL = isDark ? 0.74 : 0.55;
+            const mistL = isDark ? 0.72 : 0.58;
+            accRgb = blendOklabRgb(
+                oklchToSrgb(celadonL, 0.090, 164),
+                accRgb,
+                0.16,
+                0.048,
+                0.095,
+                celadonL,
+            );
+            subRgb = blendOklabRgb(
+                oklchToSrgb(mistL, 0.058, 195),
+                subRgb,
+                0.20,
+                0.032,
+                0.072,
+                mistL,
+            );
+        } else if (species === "maple") {
+            const crimsonL = isDark ? 0.68 : 0.52;
+            const amberL = isDark ? 0.75 : 0.60;
+            accRgb = blendOklabRgb(
+                oklchToSrgb(crimsonL, 0.158, 29),
+                accRgb,
+                0.42,
+                0.095,
+                0.165,
+                crimsonL,
+            );
+            subRgb = blendOklabRgb(
+                oklchToSrgb(amberL, 0.108, 72),
+                subRgb,
+                0.32,
+                0.055,
+                0.120,
+                amberL,
+            );
+        } else if (species === "orchid") {
+            const jadeL = isDark ? 0.75 : 0.58;
+            accRgb = blendOklabRgb(
+                oklchToSrgb(accL, clamp(accC, 0.07, 0.16), 352),
+                accRgb,
+                0.82,
+                0.055,
+                0.165,
+                accL,
+            );
+            subRgb = blendOklabRgb(
+                oklchToSrgb(jadeL, 0.068, 126),
+                subRgb,
+                0.34,
+                0.038,
+                0.088,
+                jadeL,
+            );
+        } else {
+            // bamboo / fern: 苍竹石绿伴色与主题色温和呼应
+            const bambooL = isDark ? 0.72 : 0.56;
+            accRgb = blendOklabRgb(
+                oklchToSrgb(accL, 0.082, species === "bamboo" ? 142 : 128),
+                accRgb,
+                0.65,
+                0.045,
+                0.155,
+                accL,
+            );
+            subRgb = blendOklabRgb(
+                oklchToSrgb(bambooL, 0.062, 142),
+                subRgb,
+                0.38,
+                0.034,
+                0.088,
+                bambooL,
+            );
+        }
+    }
+
+    const baseInk = parseCssColorToRgb(foregroundCss, fallbackInk, isDark);
+    const [inkBaseL] = srgbToOklch(baseInk[0], baseInk[1], baseInk[2]);
+
+    // Five shades of ink: deep pine-soot foreground vs cool distant mountain ink
     const inkStrokeRgb = isDark
-        ? mixRgb(mixRgb(baseInk, [194, 200, 212], 0.52), accRgb, 0.06)
-        : mixRgb(mixRgb(baseInk, [44, 37, 31], 0.40), accRgb, 0.04);
+        ? oklchToSrgb(clamp(inkBaseL * 0.97, 0.84, 0.93), 0.014, 245)
+        : oklchToSrgb(clamp(inkBaseL * 0.92, 0.13, 0.21), 0.012, 52);
     let inkWashRgb = isDark
-        ? mixRgb(mixRgb(baseInk, [168, 178, 194], 0.50), accRgb, 0.08)
-        : mixRgb(mixRgb(baseInk, [52, 58, 66], 0.36), accRgb, 0.06);
+        ? oklchToSrgb(clamp(inkBaseL * 0.84, 0.70, 0.82), 0.018, 240)
+        : oklchToSrgb(clamp(inkBaseL * 1.35, 0.28, 0.40), 0.015, 238);
 
     if (localHour !== undefined && Number.isFinite(localHour)) {
         const h = ((Math.floor(localHour) % 24) + 24) % 24;
         if (h >= 17 && h <= 19) {
             const duskOchre: Rgb = isDark ? [196, 152, 118] : [188, 134, 88];
-            subRgb = mixRgb(subRgb, duskOchre, 0.06);
+            subRgb = mixRgb(subRgb, duskOchre, 0.08);
             inkWashRgb = mixRgb(inkWashRgb, duskOchre, 0.06);
         } else if (h >= 5 && h <= 8) {
             const dawnMist: Rgb = isDark ? [154, 178, 208] : [142, 170, 198];
-            subRgb = mixRgb(subRgb, dawnMist, 0.04);
-            inkWashRgb = mixRgb(inkWashRgb, dawnMist, 0.04);
+            subRgb = mixRgb(subRgb, dawnMist, 0.06);
+            inkWashRgb = mixRgb(inkWashRgb, dawnMist, 0.05);
         }
     }
 
+    const cinnabarRgb = mixRgb(
+        isDark ? oklchToSrgb(0.60, 0.172, 27) : oklchToSrgb(0.49, 0.182, 27),
+        accRgb,
+        0.18,
+    );
+    const goldDustRgb = mixRgb(
+        isDark ? oklchToSrgb(0.83, 0.085, 84) : oklchToSrgb(0.62, 0.095, 80),
+        subRgb,
+        0.20,
+    );
+
     const highlightRgb: Rgb = isDark ? [18, 19, 22] : [250, 248, 243];
-    const harmony = isDark && overPhoto ? 0.52 : 1;
+    const harmony = isDark && overPhoto ? 0.52 : overPhoto ? 0.86 : 1;
 
-    const strokeA = (isDark ? 0.46 : 0.62) * harmony;
-    const veinA = (isDark ? 0.28 : 0.34) * harmony;
-    const fillA = (isDark ? 0.125 : 0.135) * harmony;
-    const accA = (isDark ? 0.82 : 0.78) * harmony;
-    const accFill = (isDark ? 0.30 : 0.27) * harmony;
-    const subA = (isDark ? 0.66 : 0.64) * harmony;
-    const subFill = (isDark ? 0.23 : 0.21) * harmony;
+    const strokeA = (isDark ? 0.78 : 0.88) * harmony;
+    const veinA = (isDark ? 0.30 : 0.36) * harmony;
+    const fillA = (isDark ? 0.13 : 0.145) * harmony;
+    const accA = (isDark ? 0.84 : 0.80) * harmony;
+    const accFill = (isDark ? 0.32 : 0.28) * harmony;
+    const subA = (isDark ? 0.68 : 0.66) * harmony;
+    const subFill = (isDark ? 0.24 : 0.22) * harmony;
 
-    const accWash = (isDark ? 0.42 : 0.40) * harmony;
-    const subWash = (isDark ? 0.32 : 0.29) * harmony;
-    const inkWash = (isDark ? 0.21 : 0.23) * harmony;
+    const accWash = (isDark ? 0.44 : 0.42) * harmony;
+    const subWash = (isDark ? 0.33 : 0.30) * harmony;
+    const inkWash = (isDark ? 0.22 : 0.24) * harmony;
+
+    const gradeMap: Record<"jiao" | "nong" | "zhong" | "dan" | "qing", number> =
+        {
+            jiao: 0.96,
+            nong: 0.82,
+            zhong: 0.54,
+            dan: 0.28,
+            qing: 0.13,
+        };
 
     return {
         isDark,
@@ -616,8 +996,8 @@ export function buildBotanicalPalette(
             return rgba(inkStrokeRgb, strokeA * a);
         },
         vein: (tint, a = 1) => {
-            if (tint === "accent") return rgba(accRgb, accA * 0.54 * a);
-            if (tint === "sub") return rgba(subRgb, subA * 0.54 * a);
+            if (tint === "accent") return rgba(accRgb, accA * 0.56 * a);
+            if (tint === "sub") return rgba(subRgb, subA * 0.56 * a);
             return rgba(inkStrokeRgb, veinA * a);
         },
         fill: (tint, a = 1) => {
@@ -630,7 +1010,24 @@ export function buildBotanicalPalette(
             if (tint === "sub") return rgba(subRgb, subWash * a);
             return rgba(inkWashRgb, inkWash * a);
         },
-        highlight: (a = 1) => rgba(highlightRgb, 0.72 * a),
+        waterline: (tint, a = 1) => {
+            if (tint === "accent") {
+                return rgba(accRgb, clamp(accA * 0.72 * a, 0, 1));
+            }
+            if (tint === "sub") {
+                return rgba(subRgb, clamp(subA * 0.68 * a, 0, 1));
+            }
+            return rgba(inkStrokeRgb, clamp(strokeA * 0.58 * a, 0, 1));
+        },
+        inkGrade: (grade, a = 1) => {
+            const rgb = grade === "dan" || grade === "qing"
+                ? inkWashRgb
+                : inkStrokeRgb;
+            return rgba(rgb, gradeMap[grade] * harmony * a);
+        },
+        cinnabar: (a = 1) => rgba(cinnabarRgb, harmony * a),
+        goldDust: (a = 1) => rgba(goldDustRgb, harmony * a),
+        highlight: (a = 1) => rgba(highlightRgb, 0.74 * a),
     };
 }
 
@@ -692,6 +1089,9 @@ interface SampleBranchOpts {
     phase?: number;
     waveLag?: number;
     ghost?: boolean;
+    midground?: boolean;
+    brushStyle?: "standard" | "iron-plum" | "orchid-blade";
+    twistU?: number;
     bambooNodes?: readonly number[];
     snowCushions?: boolean;
     wobble?: number;
@@ -739,6 +1139,9 @@ function sampleBranch(
         phase: opts.phase ?? 0,
         waveLag: opts.waveLag,
         ghost: Boolean(opts.ghost),
+        midground: Boolean(opts.midground),
+        brushStyle: opts.brushStyle ?? "standard",
+        twistU: opts.twistU,
         bambooNodes: opts.bambooNodes,
         snowCushions: opts.snowCushions,
         parentRef: opts.parentRef ?? null,
@@ -753,9 +1156,11 @@ export function generateBotanicalScene(
     h: number,
     dateKey: string,
     embedded = false,
+    dockInsets?: BotanicalDockInsets,
 ): BotanicalScene {
-    const rng = mulberry32(hashString(`${dateKey}:${species}:v6`));
+    const rng = mulberry32(hashString(`${dateKey}:${species}:v7`));
     const rand = (lo: number, hi: number) => lo + rng() * (hi - lo);
+    const solar = resolveSolarTerm(dateKey);
     const isNarrow = !embedded && w < 720;
     const isWide = embedded || w >= 1024;
     const S = isNarrow
@@ -764,19 +1169,30 @@ export function generateBotanicalScene(
 
     const branches: BranchData[] = [];
     const ornaments: BotanicalOrnament[] = [];
-    const narrowRootY = h - Math.max(92, h * 0.115);
-    const rootX = isNarrow ? w + 10 * S : w + 16 * S;
-    const rootY = isNarrow ? narrowRootY : h + 16 * S;
+    const rocks: RockStroke[] = [];
+    const dockRight = dockInsets?.right ?? 0;
+    const dockBottom = dockInsets?.bottom ?? 0;
+    const narrowRootY = h - Math.max(92, h * 0.115) - dockBottom;
+    const rootX = isNarrow ? w + 10 * S : w + 16 * S - dockRight * 0.4;
+    const rootY = isNarrow ? narrowRootY : h + 16 * S - dockBottom * 0.3;
 
     if (isWide || isNarrow) {
         const echoScale = isNarrow ? 0.9 : 1;
+        const isWideMaple = !isNarrow && species === "maple";
         const tr0 = isNarrow
             ? { x: w + 8, y: rand(215, 235) * S }
+            : isWideMaple
+            ? { x: w - 180 * S, y: Math.max(48, 52 * S) }
             : { x: w + 10, y: rand(96, 118) * S };
         const tr3 = isNarrow
             ? {
                 x: w - rand(130, 158) * S,
                 y: tr0.y + rand(72, 92) * S,
+            }
+            : isWideMaple
+            ? {
+                x: w - rand(345, 385) * S,
+                y: tr0.y + rand(95, 120) * S,
             }
             : {
                 x: w - rand(180, 225) * S,
@@ -1174,8 +1590,8 @@ export function generateBotanicalScene(
             p3,
             {
                 steps: 40,
-                widthStart: (isNarrow ? 2.1 : 2.55) * S,
-                widthEnd: 0.75 * S,
+                widthStart: (isNarrow ? 3.8 : 6.6) * S,
+                widthEnd: 0.70 * S,
                 t0: 0.0,
                 t1: 0.46,
                 flexSpan: 0.95,
@@ -1199,13 +1615,32 @@ export function generateBotanicalScene(
                 { u: 0.66, dir: -1, len: 168 * S, lift: 85 * S },
                 { u: 0.82, dir: 1, len: 118 * S, lift: 72 * S },
             ];
+        const isLateAutumnGinkgo = solar.termIndex >= 18 ||
+            solar.termIndex <= 1;
+        const isEarlyAutumnGinkgo = solar.termIndex >= 14 &&
+            solar.termIndex <= 17;
         const subTints:
-            readonly (readonly [TintRole, TintRole, TintRole, TintRole])[] = [
-                ["accent", "ink", "sub", "ink"],
-                ["ink", "ink", "sub", "ink"],
-                ["ink", "ink", "accent", "ink"],
-                ["ink", "sub", "ink", "ink"],
-            ];
+            readonly (readonly [TintRole, TintRole, TintRole, TintRole])[] =
+                isLateAutumnGinkgo
+                    ? [
+                        ["accent", "sub", "accent", "ink"],
+                        ["sub", "accent", "accent", "sub"],
+                        ["accent", "ink", "accent", "sub"],
+                        ["sub", "accent", "ink", "accent"],
+                    ]
+                    : isEarlyAutumnGinkgo
+                    ? [
+                        ["accent", "ink", "sub", "ink"],
+                        ["sub", "ink", "accent", "ink"],
+                        ["ink", "sub", "accent", "ink"],
+                        ["sub", "accent", "ink", "sub"],
+                    ]
+                    : [
+                        ["ink", "ink", "sub", "ink"],
+                        ["sub", "ink", "ink", "ink"],
+                        ["ink", "ink", "accent", "ink"],
+                        ["ink", "sub", "ink", "ink"],
+                    ];
 
         subs.forEach((cfg, si) => {
             const bi = Math.round(cfg.u * (main.points.length - 1));
@@ -1232,7 +1667,7 @@ export function generateBotanicalScene(
                 sp3,
                 {
                     steps: 24,
-                    widthStart: 1.45 * S,
+                    widthStart: (isNarrow ? 1.65 : 2.35) * S,
                     widthEnd: 0.52 * S,
                     t0: ts,
                     t1: ts + 0.24,
@@ -1262,6 +1697,14 @@ export function generateBotanicalScene(
                             tint: tSet[1],
                             profile: true,
                         },
+                        ...(si === 1 || si === 2
+                            ? [{
+                                ang: cfg.dir * 0.12,
+                                sz: 27,
+                                tint: tSet[2],
+                                profile: false,
+                            }]
+                            : []),
                     ],
                 },
                 {
@@ -1274,6 +1717,14 @@ export function generateBotanicalScene(
                             tint: tSet[3],
                             profile: si % 2 === 0,
                         },
+                        ...(si === 0 || si === 1
+                            ? [{
+                                ang: 0.08,
+                                sz: 30,
+                                tint: tSet[0],
+                                profile: true,
+                            }]
+                            : []),
                     ],
                 },
             ];
@@ -1302,6 +1753,104 @@ export function generateBotanicalScene(
             }
         });
 
+        // 银杏短枝簇生（主干中段加厚画眼，桌面端向上抽一枝探空瘦梢）
+        if (!isNarrow) {
+            const spurIdx = Math.round(0.62 * (main.points.length - 1));
+            const spurT = lerp(main.t0, main.t1, 0.62) + 0.05;
+            const spurLeafTints: readonly TintRole[] = isLateAutumnGinkgo
+                ? ["accent", "sub", "accent"]
+                : isEarlyAutumnGinkgo
+                ? ["sub", "accent", "ink"]
+                : ["ink", "sub", "ink"];
+            [-0.72, -0.34, 0.36].forEach((ang, li) => {
+                ornaments.push({
+                    kind: "ginkgo",
+                    ghost: false,
+                    branch: main,
+                    idx: spurIdx,
+                    angleOffset: ang,
+                    size: (32 + li * 4) * S,
+                    notch: 0.22,
+                    stemLen: (13 + li * 2) * S,
+                    tint: spurLeafTints[li],
+                    profile: li === 1,
+                    t0: spurT + li * 0.04,
+                    t1: spurT + 0.34 + li * 0.04,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            });
+
+            const skyIdx = Math.round(0.76 * (main.points.length - 1));
+            const skyAnc = main.points[skyIdx];
+            const skyEnd = {
+                x: skyAnc.x - 95 * S,
+                y: Math.max(54, skyAnc.y - 165 * S),
+            };
+            const skyTwig = sampleBranch(
+                { x: skyAnc.x, y: skyAnc.y },
+                {
+                    x: lerp(skyAnc.x, skyEnd.x, 0.42) + 12 * S,
+                    y: lerp(skyAnc.y, skyEnd.y, 0.42) - 18 * S,
+                },
+                {
+                    x: lerp(skyAnc.x, skyEnd.x, 0.78) - 8 * S,
+                    y: lerp(skyAnc.y, skyEnd.y, 0.78),
+                },
+                skyEnd,
+                {
+                    steps: 18,
+                    widthStart: 1.25 * S,
+                    widthEnd: 0.32 * S,
+                    t0: lerp(main.t0, main.t1, 0.76),
+                    t1: lerp(main.t0, main.t1, 0.76) + 0.22,
+                    flexSpan: 0.65,
+                    phase: 3.1,
+                    wobble: 0.9 * S,
+                    parentRef: { branch: main, idx: skyIdx },
+                },
+                rng,
+            );
+            branches.push(skyTwig);
+            [
+                {
+                    u: 0.90,
+                    ang: -0.38,
+                    sz: 34,
+                    tint: "sub" as TintRole,
+                    p: true,
+                },
+                {
+                    u: 1.0,
+                    ang: 0.14,
+                    sz: 40,
+                    tint: isLateAutumnGinkgo
+                        ? "accent" as TintRole
+                        : "sub" as TintRole,
+                    p: false,
+                },
+            ].forEach((sl, li) => {
+                ornaments.push({
+                    kind: "ginkgo",
+                    ghost: false,
+                    branch: skyTwig,
+                    idx: Math.round(sl.u * (skyTwig.points.length - 1)),
+                    angleOffset: sl.ang,
+                    size: sl.sz * S,
+                    notch: 0.22,
+                    stemLen: 14 * S,
+                    tint: sl.tint,
+                    profile: sl.p,
+                    t0: skyTwig.t1 - 0.02 + li * 0.04,
+                    t1: skyTwig.t1 + 0.28 + li * 0.04,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            });
+        }
+
         const topLeaves: ReadonlyArray<{
             u: number;
             ang: number;
@@ -1309,7 +1858,13 @@ export function generateBotanicalScene(
             tint: TintRole;
             profile: boolean;
         }> = [
-            { u: 0.93, ang: -0.50, sz: 40, tint: "ink", profile: true },
+            {
+                u: 0.93,
+                ang: -0.50,
+                sz: 40,
+                tint: isLateAutumnGinkgo ? "sub" : "ink",
+                profile: true,
+            },
             { u: 1.00, ang: 0.08, sz: 45, tint: "accent", profile: false },
         ];
         topLeaves.forEach((ls, li) => {
@@ -1411,7 +1966,7 @@ export function generateBotanicalScene(
                 p3,
                 {
                     steps: 44,
-                    widthStart: (cfg.ghost ? 1.15 : 1.95) * S,
+                    widthStart: (cfg.ghost ? 1.25 : isNarrow ? 2.15 : 2.75) * S,
                     widthEnd: 0.48 * S,
                     t0: cfg.t0,
                     t1: cfg.t0 + 0.52,
@@ -1575,8 +2130,8 @@ export function generateBotanicalScene(
                 y: rootY - rand(182, 210) * S,
             }
             : {
-                x: w - rand(465, 525) * S,
-                y: h - rand(380, 428) * S,
+                x: w - rand(515, 575) * S,
+                y: h - rand(365, 405) * S,
             };
 
         const seg1 = sampleBranch(
@@ -1592,12 +2147,13 @@ export function generateBotanicalScene(
             mid1,
             {
                 steps: 20,
-                widthStart: 4.2 * S,
-                widthEnd: 2.55 * S,
+                widthStart: (isNarrow ? 5.4 : 8.8) * S,
+                widthEnd: (isNarrow ? 3.2 : 5.0) * S,
                 t0: 0.0,
                 t1: 0.21,
                 flexSpan: 0.18,
                 phase: 0,
+                brushStyle: "iron-plum",
                 wobble: 1.2 * S,
             },
             rng,
@@ -1615,12 +2171,13 @@ export function generateBotanicalScene(
             mid2,
             {
                 steps: 22,
-                widthStart: 2.55 * S,
-                widthEnd: 1.55 * S,
+                widthStart: (isNarrow ? 3.2 : 5.0) * S,
+                widthEnd: (isNarrow ? 1.75 : 2.5) * S,
                 t0: 0.20,
                 t1: 0.40,
                 flexSpan: 0.35,
                 phase: 0.3,
+                brushStyle: "iron-plum",
                 wobble: 1.4 * S,
                 parentRef: { branch: seg1, idx: seg1.points.length - 1 },
             },
@@ -1639,12 +2196,13 @@ export function generateBotanicalScene(
             tip,
             {
                 steps: 22,
-                widthStart: 1.55 * S,
-                widthEnd: 0.62 * S,
+                widthStart: (isNarrow ? 1.75 : 2.5) * S,
+                widthEnd: (isNarrow ? 0.56 : 0.65) * S,
                 t0: 0.39,
                 t1: 0.56,
                 flexSpan: 0.42,
                 phase: 0.6,
+                brushStyle: "iron-plum",
                 wobble: 1.2 * S,
                 parentRef: { branch: seg2, idx: seg2.points.length - 1 },
             },
@@ -1691,27 +2249,32 @@ export function generateBotanicalScene(
                 { parent: seg3, u: 0.58, ang: -1.58, len: 62 * S },
             ]
             : [
-                { parent: seg1, u: 0.78, ang: -1.92, len: 205 * S },
-                { parent: seg2, u: 0.52, ang: -1.36, len: 185 * S },
-                { parent: seg2, u: 0.92, ang: -2.28, len: 150 * S },
-                { parent: seg3, u: 0.58, ang: -1.58, len: 108 * S },
+                { parent: seg1, u: 0.78, ang: -1.68, len: 195 * S },
+                { parent: seg2, u: 0.52, ang: -1.26, len: 185 * S },
+                { parent: seg2, u: 0.92, ang: -2.62, len: 135 * S },
+                { parent: seg3, u: 0.52, ang: -2.74, len: 108 * S },
             ];
         twigs.forEach((tw, ti) => {
             const pIdx = Math.round(tw.u * (tw.parent.points.length - 1));
             const anc = tw.parent.points[pIdx];
             const ang = tw.ang + rand(-0.12, 0.12);
             const tp0 = { x: anc.x, y: anc.y };
+            const rawEndY = anc.y + Math.sin(ang) * tw.len;
             const tp3 = {
                 x: anc.x + Math.cos(ang) * tw.len,
-                y: anc.y + Math.sin(ang) * tw.len,
+                y: !isNarrow && ti >= 2 ? Math.max(435 * S, rawEndY) : rawEndY,
             };
+            const rawCp1Y = lerp(tp0.y, tp3.y, 0.38) -
+                rand(10, 20) * S * plumScale;
+            const rawCp2Y = lerp(tp0.y, tp3.y, 0.74) -
+                rand(6, 14) * S * plumScale;
             const tp1 = {
                 x: lerp(tp0.x, tp3.x, 0.38) + rand(-14, 14) * S * plumScale,
-                y: lerp(tp0.y, tp3.y, 0.38) - rand(10, 20) * S * plumScale,
+                y: !isNarrow && ti >= 2 ? Math.max(435 * S, rawCp1Y) : rawCp1Y,
             };
             const tp2 = {
                 x: lerp(tp0.x, tp3.x, 0.74) + rand(-10, 10) * S * plumScale,
-                y: lerp(tp0.y, tp3.y, 0.74) - rand(6, 14) * S * plumScale,
+                y: !isNarrow && ti >= 2 ? Math.max(435 * S, rawCp2Y) : rawCp2Y,
             };
             const ts = lerp(tw.parent.t0, tw.parent.t1, tw.u);
             const twig = sampleBranch(
@@ -1798,16 +2361,32 @@ export function generateBotanicalScene(
             spots.forEach((sp, si) => {
                 const sIdx = Math.round(sp.u * (twig.points.length - 1));
                 const tS = lerp(twig.t0, twig.t1, sp.u) + 0.06;
+                const earlyWinterBud =
+                    (solar.termIndex >= 21 || solar.termIndex === 0) &&
+                    sp.kind === "plumBlossom" && (ti + si) % 3 === 0;
+                const lateWinterBloom = solar.termIndex >= 1 &&
+                    solar.termIndex <= 3 &&
+                    sp.kind === "plumBud" && si === 0;
+                const resolvedKind = earlyWinterBud
+                    ? "plumBud"
+                    : lateWinterBloom
+                    ? "plumBlossom"
+                    : sp.kind;
+                const poses = ["frontal", "side", "upward", "back"] as const;
                 ornaments.push({
-                    kind: sp.kind,
+                    kind: resolvedKind,
                     ghost: false,
                     branch: twig,
                     idx: sIdx,
                     angleOffset: (si % 2 === 0 ? -1 : 1) * rand(0.42, 0.90),
-                    size: sp.sz * rand(0.94, 1.06) * S * plumScale,
+                    size: (resolvedKind === "plumBud"
+                        ? 4.8
+                        : Math.max(13, sp.sz)) *
+                        rand(0.94, 1.06) * S * plumScale,
                     rotation: rand(0, 6.28),
                     tint: sp.tint,
                     profile: sp.profile,
+                    pose: poses[(ti + si) % poses.length],
                     t0: tS,
                     t1: tS + 0.34,
                     phase: rand(0, 6.28),
@@ -1824,14 +2403,47 @@ export function generateBotanicalScene(
             sz: number;
             tint: TintRole;
             profile: boolean;
+            pose?: PlumOrnament["pose"];
+            midground?: boolean;
         }> = [
+            // 主景画眼繁簇（密不透风）：在 seg2 折转处排布大小错落、正侧仰背俱全的重叠梅花
+            {
+                branch: seg2,
+                u: 0.46,
+                kind: "plumBlossom",
+                sz: 15,
+                tint: "sub",
+                profile: true,
+                pose: "side",
+                midground: true,
+            },
+            {
+                branch: seg2,
+                u: 0.62,
+                kind: "plumBlossom",
+                sz: 26,
+                tint: "accent",
+                profile: false,
+                pose: "frontal",
+            },
             {
                 branch: seg2,
                 u: 0.72,
                 kind: "plumBlossom",
-                sz: 24,
+                sz: 20,
                 tint: "accent",
                 profile: false,
+                pose: "upward",
+            },
+            {
+                branch: seg2,
+                u: 0.80,
+                kind: "plumBlossom",
+                sz: 13.5,
+                tint: "sub",
+                profile: true,
+                pose: "back",
+                midground: true,
             },
             {
                 branch: seg3,
@@ -1848,6 +2460,7 @@ export function generateBotanicalScene(
                 sz: 15,
                 tint: "sub",
                 profile: true,
+                pose: "side",
             },
             {
                 branch: seg3,
@@ -1861,16 +2474,30 @@ export function generateBotanicalScene(
         mainPlums.forEach((sp, si) => {
             const sIdx = Math.round(sp.u * (sp.branch.points.length - 1));
             const tS = lerp(sp.branch.t0, sp.branch.t1, sp.u) + 0.06;
+            const earlyWinterBud =
+                (solar.termIndex >= 21 || solar.termIndex === 0) &&
+                sp.kind === "plumBlossom" && si % 3 === 0;
+            const lateWinterBloom = solar.termIndex >= 1 &&
+                solar.termIndex <= 3 &&
+                sp.kind === "plumBud" && si === 4;
+            const resolvedKind = earlyWinterBud
+                ? "plumBud"
+                : lateWinterBloom
+                ? "plumBlossom"
+                : sp.kind;
             ornaments.push({
-                kind: sp.kind,
+                kind: resolvedKind,
                 ghost: false,
+                midground: sp.midground,
                 branch: sp.branch,
                 idx: sIdx,
                 angleOffset: si % 2 === 0 ? -0.55 : 0.65,
-                size: sp.sz * S * plumScale,
+                size: (resolvedKind === "plumBud" ? 4.8 : Math.max(13, sp.sz)) *
+                    S * plumScale,
                 rotation: rand(0, 6.28),
                 tint: sp.tint,
                 profile: sp.profile,
+                pose: sp.pose,
                 t0: tS,
                 t1: tS + 0.34,
                 phase: rand(0, 6.28),
@@ -1878,6 +2505,83 @@ export function generateBotanicalScene(
                 vel: 0,
             });
         });
+
+        // 桌面端「疏可跑马」探空铁梢：分别沿搜索框右侧高空与搜索框下方留白横逸，100% 避让搜索框
+        if (!isNarrow) {
+            const skyPlums = [
+                {
+                    parent: seg2,
+                    u: 0.78,
+                    endX: w - 345 * S,
+                    endY: Math.max(85, h - 605 * S),
+                    tSpan: 0.22,
+                    minRightSide: true,
+                },
+                {
+                    parent: seg3,
+                    u: 0.76,
+                    endX: tip.x - 145 * S,
+                    endY: Math.max(438 * S, tip.y - 38 * S),
+                    tSpan: 0.20,
+                    minRightSide: false,
+                },
+            ];
+            skyPlums.forEach((sp, si) => {
+                const pIdx = Math.round(sp.u * (sp.parent.points.length - 1));
+                const anc = sp.parent.points[pIdx];
+                const endPt = { x: sp.endX, y: sp.endY };
+                const ts = lerp(sp.parent.t0, sp.parent.t1, sp.u);
+                const cp1X = sp.minRightSide
+                    ? Math.max(w - 365 * S, lerp(anc.x, endPt.x, 0.38) + 8 * S)
+                    : lerp(anc.x, endPt.x, 0.38) - 18 * S;
+                const cp2X = sp.minRightSide
+                    ? Math.max(w - 365 * S, lerp(anc.x, endPt.x, 0.72) - 4 * S)
+                    : lerp(anc.x, endPt.x, 0.72) + 10 * S;
+                const cp1Y = sp.minRightSide
+                    ? lerp(anc.y, endPt.y, 0.38) - 18 * S
+                    : Math.max(434 * S, lerp(anc.y, endPt.y, 0.38) - 14 * S);
+                const cp2Y = sp.minRightSide
+                    ? lerp(anc.y, endPt.y, 0.72) - 8 * S
+                    : Math.max(434 * S, lerp(anc.y, endPt.y, 0.72) - 6 * S);
+                const skyTwig = sampleBranch(
+                    { x: anc.x, y: anc.y },
+                    { x: cp1X, y: cp1Y },
+                    { x: cp2X, y: cp2Y },
+                    endPt,
+                    {
+                        steps: 18,
+                        widthStart: 1.15 * S,
+                        widthEnd: 0.26 * S,
+                        t0: ts,
+                        t1: ts + sp.tSpan,
+                        flexSpan: 0.62,
+                        phase: 1.8 + si,
+                        wobble: 0.8 * S,
+                        parentRef: { branch: sp.parent, idx: pIdx },
+                    },
+                    rng,
+                );
+                branches.push(skyTwig);
+                [0.88, 0.99].forEach((bu, bi) => {
+                    ornaments.push({
+                        kind: "plumBud",
+                        ghost: false,
+                        branch: skyTwig,
+                        idx: Math.round(bu * (skyTwig.points.length - 1)),
+                        angleOffset: bi === 0 ? -0.45 : 0.12,
+                        size: (4.6 - bi * 0.6) * S,
+                        rotation: rand(0, 6.28),
+                        tint: "accent",
+                        profile: false,
+                        t0: skyTwig.t1 - 0.02 + bi * 0.04,
+                        t1: skyTwig.t1 + 0.26 + bi * 0.04,
+                        phase: rand(0, 6.28),
+                        push: 0,
+                        vel: 0,
+                    });
+                });
+            });
+        }
     } else if (species === "fern") {
         const fernScale = isNarrow ? 0.85 : 1;
         interface FernFrondConfig {
@@ -2125,13 +2829,188 @@ export function generateBotanicalScene(
                 vel: 0,
             });
         });
+        if (!isNarrow) {
+            const fBaseX = rootX - 18 * S;
+            const fBaseY = h + 8 * S;
+            rocks.push(
+                {
+                    points: [
+                        { x: fBaseX + 26 * S, y: fBaseY },
+                        { x: fBaseX - 165 * S, y: fBaseY },
+                        { x: fBaseX - 132 * S, y: fBaseY - 38 * S },
+                        { x: fBaseX - 72 * S, y: fBaseY - 56 * S },
+                        { x: fBaseX - 18 * S, y: fBaseY - 40 * S },
+                        { x: fBaseX + 26 * S, y: fBaseY - 22 * S },
+                    ],
+                    mossDots: [
+                        {
+                            x: fBaseX - 122 * S,
+                            y: fBaseY - 36 * S,
+                            rx: 4.2 * S,
+                            ry: 1.9 * S,
+                            rot: -0.25,
+                        },
+                        {
+                            x: fBaseX - 74 * S,
+                            y: fBaseY - 54 * S,
+                            rx: 3.6 * S,
+                            ry: 1.6 * S,
+                            rot: -0.1,
+                        },
+                        {
+                            x: fBaseX - 62 * S,
+                            y: fBaseY - 49 * S,
+                            rx: 2.5 * S,
+                            ry: 1.2 * S,
+                            rot: 0.15,
+                        },
+                    ],
+                    t0: 0.0,
+                    t1: 0.28,
+                },
+            );
+        }
     } else if (species === "orchid") {
-        // Spring orchid: rock-clump fanning leaves + slender arched flower scapes
+        // Spring orchid: 2-tier slope rocks & moss clump + calligraphic twisted leaves + arched scape
         const orchidScale = isNarrow ? 0.86 : 1;
+        const rBaseX = isNarrow ? w - 8 * S : rootX - 18 * S;
+        const rBaseY = isNarrow ? rootY + 6 * S : h + 8 * S;
+        if (isNarrow) {
+            rocks.push(
+                {
+                    points: [
+                        { x: rBaseX + 14 * S, y: rBaseY },
+                        { x: rBaseX - 110 * S, y: rBaseY },
+                        { x: rBaseX - 84 * S, y: rBaseY - 26 * S },
+                        { x: rBaseX - 36 * S, y: rBaseY - 40 * S },
+                        { x: rBaseX + 14 * S, y: rBaseY - 20 * S },
+                    ],
+                    mossDots: [
+                        {
+                            x: rBaseX - 78 * S,
+                            y: rBaseY - 24 * S,
+                            rx: 3.4 * S,
+                            ry: 1.5 * S,
+                            rot: -0.2,
+                        },
+                        {
+                            x: rBaseX - 42 * S,
+                            y: rBaseY - 36 * S,
+                            rx: 2.8 * S,
+                            ry: 1.3 * S,
+                            rot: 0.1,
+                        },
+                        {
+                            x: rBaseX - 31 * S,
+                            y: rBaseY - 32 * S,
+                            rx: 2.0 * S,
+                            ry: 1.0 * S,
+                            rot: 0.25,
+                        },
+                    ],
+                    t0: 0.0,
+                    t1: 0.28,
+                },
+                {
+                    points: [
+                        { x: rBaseX - 65 * S, y: rBaseY },
+                        { x: rBaseX - 148 * S, y: rBaseY },
+                        { x: rBaseX - 126 * S, y: rBaseY - 18 * S },
+                        { x: rBaseX - 82 * S, y: rBaseY - 22 * S },
+                        { x: rBaseX - 65 * S, y: rBaseY - 10 * S },
+                    ],
+                    mossDots: [
+                        {
+                            x: rBaseX - 118 * S,
+                            y: rBaseY - 16 * S,
+                            rx: 2.4 * S,
+                            ry: 1.1 * S,
+                            rot: -0.15,
+                        },
+                    ],
+                    t0: 0.04,
+                    t1: 0.30,
+                },
+            );
+        } else {
+            rocks.push(
+                {
+                    points: [
+                        { x: rBaseX + 28 * S, y: rBaseY },
+                        { x: rBaseX - 195 * S, y: rBaseY },
+                        { x: rBaseX - 158 * S, y: rBaseY - 42 * S },
+                        { x: rBaseX - 96 * S, y: rBaseY - 68 * S },
+                        { x: rBaseX - 28 * S, y: rBaseY - 52 * S },
+                        { x: rBaseX + 28 * S, y: rBaseY - 28 * S },
+                    ],
+                    mossDots: [
+                        {
+                            x: rBaseX - 146 * S,
+                            y: rBaseY - 39 * S,
+                            rx: 4.8 * S,
+                            ry: 2.1 * S,
+                            rot: -0.25,
+                        },
+                        {
+                            x: rBaseX - 98 * S,
+                            y: rBaseY - 64 * S,
+                            rx: 4.2 * S,
+                            ry: 1.8 * S,
+                            rot: -0.1,
+                        },
+                        {
+                            x: rBaseX - 84 * S,
+                            y: rBaseY - 58 * S,
+                            rx: 3.1 * S,
+                            ry: 1.4 * S,
+                            rot: 0.15,
+                        },
+                        {
+                            x: rBaseX - 38 * S,
+                            y: rBaseY - 48 * S,
+                            rx: 3.4 * S,
+                            ry: 1.5 * S,
+                            rot: 0.2,
+                        },
+                    ],
+                    t0: 0.0,
+                    t1: 0.28,
+                },
+                {
+                    points: [
+                        { x: rBaseX - 120 * S, y: rBaseY },
+                        { x: rBaseX - 275 * S, y: rBaseY },
+                        { x: rBaseX - 235 * S, y: rBaseY - 28 * S },
+                        { x: rBaseX - 168 * S, y: rBaseY - 42 * S },
+                        { x: rBaseX - 120 * S, y: rBaseY - 18 * S },
+                    ],
+                    mossDots: [
+                        {
+                            x: rBaseX - 222 * S,
+                            y: rBaseY - 26 * S,
+                            rx: 3.6 * S,
+                            ry: 1.6 * S,
+                            rot: -0.2,
+                        },
+                        {
+                            x: rBaseX - 176 * S,
+                            y: rBaseY - 38 * S,
+                            rx: 2.8 * S,
+                            ry: 1.3 * S,
+                            rot: 0.1,
+                        },
+                    ],
+                    t0: 0.05,
+                    t1: 0.32,
+                },
+            );
+        }
+
         const bladeCfgs = isNarrow
             ? [
                 {
                     ghost: true,
+                    midground: false,
                     rx: 12,
                     tx: 105,
                     len: 175,
@@ -2139,9 +3018,11 @@ export function generateBotanicalScene(
                     c2x: 44,
                     curve: -0.22,
                     w: 6.4,
+                    twistU: 0.56,
                 },
                 {
                     ghost: false,
+                    midground: false,
                     rx: 18,
                     tx: 235,
                     len: 215,
@@ -2149,9 +3030,11 @@ export function generateBotanicalScene(
                     c2x: 84,
                     curve: -0.26,
                     w: 7.4,
+                    twistU: 0.52,
                 },
                 {
                     ghost: false,
+                    midground: false,
                     rx: 52,
                     tx: 315,
                     len: 235,
@@ -2159,9 +3042,11 @@ export function generateBotanicalScene(
                     c2x: 112,
                     curve: -0.18,
                     w: 7.8,
+                    twistU: 0.60,
                 },
                 {
                     ghost: false,
+                    midground: true,
                     rx: 86,
                     tx: 165,
                     len: 165,
@@ -2169,65 +3054,89 @@ export function generateBotanicalScene(
                     c2x: 52,
                     curve: 0.14,
                     w: 6.2,
+                    twistU: 0.48,
                 },
             ]
             : [
                 {
                     ghost: true,
+                    midground: false,
                     rx: 18,
-                    tx: 125,
-                    len: 390,
+                    tx: 135,
+                    len: 410,
                     c1x: 22,
                     c2x: 78,
                     curve: -0.22,
                     w: 9.2,
+                    twistU: 0.58,
                 },
                 {
                     ghost: false,
-                    rx: 32,
-                    tx: 295,
-                    len: 470,
+                    midground: true,
+                    rx: 38,
+                    tx: 325,
+                    len: 495,
                     c1x: 34,
-                    c2x: 148,
+                    c2x: 158,
                     curve: -0.26,
-                    w: 11.2,
+                    w: 10.6,
+                    twistU: 0.52,
                 },
                 {
                     ghost: false,
-                    rx: 84,
-                    tx: 465,
-                    len: 510,
-                    c1x: 58,
-                    c2x: 192,
+                    midground: false,
+                    rx: 88,
+                    tx: 520,
+                    len: 545,
+                    c1x: 68,
+                    c2x: 212,
                     curve: -0.18,
-                    w: 12.0,
+                    w: 12.2,
+                    twistU: 0.60,
                 },
                 {
                     ghost: false,
-                    rx: 128,
-                    tx: 355,
-                    len: 380,
-                    c1x: 38,
-                    c2x: 128,
+                    midground: false,
+                    rx: 134,
+                    tx: 390,
+                    len: 405,
+                    c1x: 42,
+                    c2x: 142,
                     curve: -0.14,
-                    w: 9.8,
+                    w: 10.0,
+                    twistU: 0.46,
                 },
                 {
                     ghost: false,
-                    rx: 56,
-                    tx: 190,
-                    len: 340,
-                    c1x: 20,
-                    c2x: 76,
+                    midground: false,
+                    rx: 60,
+                    tx: 210,
+                    len: 365,
+                    c1x: 22,
+                    c2x: 84,
                     curve: 0.15,
-                    w: 9.0,
+                    w: 9.2,
+                    twistU: 0.64,
+                },
+                // 桌面端新增一叶低垂破边细叶丰富「凤眼」穿插
+                {
+                    ghost: false,
+                    midground: false,
+                    rx: 152,
+                    tx: 615,
+                    len: 340,
+                    c1x: 88,
+                    c2x: 165,
+                    curve: 0.22,
+                    w: 8.6,
+                    twistU: 0.44,
                 },
             ];
         bladeCfgs.forEach((cfg, bi) => {
             const len = cfg.len * S * orchidScale;
             const p0 = {
                 x: rootX - cfg.rx * S,
-                y: isNarrow ? rootY + 4 * S : rootY + 12 * S,
+                y: isNarrow ? rootY + 2 * S : rootY - 12 * S,
             };
             const p3 = {
                 x: w - cfg.tx * S,
@@ -2242,8 +3151,8 @@ export function generateBotanicalScene(
                 },
                 p3,
                 {
-                    steps: 34,
-                    widthStart: cfg.w * 0.28 * S,
+                    steps: 36,
+                    widthStart: cfg.w * 0.92 * S,
                     widthEnd: 0.35 * S,
                     t0: cfg.ghost ? 0.10 : bi * 0.04,
                     t1: 0.48 + bi * 0.04,
@@ -2251,42 +3160,24 @@ export function generateBotanicalScene(
                     phase: bi * 1.1,
                     waveLag: 1.6,
                     ghost: cfg.ghost,
+                    midground: cfg.midground,
+                    brushStyle: "orchid-blade",
+                    twistU: cfg.twistU,
                     wobble: 0.8 * S,
                 },
                 rng,
             );
             branches.push(leafBranch);
-            ornaments.push({
-                kind: "fernPinna",
-                ghost: cfg.ghost,
-                branch: leafBranch,
-                idx: Math.round(leafBranch.points.length * 0.18),
-                side: 1,
-                angleOffset: 0.02,
-                len: len * 0.76,
-                width: cfg.w * S,
-                curve: cfg.curve,
-                inkWeight: bi === 2 ? 1.15 : 0.92,
-                whip: 0.07,
-                feibai: !cfg.ghost && bi <= 2,
-                tint: bi === 2 ? "sub" : "ink",
-                profile: bi === 3,
-                t0: leafBranch.t0 + 0.06,
-                t1: leafBranch.t1 + 0.22,
-                phase: bi * 0.9,
-                push: 0,
-                vel: 0,
-            });
         });
 
         // Graceful arched flower scape
         const scapeP0 = {
             x: rootX - (isNarrow ? 42 : 76) * S,
-            y: isNarrow ? rootY + 2 * S : rootY + 10 * S,
+            y: isNarrow ? rootY + 2 * S : rootY - 10 * S,
         };
         const scapeP3 = isNarrow
             ? { x: w - 265 * S, y: rootY - 215 * S }
-            : { x: w - 395 * S, y: h - 465 * S };
+            : { x: w - 425 * S, y: h - 485 * S };
         const scape = sampleBranch(
             scapeP0,
             {
@@ -2311,11 +3202,19 @@ export function generateBotanicalScene(
             rng,
         );
         branches.push(scape);
-        [
-            { u: 0.56, ang: -0.45, sz: 22, tint: "sub" as TintRole },
-            { u: 0.78, ang: 0.42, sz: 25, tint: "accent" as TintRole },
-            { u: 0.96, ang: -0.15, sz: 20, tint: "accent" as TintRole },
-        ].forEach((fl, fi) => {
+        const orchidSpots = solar.termIndex >= 4 && solar.termIndex <= 8
+            ? [
+                { u: 0.46, ang: -0.48, sz: 21, tint: "sub" as TintRole },
+                { u: 0.64, ang: 0.42, sz: 25, tint: "accent" as TintRole },
+                { u: 0.82, ang: -0.32, sz: 23, tint: "sub" as TintRole },
+                { u: 0.97, ang: 0.14, sz: 19, tint: "accent" as TintRole },
+            ]
+            : [
+                { u: 0.56, ang: -0.45, sz: 22, tint: "sub" as TintRole },
+                { u: 0.78, ang: 0.42, sz: 25, tint: "accent" as TintRole },
+                { u: 0.96, ang: -0.15, sz: 20, tint: "accent" as TintRole },
+            ];
+        orchidSpots.forEach((fl, fi) => {
             const idx = Math.round(fl.u * (scape.points.length - 1));
             const ts = lerp(scape.t0, scape.t1, fl.u) + 0.06;
             ornaments.push({
@@ -2327,7 +3226,7 @@ export function generateBotanicalScene(
                 size: fl.sz * S * orchidScale,
                 rotation: rand(-0.35, 0.35),
                 tint: fl.tint,
-                profile: fi === 2,
+                profile: fi === orchidSpots.length - 1,
                 t0: ts,
                 t1: ts + 0.32,
                 phase: rand(0, 6.28),
@@ -2335,35 +3234,56 @@ export function generateBotanicalScene(
                 vel: 0,
             });
         });
+        // 花葶顶端含苞兰蕾与中段主花形成主次呼应
+        ornaments.push({
+            kind: "orchidBlossom",
+            ghost: false,
+            branch: scape,
+            idx: scape.points.length - 1,
+            angleOffset: 0.06,
+            size: 12 * S * orchidScale,
+            rotation: -0.18,
+            tint: "accent",
+            profile: true,
+            t0: scape.t1 - 0.02,
+            t1: scape.t1 + 0.28,
+            phase: rand(0, 6.28),
+            push: 0,
+            vel: 0,
+        });
     } else if (species === "bamboo") {
-        // Summer bamboo: segmented upright culms + antler twigs + sharp "个" leaves
+        // Summer bamboo: segmented upright culms piercing top edge on wide desktop ("竹不见梢")
         const bambooScale = isNarrow ? 0.85 : 1;
+        const pierceTop = !isNarrow && !embedded;
         const culms = isNarrow
             ? [
                 {
                     ghost: true,
+                    midground: false,
                     rx: 14,
                     tx: 108,
-                    hSpan: 215,
-                    w0: 1.8,
+                    topY: rootY - 215 * S,
+                    w0: 1.85,
                     nodes: [0.28, 0.58, 0.86],
                     t0: 0.12,
                 },
                 {
                     ghost: false,
+                    midground: false,
                     rx: 54,
                     tx: 185,
-                    hSpan: 245,
-                    w0: 3.1,
+                    topY: rootY - 245 * S,
+                    w0: 3.8,
                     nodes: [0.22, 0.46, 0.70, 0.90],
                     t0: 0.0,
                 },
                 {
                     ghost: false,
+                    midground: false,
                     rx: 96,
                     tx: 272,
-                    hSpan: 210,
-                    w0: 2.4,
+                    topY: rootY - 210 * S,
+                    w0: 2.8,
                     nodes: [0.26, 0.54, 0.82],
                     t0: 0.08,
                 },
@@ -2371,29 +3291,32 @@ export function generateBotanicalScene(
             : [
                 {
                     ghost: true,
+                    midground: false,
                     rx: 22,
-                    tx: 130,
-                    hSpan: 440,
-                    w0: 2.2,
+                    tx: 165,
+                    topY: pierceTop ? h - 540 * S : Math.max(54, h - 460 * S),
+                    w0: 2.3,
                     nodes: [0.24, 0.48, 0.72, 0.92],
                     t0: 0.12,
                 },
                 {
                     ghost: false,
-                    rx: 92,
-                    tx: 260,
-                    hSpan: 590,
-                    w0: 4.0,
-                    nodes: [0.18, 0.36, 0.54, 0.72, 0.88],
+                    midground: false,
+                    rx: 108,
+                    tx: pierceTop ? 385 : 295,
+                    topY: pierceTop ? -26 * S : 52,
+                    w0: 5.6,
+                    nodes: [0.16, 0.34, 0.52, 0.70, 0.86],
                     t0: 0.0,
                 },
                 {
                     ghost: false,
-                    rx: 165,
-                    tx: 420,
-                    hSpan: 510,
-                    w0: 3.0,
-                    nodes: [0.22, 0.45, 0.68, 0.88],
+                    midground: true,
+                    rx: 190,
+                    tx: pierceTop ? 505 : 455,
+                    topY: pierceTop ? -10 * S : Math.max(60, h - 520 * S),
+                    w0: 3.8,
+                    nodes: [0.20, 0.42, 0.66, 0.86],
                     t0: 0.08,
                 },
             ];
@@ -2405,7 +3328,7 @@ export function generateBotanicalScene(
             };
             const p3 = {
                 x: w - cfg.tx * S,
-                y: (isNarrow ? rootY : h) - cfg.hSpan * S,
+                y: cfg.topY,
             };
             const culm = sampleBranch(
                 p0,
@@ -2419,14 +3342,15 @@ export function generateBotanicalScene(
                 },
                 p3,
                 {
-                    steps: 40,
+                    steps: 42,
                     widthStart: cfg.w0 * S,
-                    widthEnd: cfg.w0 * 0.38 * S,
+                    widthEnd: cfg.w0 * 0.40 * S,
                     t0: cfg.t0,
                     t1: cfg.t0 + 0.44,
                     flexSpan: 0.65,
                     phase: ci * 1.1,
                     ghost: cfg.ghost,
+                    midground: cfg.midground,
                     bambooNodes: cfg.nodes,
                 },
                 rng,
@@ -2439,7 +3363,7 @@ export function generateBotanicalScene(
                 const anc = culm.points[pIdx];
                 const dir = (ni + ci) % 2 === 0 ? -1 : 1;
                 const twigAng = anc.angle + dir * rand(0.55, 0.82);
-                const twigLen = (isNarrow ? 64 : 112) * S * (1 - nu * 0.25);
+                const twigLen = (isNarrow ? 64 : 122) * S * (1 - nu * 0.22);
                 const tp3 = {
                     x: anc.x + Math.cos(twigAng) * twigLen,
                     y: anc.y + Math.sin(twigAng) * twigLen,
@@ -2465,52 +3389,135 @@ export function generateBotanicalScene(
                         flexSpan: 0.48,
                         phase: ni * 0.9 + ci,
                         ghost: cfg.ghost,
+                        midground: cfg.midground,
                         parentRef: { branch: culm, idx: pIdx },
                     },
                     rng,
                 );
                 branches.push(twig);
 
-                // Classic "个" / "介" 3-leaf cluster at twig tip
-                const leafCluster = [
-                    {
-                        ang: -0.52,
-                        len: 54,
-                        curve: 0.14,
-                        tint: "ink" as TintRole,
-                    },
-                    {
-                        ang: 0.04,
-                        len: 64,
-                        curve: 0.08,
-                        tint: (ni === cfg.nodes.length - 1 && !cfg.ghost)
-                            ? "accent" as TintRole
-                            : "ink" as TintRole,
-                    },
-                    {
-                        ang: 0.56,
-                        len: 48,
-                        curve: -0.15,
-                        tint: ni % 2 === 0
-                            ? "sub" as TintRole
-                            : "ink" as TintRole,
-                    },
-                ];
+                // 惊风撇竹 · 个介错节叠叶：错落着生于 0.52 / 0.76 / 1.0 小节，顺风向左下披拂（不对称）
+                const leafCluster = cfg.ghost
+                    ? [
+                        {
+                            uSpot: 0.72,
+                            ang: -0.32,
+                            len: 44,
+                            curve: 0.14,
+                            tint: "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 1.0,
+                            ang: 0.28,
+                            len: 38,
+                            curve: -0.10,
+                            tint: ni === cfg.nodes.length - 1
+                                ? "sub" as TintRole
+                                : "ink" as TintRole,
+                        },
+                    ]
+                    : cfg.midground
+                    ? [
+                        {
+                            uSpot: 0.58,
+                            ang: -0.46,
+                            len: 42,
+                            curve: 0.15,
+                            tint: "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 0.82,
+                            ang: -0.06,
+                            len: 56,
+                            curve: 0.10,
+                            tint: "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 1.0,
+                            ang: 0.22,
+                            len: 48,
+                            curve: 0.08,
+                            tint: ni % 2 === 0
+                                ? "sub" as TintRole
+                                : "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 1.0,
+                            ang: 0.44,
+                            len: 38,
+                            curve: 0.14,
+                            tint: "ink" as TintRole,
+                        },
+                    ]
+                    : [
+                        {
+                            uSpot: 0.52,
+                            ang: -0.56,
+                            len: 40,
+                            curve: -0.14,
+                            tint: "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 0.76,
+                            ang: -0.10,
+                            len: 74,
+                            curve: 0.12,
+                            tint: "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 0.76,
+                            ang: 0.24,
+                            len: 58,
+                            curve: 0.16,
+                            tint: ni % 2 === 0
+                                ? "sub" as TintRole
+                                : "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 1.0,
+                            ang: 0.06,
+                            len: 52,
+                            curve: 0.11,
+                            tint: (ni === cfg.nodes.length - 1)
+                                ? "accent" as TintRole
+                                : "ink" as TintRole,
+                        },
+                        {
+                            uSpot: 1.0,
+                            ang: 0.34,
+                            len: 48,
+                            curve: 0.18,
+                            tint: "ink" as TintRole,
+                        },
+                        ...(ni % 2 === 1
+                            ? [{
+                                uSpot: 0.52,
+                                ang: 0.22,
+                                len: 38,
+                                curve: 0.09,
+                                tint: "ink" as TintRole,
+                            }]
+                            : []),
+                    ];
                 leafCluster.forEach((lf, li) => {
+                    const spotIdx = Math.round(
+                        lf.uSpot * (twig.points.length - 1),
+                    );
                     ornaments.push({
                         kind: "bambooLeaf",
                         ghost: cfg.ghost,
+                        midground: cfg.midground,
                         branch: twig,
-                        idx: twig.points.length - 1,
-                        angleOffset: lf.ang + rand(-0.08, 0.08),
+                        idx: spotIdx,
+                        angleOffset: lf.ang + rand(-0.06, 0.06),
                         len: lf.len * S * bambooScale,
-                        width: 6.2 * S * bambooScale,
+                        width: 6.4 * S * bambooScale,
                         curve: lf.curve,
-                        feibai: !cfg.ghost && li === 1,
+                        feibai: !cfg.ghost && !cfg.midground && li === 1,
                         tint: lf.tint,
                         profile: false,
-                        t0: twig.t1 - 0.02 + li * 0.04,
-                        t1: twig.t1 + 0.24 + li * 0.04,
+                        t0: twig.t1 - 0.04 + li * 0.03,
+                        t1: twig.t1 + 0.22 + li * 0.03,
                         phase: rand(0, 6.28),
                         push: 0,
                         vel: 0,
@@ -2519,27 +3526,29 @@ export function generateBotanicalScene(
             });
         });
     } else if (species === "maple") {
-        // Autumn maple: cliff-hanging sweeping branch (desktop) / gnarled lateral bough (narrow)
+        // Autumn maple: 桌面端高崖横柯零穿插避让搜索框 / 窄屏保持侧生古干
         const mapleScale = isNarrow ? 0.84 : 1;
-        const mainP0 = isNarrow
-            ? { x: rootX - 6 * S, y: rootY - 12 * S }
-            : { x: rootX + 4 * S, y: Math.max(185 * S, h * 0.24) };
-        const mainP3 = isNarrow
-            ? { x: w - 265 * S, y: rootY - 195 * S }
-            : { x: w - 455 * S, y: Math.min(h - 140 * S, h * 0.56) };
+        const mainP0 = isNarrow ? { x: rootX - 6 * S, y: rootY - 12 * S } : {
+            x: rootX + 18 * S,
+            y: embedded ? Math.max(56, 92 * S) : Math.max(68 * S, h * 0.085),
+        };
+        const mainP3 = isNarrow ? { x: w - 265 * S, y: rootY - 195 * S } : {
+            x: w - rand(380, 425) * S,
+            y: embedded ? 275 * S : h * 0.31,
+        };
         const main = sampleBranch(
             mainP0,
             isNarrow
                 ? { x: mainP0.x - 55 * S, y: mainP0.y - 95 * S }
-                : { x: mainP0.x - 135 * S, y: mainP0.y + 42 * S },
+                : { x: mainP0.x - 140 * S, y: mainP0.y + 24 * S },
             isNarrow
                 ? { x: mainP3.x + 85 * S, y: mainP3.y + 24 * S }
-                : { x: mainP3.x + 150 * S, y: mainP3.y - 75 * S },
+                : { x: mainP3.x + 125 * S, y: mainP3.y - 36 * S },
             mainP3,
             {
                 steps: 42,
-                widthStart: (isNarrow ? 3.2 : 4.2) * S,
-                widthEnd: 0.7 * S,
+                widthStart: (isNarrow ? 4.8 : 8.2) * S,
+                widthEnd: 0.66 * S,
                 t0: 0.0,
                 t1: 0.48,
                 flexSpan: 0.72,
@@ -2557,32 +3566,40 @@ export function generateBotanicalScene(
                 { u: 0.82, ang: -2.45, len: 74 * S },
             ]
             : [
-                { u: 0.28, ang: 2.25, len: 185 * S },
-                { u: 0.54, ang: -2.35, len: 165 * S },
-                { u: 0.78, ang: 2.55, len: 135 * S },
+                { u: 0.26, ang: 2.02, len: 225 * S },
+                { u: 0.56, ang: -2.82, len: 185 * S },
+                { u: 0.84, ang: 1.72, len: 165 * S },
             ];
         subCfgs.forEach((sc, si) => {
             const pIdx = Math.round(sc.u * (main.points.length - 1));
             const anc = main.points[pIdx];
             const sp3 = {
                 x: anc.x + Math.cos(sc.ang) * sc.len,
-                y: anc.y + Math.sin(sc.ang) * sc.len,
+                y: isNarrow
+                    ? anc.y + Math.sin(sc.ang) * sc.len
+                    : Math.max(54, anc.y + Math.sin(sc.ang) * sc.len),
             };
             const ts = lerp(main.t0, main.t1, sc.u);
             const sub = sampleBranch(
                 { x: anc.x, y: anc.y },
                 {
                     x: lerp(anc.x, sp3.x, 0.38) - 10 * S,
-                    y: lerp(anc.y, sp3.y, 0.38) - 12 * S,
+                    y: Math.max(
+                        54,
+                        lerp(anc.y, sp3.y, 0.38) - (isNarrow ? 12 : 4) * S,
+                    ),
                 },
                 {
                     x: lerp(anc.x, sp3.x, 0.72) + 8 * S,
-                    y: lerp(anc.y, sp3.y, 0.72) + 8 * S,
+                    y: Math.max(
+                        54,
+                        lerp(anc.y, sp3.y, 0.72) + 6 * S,
+                    ),
                 },
                 sp3,
                 {
                     steps: 20,
-                    widthStart: 1.55 * S,
+                    widthStart: (isNarrow ? 1.85 : 2.55) * S,
                     widthEnd: 0.5 * S,
                     t0: ts,
                     t1: ts + 0.22,
@@ -2595,24 +3612,43 @@ export function generateBotanicalScene(
             );
             branches.push(sub);
 
-            [0.52, 0.96].forEach((lu, li) => {
-                const lIdx = Math.round(lu * (sub.points.length - 1));
-                const lt = lerp(sub.t0, sub.t1, lu) + 0.04;
+            const leafOffsets = [
+                { u: 0.36, ang: -0.62, sz: 24, rot: -0.25, profile: true },
+                { u: 0.56, ang: 0.38, sz: 31, rot: 0.18, profile: false },
+                { u: 0.84, ang: -0.42, sz: 28, rot: -0.14, profile: false },
+                {
+                    u: 0.97,
+                    ang: 0.22,
+                    sz: 35,
+                    rot: 0.22,
+                    profile: si % 2 === 1,
+                },
+            ];
+            leafOffsets.forEach((lf, li) => {
+                const lIdx = Math.round(lf.u * (sub.points.length - 1));
+                const lt = lerp(sub.t0, sub.t1, lf.u) + 0.03;
+                const mapleTint: TintRole = solar.phenologyStage === "frost"
+                    ? ((si + li) % 4 === 0
+                        ? "ink"
+                        : (si + li) % 3 === 0
+                        ? "sub"
+                        : "accent")
+                    : (si + li) % 3 === 0
+                    ? "accent"
+                    : (si + li) % 2 === 0
+                    ? "sub"
+                    : "ink";
                 ornaments.push({
                     kind: "mapleLeaf",
                     ghost: false,
                     branch: sub,
                     idx: lIdx,
-                    angleOffset: (li === 0 ? -0.55 : 0.25) + rand(-0.15, 0.15),
-                    size: rand(26, 36) * S * mapleScale,
-                    stemLen: 12 * S * mapleScale,
-                    rotation: rand(-0.4, 0.4),
-                    tint: (si + li) % 3 === 0
-                        ? "accent"
-                        : (si + li) % 2 === 0
-                        ? "sub"
-                        : "ink",
-                    profile: false,
+                    angleOffset: lf.ang + rand(-0.12, 0.12),
+                    size: lf.sz * rand(0.90, 1.12) * S * mapleScale,
+                    stemLen: rand(10, 14) * S * mapleScale,
+                    rotation: lf.rot + rand(-0.2, 0.2),
+                    tint: mapleTint,
+                    profile: lf.profile,
                     t0: lt,
                     t1: lt + 0.32,
                     phase: rand(0, 6.28),
@@ -2622,32 +3658,191 @@ export function generateBotanicalScene(
             });
         });
 
-        [0.88, 1.0].forEach((u, mi) => {
+        [0.44, 0.68, 0.88, 1.0].forEach((u, mi) => {
             const mIdx = Math.round(u * (main.points.length - 1));
             ornaments.push({
                 kind: "mapleLeaf",
                 ghost: false,
                 branch: main,
                 idx: mIdx,
-                angleOffset: mi === 0 ? -0.45 : 0.18,
-                size: (mi === 1 ? 38 : 30) * S * mapleScale,
-                stemLen: 13 * S * mapleScale,
+                angleOffset: mi % 2 === 0 ? -0.52 : 0.24,
+                size: (mi === 3 ? 38 : mi === 1 ? 32 : 26) * S * mapleScale,
+                stemLen: 12 * S * mapleScale,
                 rotation: rand(-0.3, 0.3),
-                tint: mi === 1 ? "accent" : "sub",
-                profile: false,
-                t0: main.t1 - 0.04 + mi * 0.05,
-                t1: main.t1 + 0.30 + mi * 0.05,
+                tint: mi === 3 || mi === 0
+                    ? "accent"
+                    : mi === 1
+                    ? "ink"
+                    : "sub",
+                profile: mi === 1,
+                t0: main.t1 - 0.08 + mi * 0.04,
+                t1: main.t1 + 0.26 + mi * 0.04,
                 phase: rand(0, 6.28),
                 push: 0,
                 vel: 0,
             });
         });
+
+        // Wide midground companion maple bough for layered canopy depth (kept clear of search zone)
+        if (!isNarrow) {
+            const midP0 = { x: rootX + 12 * S, y: mainP0.y + 135 * S };
+            const midP3 = {
+                x: w - rand(240, 280) * S,
+                y: mainP0.y + 285 * S,
+            };
+            const midMaple = sampleBranch(
+                midP0,
+                { x: midP0.x - 105 * S, y: midP0.y + 36 * S },
+                { x: midP3.x + 110 * S, y: midP3.y - 42 * S },
+                midP3,
+                {
+                    steps: 28,
+                    widthStart: 3.2 * S,
+                    widthEnd: 0.55 * S,
+                    t0: 0.14,
+                    t1: 0.56,
+                    flexSpan: 0.82,
+                    phase: 1.7,
+                    midground: true,
+                    wobble: 1.2 * S,
+                },
+                rng,
+            );
+            branches.push(midMaple);
+            [0.48, 0.74, 0.96].forEach((mu, mi) => {
+                const mIdx = Math.round(mu * (midMaple.points.length - 1));
+                ornaments.push({
+                    kind: "mapleLeaf",
+                    ghost: false,
+                    midground: true,
+                    branch: midMaple,
+                    idx: mIdx,
+                    angleOffset: mi === 1 ? 0.42 : -0.48,
+                    size: rand(24, 32) * S,
+                    stemLen: 10 * S,
+                    rotation: rand(-0.3, 0.3),
+                    tint: mi === 2 ? "accent" : "sub",
+                    profile: mi === 0,
+                    t0: lerp(midMaple.t0, midMaple.t1, mu) + 0.04,
+                    t1: lerp(midMaple.t0, midMaple.t1, mu) + 0.32,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            });
+
+            // 红枫主干中上段繁叶画眼簇（红黄墨三色层叠）+ 高空探空独叶细梢
+            const focalIdx = Math.round(0.42 * (main.points.length - 1));
+            const focalT = lerp(main.t0, main.t1, 0.42) + 0.04;
+            [
+                { ang: -0.78, sz: 34, tint: "accent" as TintRole, mid: false },
+                { ang: -0.22, sz: 28, tint: "sub" as TintRole, mid: true },
+                { ang: 0.52, sz: 30, tint: "ink" as TintRole, mid: false },
+            ].forEach((fl, li) => {
+                ornaments.push({
+                    kind: "mapleLeaf",
+                    ghost: false,
+                    midground: fl.mid,
+                    branch: main,
+                    idx: focalIdx,
+                    angleOffset: fl.ang,
+                    size: fl.sz * S,
+                    stemLen: 11 * S,
+                    rotation: rand(-0.28, 0.28),
+                    tint: fl.tint,
+                    profile: li === 1,
+                    t0: focalT + li * 0.04,
+                    t1: focalT + 0.30 + li * 0.04,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            });
+
+            const skyIdx = Math.round(0.88 * (main.points.length - 1));
+            const skyAnc = main.points[skyIdx];
+            const skyEnd = {
+                x: skyAnc.x - 135 * S,
+                y: Math.max(60, skyAnc.y - 52 * S),
+            };
+            const skyMaple = sampleBranch(
+                { x: skyAnc.x, y: skyAnc.y },
+                {
+                    x: lerp(skyAnc.x, skyEnd.x, 0.4) - 10 * S,
+                    y: Math.max(54, lerp(skyAnc.y, skyEnd.y, 0.4) - 14 * S),
+                },
+                {
+                    x: lerp(skyAnc.x, skyEnd.x, 0.78) + 8 * S,
+                    y: Math.max(54, lerp(skyAnc.y, skyEnd.y, 0.78)),
+                },
+                skyEnd,
+                {
+                    steps: 18,
+                    widthStart: 1.15 * S,
+                    widthEnd: 0.30 * S,
+                    t0: lerp(main.t0, main.t1, 0.88),
+                    t1: lerp(main.t0, main.t1, 0.88) + 0.22,
+                    flexSpan: 0.72,
+                    phase: 2.5,
+                    wobble: 0.8 * S,
+                    parentRef: { branch: main, idx: skyIdx },
+                },
+                rng,
+            );
+            branches.push(skyMaple);
+            ornaments.push({
+                kind: "mapleLeaf",
+                ghost: false,
+                branch: skyMaple,
+                idx: skyMaple.points.length - 1,
+                angleOffset: -0.18,
+                size: 36 * S,
+                stemLen: 13 * S,
+                rotation: 0.24,
+                tint: "accent",
+                profile: false,
+                t0: skyMaple.t1 - 0.02,
+                t1: skyMaple.t1 + 0.28,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
+            });
+        }
     }
 
-    if (species === "plum" && resolveSolarTerm(dateKey).isSnowSeason) {
+    if (species === "plum" && solar.isSnowSeason) {
         for (const b of branches) {
             if (!b.ghost && b.widthStart >= 1.4 * S) {
                 b.snowCushions = true;
+            }
+        }
+    }
+
+    // Soft potential-field clearance around center search bar on wide desktop
+    if (!isNarrow && !embedded && species !== "bamboo") {
+        const cx = w * 0.50;
+        const cy = h * 0.43;
+        const rx = 315 * S;
+        const ry = 130 * S;
+        for (const b of branches) {
+            if (b.parentRef || b.ghost) continue;
+            for (const pt of b.points) {
+                const dx = (pt.x - cx) / rx;
+                const dy = (pt.y - cy) / ry;
+                const d2 = dx * dx + dy * dy;
+                if (d2 < 1.0 && d2 > 1e-4) {
+                    const pushOut = (1.0 - d2) * 32 * S;
+                    const invLen = 1 / Math.hypot(dx, dy);
+                    pt.x += dx * invLen * pushOut;
+                    pt.y += dy * invLen * pushOut;
+                }
+            }
+            if (b.points.length > 1) {
+                const p0 = b.points[0];
+                for (let i = 0; i < b.points.length; i++) {
+                    b.points[i].lx = b.points[i].x - p0.x;
+                    b.points[i].ly = b.points[i].y - p0.y;
+                }
             }
         }
     }
@@ -2657,6 +3852,7 @@ export function generateBotanicalScene(
             species,
             branches,
             ornaments,
+            rocks,
             scale: S,
             visitorAnchor: null,
             rewardAnchor: null,
@@ -2856,6 +4052,7 @@ export function generateBotanicalScene(
         species,
         branches,
         ornaments,
+        rocks,
         scale: S,
         visitorAnchor,
         rewardAnchor,
@@ -2870,6 +4067,7 @@ function computeBranchWorldPoints(
     scale: number,
     frameSeq: number,
     breezeImpulse = 0,
+    runtime?: BotanicalRuntimeState,
 ): WorldSample[] {
     if (branch.frameId === frameSeq && branch.worldCache) {
         return branch.worldCache;
@@ -2888,6 +4086,7 @@ function computeBranchWorldPoints(
             scale,
             frameSeq,
             breezeImpulse,
+            runtime,
         );
         const pPt = pWorld[branch.parentRef.idx];
         baseDAngle = pPt.dAngle;
@@ -2898,31 +4097,51 @@ function computeBranchWorldPoints(
     const cosA = Math.cos(baseDAngle);
     const sinA = Math.sin(baseDAngle);
     const waveLag = branch.waveLag ?? 0;
-    const baseBreeze = reducedMotion
-        ? 0
-        : (Math.sin(timeSec * 0.66 + branch.phase) * 0.65 +
-                    Math.sin(timeSec * 1.40 + branch.phase * 1.7 + 1.1) *
-                        0.35) *
-                windCalm +
-            breezeImpulse;
+
+    let gustEnv = 0;
+    let gustAge = 0;
+    if (runtime && !reducedMotion) {
+        if (
+            timeSec >= runtime.gustStartSec &&
+            timeSec <= runtime.gustStartSec + runtime.gustDurationSec
+        ) {
+            const uGust = (timeSec - runtime.gustStartSec) /
+                Math.max(0.1, runtime.gustDurationSec);
+            const s = Math.sin(uGust * Math.PI);
+            gustEnv = s * s * runtime.gustStrength * windCalm;
+            gustAge = timeSec - runtime.gustStartSec;
+        }
+    }
 
     const out: WorldSample[] = new Array(branch.points.length);
     for (let i = 0; i < branch.points.length; i++) {
         const pt = branch.points[i];
         const rx = anchorX + pt.lx * cosA - pt.ly * sinA;
         const ry = anchorY + pt.lx * sinA + pt.ly * cosA;
-        const breeze = waveLag && !reducedMotion
-            ? (Math.sin(timeSec * 0.66 + branch.phase - pt.u * waveLag) *
-                            0.65 +
-                        Math.sin(
-                                timeSec * 1.40 +
-                                    (branch.phase - pt.u * waveLag) * 1.7 +
-                                    1.1,
-                            ) *
-                            0.35) *
-                    windCalm +
-                breezeImpulse
-            : baseBreeze;
+        let breeze = 0;
+        if (!reducedMotion) {
+            if (runtime) {
+                const wavePhase = gustAge * 2.5 - rx * 0.0022 - pt.u * waveLag +
+                    branch.phase;
+                const gustWave = gustEnv > 0
+                    ? (Math.sin(wavePhase) * 0.65 +
+                        Math.sin(wavePhase * 1.68 + 0.9) * 0.35) * gustEnv
+                    : 0;
+                breeze = gustWave + breezeImpulse;
+            } else {
+                breeze =
+                    (Math.sin(timeSec * 0.66 + branch.phase - pt.u * waveLag) *
+                                0.65 +
+                            Math.sin(
+                                    timeSec * 1.40 +
+                                        (branch.phase - pt.u * waveLag) * 1.7 +
+                                        1.1,
+                                ) *
+                                0.35) *
+                        windCalm +
+                    breezeImpulse;
+            }
+        }
         const amp = 7.5 * scale * pt.localFlex;
         const ldx = breeze * amp;
         const ldy = Math.abs(breeze) * amp * 0.24;
@@ -2940,6 +4159,245 @@ function computeBranchWorldPoints(
     return out;
 }
 
+function drawRockBase(
+    ctx: CanvasRenderingContext2D,
+    rock: RockStroke,
+    rawProgress: number,
+    scale: number,
+    pal: BotanicalPalette,
+): void {
+    const rp = easeOutCubic(
+        clamp((rawProgress - rock.t0) / (rock.t1 - rock.t0), 0, 1),
+    );
+    if (rp <= 0.02 || rock.points.length < 3) return;
+    const pts = rock.points;
+
+    let minX = pts[0].x;
+    let maxX = pts[0].x;
+    let minY = pts[0].y;
+    let maxY = pts[0].y;
+    for (let i = 1; i < pts.length; i++) {
+        if (pts[i].x < minX) minX = pts[i].x;
+        if (pts[i].x > maxX) maxX = pts[i].x;
+        if (pts[i].y < minY) minY = pts[i].y;
+        if (pts[i].y > maxY) maxY = pts[i].y;
+    }
+
+    const traceSmoothRock = () => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+            const prev = pts[i - 1];
+            const curr = pts[i];
+            ctx.quadraticCurveTo(
+                prev.x,
+                prev.y,
+                (prev.x + curr.x) * 0.5,
+                (prev.y + curr.y) * 0.5,
+            );
+        }
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.closePath();
+    };
+
+    // 1. 浑厚没骨石体晕染（偏心径向渐变：有顶无脚，石根化入画布）
+    ctx.save();
+    traceSmoothRock();
+    const focalX = lerp(minX, maxX, 0.42);
+    const focalY = lerp(minY, maxY, 0.22);
+    const rockR = Math.max(8, (maxX - minX) * 0.85);
+    const washGrad = ctx.createRadialGradient(
+        focalX,
+        focalY,
+        Math.max(1, rockR * 0.08),
+        focalX,
+        lerp(minY, maxY, 0.48),
+        rockR,
+    );
+    washGrad.addColorStop(
+        0,
+        pal.inkGrade("zhong", (pal.isDark ? 0.26 : 0.36) * rp),
+    );
+    washGrad.addColorStop(
+        0.55,
+        pal.wash("sub", (pal.isDark ? 0.16 : 0.24) * rp),
+    );
+    washGrad.addColorStop(1, pal.inkGrade("qing", 0));
+    ctx.fillStyle = washGrad;
+    ctx.fill();
+
+    // 2. 破墨内层石腹体量
+    ctx.save();
+    const cx = (minX + maxX) * 0.5;
+    const cy = (minY + maxY) * 0.5;
+    ctx.translate(cx + 3.2 * scale, cy + 2.4 * scale);
+    ctx.scale(0.84, 0.80);
+    ctx.translate(-cx, -cy);
+    traceSmoothRock();
+    const innerGrad = ctx.createLinearGradient(
+        cx,
+        minY,
+        cx,
+        Math.max(minY + 4, maxY),
+    );
+    innerGrad.addColorStop(
+        0,
+        pal.inkGrade("nong", (pal.isDark ? 0.20 : 0.26) * rp),
+    );
+    innerGrad.addColorStop(1, pal.inkGrade("qing", 0));
+    ctx.fillStyle = innerGrad;
+    ctx.fill();
+    ctx.restore();
+
+    // 3. 圆融披麻/折带飞白弧皴（沿石脊平滑样条采样，两头鼠尾尖收，零几何硬折线）
+    const ridgePtsRaw = pts.slice(1, Math.min(pts.length, 5));
+    if (ridgePtsRaw.length >= 3) {
+        const samples = 18;
+        const spine: Point2D[] = [];
+        for (let i = 0; i <= samples; i++) {
+            const u = (i / samples) * rp;
+            const segF = u * (ridgePtsRaw.length - 1);
+            const idx = Math.min(ridgePtsRaw.length - 2, Math.floor(segF));
+            const localT = segF - idx;
+            const p0 = idx === 0 ? ridgePtsRaw[0] : {
+                x: (ridgePtsRaw[idx - 1].x + ridgePtsRaw[idx].x) * 0.5,
+                y: (ridgePtsRaw[idx - 1].y + ridgePtsRaw[idx].y) * 0.5,
+            };
+            const p1 = ridgePtsRaw[idx];
+            const p2 = idx + 1 === ridgePtsRaw.length - 1
+                ? ridgePtsRaw[idx + 1]
+                : {
+                    x: (ridgePtsRaw[idx].x + ridgePtsRaw[idx + 1].x) * 0.5,
+                    y: (ridgePtsRaw[idx].y + ridgePtsRaw[idx + 1].y) * 0.5,
+                };
+            const omt = 1 - localT;
+            spine.push({
+                x: omt * omt * p0.x + 2 * omt * localT * p1.x +
+                    localT * localT * p2.x,
+                y: omt * omt * p0.y + 2 * omt * localT * p1.y +
+                    localT * localT * p2.y,
+            });
+        }
+        const upper: Point2D[] = [];
+        const lower: Point2D[] = [];
+        const slitUp: Point2D[] = [];
+        const slitLo: Point2D[] = [];
+        for (let i = 0; i < spine.length; i++) {
+            const p = spine[i];
+            const next = spine[Math.min(spine.length - 1, i + 1)];
+            const prev = spine[Math.max(0, i - 1)];
+            const tang = Math.atan2(next.y - prev.y, next.x - prev.x);
+            const nx = -Math.sin(tang);
+            const ny = Math.cos(tang);
+            const env = Math.sin((i / (spine.length - 1)) * Math.PI);
+            const hw = (0.28 + 2.15 * env) * scale;
+            upper.push({ x: p.x + nx * hw * 0.45, y: p.y + ny * hw * 0.45 });
+            lower.push({ x: p.x - nx * hw, y: p.y - ny * hw });
+            if (i >= 4 && i <= 14) {
+                const sEnv = Math.sin(((i - 4) / 10) * Math.PI);
+                const sr = Math.max(0.18, 0.42 * sEnv * scale);
+                slitUp.push({
+                    x: p.x - nx * hw * 0.25 + nx * sr,
+                    y: p.y - ny * hw * 0.25 + ny * sr,
+                });
+                slitLo.push({
+                    x: p.x - nx * hw * 0.25 - nx * sr,
+                    y: p.y - ny * hw * 0.25 - ny * sr,
+                });
+            }
+        }
+        ctx.beginPath();
+        ctx.moveTo(upper[0].x, upper[0].y);
+        for (let i = 1; i < upper.length; i++) {
+            ctx.lineTo(upper[i].x, upper[i].y);
+        }
+        for (let i = lower.length - 1; i >= 0; i--) {
+            ctx.lineTo(lower[i].x, lower[i].y);
+        }
+        ctx.closePath();
+        if (slitUp.length >= 3) {
+            ctx.moveTo(slitUp[0].x, slitUp[0].y);
+            for (let i = 1; i < slitUp.length; i++) {
+                ctx.lineTo(slitUp[i].x, slitUp[i].y);
+            }
+            for (let i = slitLo.length - 1; i >= 0; i--) {
+                ctx.lineTo(slitLo[i].x, slitLo[i].y);
+            }
+            ctx.closePath();
+        }
+        ctx.fillStyle = pal.inkGrade("nong", (pal.isDark ? 0.38 : 0.62) * rp);
+        ctx.fill("evenodd");
+    }
+
+    // 内部柔和弯曲的新月形淡墨石理弧影
+    if (pts.length >= 5) {
+        const c0 = {
+            x: lerp(pts[2].x, pts[1].x, 0.35),
+            y: lerp(pts[2].y, pts[1].y, 0.35) + 6 * scale,
+        };
+        const c1 = {
+            x: lerp(pts[2].x, pts[0].x, 0.58),
+            y: lerp(pts[2].y, pts[0].y, 0.52),
+        };
+        ctx.beginPath();
+        ctx.moveTo(c0.x, c0.y);
+        ctx.quadraticCurveTo(
+            lerp(c0.x, c1.x, 0.5) - 5 * scale,
+            lerp(c0.y, c1.y, 0.5) - 3 * scale,
+            c1.x,
+            c1.y,
+        );
+        ctx.quadraticCurveTo(
+            lerp(c0.x, c1.x, 0.5) + 1.5 * scale,
+            lerp(c0.y, c1.y, 0.5) + 2.5 * scale,
+            c0.x,
+            c0.y,
+        );
+        ctx.closePath();
+        ctx.fillStyle = pal.inkGrade("zhong", (pal.isDark ? 0.22 : 0.34) * rp);
+        ctx.fill();
+    }
+
+    // 4. 攒三聚五点苔：焦墨苔点与矿物赭绿点缀相生
+    for (let mi = 0; mi < rock.mossDots.length; mi++) {
+        const m = rock.mossDots[mi];
+        ctx.beginPath();
+        ctx.ellipse(m.x, m.y, m.rx, m.ry, m.rot, 0, Math.PI * 2);
+        ctx.fillStyle = mi % 3 === 1
+            ? pal.wash("sub", (pal.isDark ? 0.42 : 0.58) * rp)
+            : pal.inkGrade("jiao", (pal.isDark ? 0.56 : 0.82) * rp);
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function strokeWaterline(
+    ctx: CanvasRenderingContext2D,
+    tint: TintRole,
+    pal: BotanicalPalette,
+    scale: number,
+    alpha: number,
+    span = 18,
+): void {
+    ctx.save();
+    const gradSpan = Math.max(4, span * scale);
+    const grad = ctx.createLinearGradient(
+        0,
+        0,
+        gradSpan,
+        gradSpan * 0.35,
+    );
+    grad.addColorStop(0, pal.waterline(tint, 0));
+    grad.addColorStop(0.45, pal.waterline(tint, alpha * 0.45));
+    grad.addColorStop(1, pal.waterline(tint, alpha));
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = Math.max(0.36, 0.54 * scale);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
+    ctx.restore();
+}
+
 function drawTaperedBranch(
     ctx: CanvasRenderingContext2D,
     branch: BranchData,
@@ -2952,6 +4410,7 @@ function drawTaperedBranch(
     frameSeq: number,
     pal: BotanicalPalette,
     breezeImpulse = 0,
+    runtime?: BotanicalRuntimeState,
 ): void {
     const bp = easeOutCubic(
         clamp((rawProgress - branch.t0) / (branch.t1 - branch.t0), 0, 1),
@@ -2967,23 +4426,63 @@ function drawTaperedBranch(
         scale,
         frameSeq,
         breezeImpulse,
+        runtime,
     );
     const totalSegs = pts.length - 1;
     const maxFloat = bp * totalSegs;
     const maxIdx = Math.floor(maxFloat);
     const frac = maxFloat - maxIdx;
-    const layerA = branch.ghost ? 0.22 : 1.0;
+    const layerA = branch.ghost ? 0.15 : branch.midground ? 0.45 : 1.0;
     const isFern = species === "fern";
-    const widthBoost = isFern
-        ? (branch.ghost ? 0.92 : 1.18)
-        : (branch.ghost ? 1.0 : branch.parentRef ? 1.32 : 1.65);
+    const isOrchidBlade = branch.brushStyle === "orchid-blade";
+    const isIronPlum = branch.brushStyle === "iron-plum";
+    const widthBoost = isFern || isOrchidBlade
+        ? (branch.ghost ? 0.92 : branch.midground ? 1.05 : 1.18)
+        : (branch.ghost
+            ? 1.0
+            : branch.midground
+            ? 1.15
+            : branch.parentRef
+            ? 1.25
+            : 1.48);
 
     const calcHalfWidth = (u: number): number => {
-        const cadenceAmp = isFern ? 0.09 : 0.24;
+        if (isOrchidBlade) {
+            // Orchid blade:藏锋起笔 → 螳螂肚 → 腰眼窄折 → 长锋鼠尾
+            const twistU = branch.twistU ?? 0.56;
+            const belly = Math.sin(Math.pow(u, 0.72) * Math.PI);
+            const twistPinch = 1 -
+                0.76 * Math.exp(-Math.pow((u - twistU) / 0.075, 2));
+            const tipTaper = u > 0.76 ? lerp(1, 0.14, (u - 0.76) / 0.24) : 1;
+            return Math.max(
+                0.22,
+                branch.widthStart * (0.28 + 0.95 * belly) * twistPinch *
+                    tipTaper * 0.5,
+            );
+        }
+        if (branch.bambooNodes && branch.bambooNodes.length > 0) {
+            // Bamboo culm: slender mid-internode, slight flare at node ends
+            let nodeFlare = 1;
+            for (const nu of branch.bambooNodes) {
+                const dist = Math.abs(u - nu);
+                if (dist < 0.045) {
+                    nodeFlare = Math.max(
+                        nodeFlare,
+                        1 + 0.22 * (1 - dist / 0.045),
+                    );
+                }
+            }
+            return Math.max(
+                0.25,
+                lerp(branch.widthStart, branch.widthEnd, u) * widthBoost *
+                    nodeFlare * 0.5,
+            );
+        }
+        const cadenceAmp = isFern ? 0.09 : isIronPlum ? 0.30 : 0.24;
         const cadence = 1 +
             cadenceAmp * Math.sin(u * Math.PI * 4.5 + branch.phase * 2.1) *
                 Math.sin(u * Math.PI);
-        const tipTaper = u > 0.78 ? lerp(1, 0.22, (u - 0.78) / 0.22) : 1;
+        const tipTaper = u > 0.78 ? lerp(1, 0.20, (u - 0.78) / 0.22) : 1;
         return Math.max(
             0.25,
             lerp(branch.widthStart, branch.widthEnd, u) * widthBoost * cadence *
@@ -3019,6 +4518,165 @@ function drawTaperedBranch(
     }
     if (spine.length < 2) return;
 
+    // Layer A: Soft wet-ink bleed on Xuan paper (skip for ghost/midground/segmented bamboo)
+    if (!branch.ghost && !branch.midground && !branch.bambooNodes) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(spine[0].x, spine[0].y);
+        for (let i = 1; i < spine.length; i++) {
+            ctx.lineTo(spine[i].x, spine[i].y);
+        }
+        ctx.strokeStyle = pal.wash(
+            "ink",
+            isFern || isOrchidBlade ? 0.14 : 0.30,
+        );
+        ctx.lineWidth = Math.max(
+            1.2,
+            (branch.widthStart + branch.widthEnd) *
+                    (isFern || isOrchidBlade ? 0.52 : 0.68) +
+                (isFern || isOrchidBlade ? 1.0 : 2.1) * scale,
+        );
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // Segmented bamboo culms: draw each internode with crisp 3-4px breathing gap
+    if (branch.bambooNodes && branch.bambooNodes.length > 0) {
+        const sampleSpineAt = (targetU: number) => {
+            if (targetU <= spine[0].u) return spine[0];
+            const last = spine[spine.length - 1];
+            if (targetU >= last.u) return last;
+            for (let i = 0; i < spine.length - 1; i++) {
+                const a = spine[i];
+                const b = spine[i + 1];
+                if (targetU >= a.u && targetU <= b.u) {
+                    const span = Math.max(1e-6, b.u - a.u);
+                    const t = (targetU - a.u) / span;
+                    return {
+                        x: lerp(a.x, b.x, t),
+                        y: lerp(a.y, b.y, t),
+                        angle: lerp(a.angle, b.angle, t),
+                        hw: lerp(a.hw, b.hw, t),
+                        u: targetU,
+                    };
+                }
+            }
+            return last;
+        };
+
+        const approxLen = Math.max(
+            40,
+            Math.hypot(
+                spine[spine.length - 1].x - spine[0].x,
+                spine[spine.length - 1].y - spine[0].y,
+            ),
+        );
+        const halfGap = clamp((1.75 * scale) / approxLen, 0.0018, 0.0045);
+        const maxU = spine[spine.length - 1].u;
+        const breaks = [...branch.bambooNodes].sort((a, b) => a - b);
+        const ranges: Array<[number, number]> = [];
+        let prevU = 0;
+        for (const nu of breaks) {
+            if (nu - halfGap > prevU && prevU < maxU) {
+                ranges.push([
+                    prevU,
+                    Math.min(maxU, Math.max(prevU, nu - halfGap)),
+                ]);
+            }
+            prevU = Math.min(1, nu + halfGap);
+        }
+        if (prevU < maxU) {
+            ranges.push([prevU, maxU]);
+        }
+
+        for (const [rStart, rEnd] of ranges) {
+            if (rEnd - rStart < 0.004) continue;
+            const segPts = [
+                sampleSpineAt(rStart),
+                ...spine.filter((p) => p.u > rStart && p.u < rEnd),
+                sampleSpineAt(rEnd),
+            ];
+            if (segPts.length < 2) continue;
+            const lEdge: Point2D[] = [];
+            const rEdge: Point2D[] = [];
+            for (const p of segPts) {
+                const nx = -Math.sin(p.angle);
+                const ny = Math.cos(p.angle);
+                lEdge.push({ x: p.x + nx * p.hw, y: p.y + ny * p.hw });
+                rEdge.push({ x: p.x - nx * p.hw, y: p.y - ny * p.hw });
+            }
+            const midP = segPts[Math.floor(segPts.length * 0.5)];
+            const mNx = -Math.sin(midP.angle);
+            const mNy = Math.cos(midP.angle);
+            const gradSpan = Math.max(1.5, midP.hw);
+            const culmGrad = ctx.createLinearGradient(
+                midP.x + mNx * gradSpan,
+                midP.y + mNy * gradSpan,
+                midP.x - mNx * gradSpan,
+                midP.y - mNy * gradSpan,
+            );
+            // 圆劲碧玉墨竹：背光焦墨 → 中腹重墨 → 受光清淡
+            culmGrad.addColorStop(0, pal.inkGrade("jiao", 0.94 * layerA));
+            culmGrad.addColorStop(0.55, pal.inkGrade("zhong", 0.70 * layerA));
+            culmGrad.addColorStop(1, pal.inkGrade("dan", 0.44 * layerA));
+
+            ctx.beginPath();
+            ctx.moveTo(lEdge[0].x, lEdge[0].y);
+            for (let i = 1; i < lEdge.length; i++) {
+                ctx.lineTo(lEdge[i].x, lEdge[i].y);
+            }
+            for (let i = rEdge.length - 1; i >= 0; i--) {
+                ctx.lineTo(rEdge[i].x, rEdge[i].y);
+            }
+            ctx.closePath();
+            ctx.fillStyle = culmGrad;
+            ctx.fill();
+
+            if (!branch.ghost && !branch.midground) {
+                ctx.fillStyle = pal.wash("sub", 0.20 * layerA);
+                ctx.fill();
+            }
+        }
+
+        // Crisp "乙" / "八" bamboo joint ridges & node-sheath spurs
+        for (const nu of breaks) {
+            if (bp < nu + 0.03) continue;
+            const np = sampleSpineAt(nu);
+            const nx = -Math.sin(np.angle);
+            const ny = Math.cos(np.angle);
+            const ridgeW = np.hw * 1.42;
+            ctx.beginPath();
+            ctx.moveTo(np.x - nx * ridgeW, np.y - ny * ridgeW);
+            ctx.quadraticCurveTo(
+                np.x - Math.cos(np.angle) * 2.2 * scale,
+                np.y - Math.sin(np.angle) * 2.2 * scale,
+                np.x + nx * ridgeW,
+                np.y + ny * ridgeW,
+            );
+            ctx.strokeStyle = pal.inkGrade("jiao", layerA);
+            ctx.lineWidth = Math.max(0.95, 1.45 * scale);
+            ctx.lineCap = "round";
+            ctx.stroke();
+
+            // Subtle upper node-sheath lip
+            ctx.beginPath();
+            ctx.moveTo(
+                np.x - nx * ridgeW * 0.72 + Math.cos(np.angle) * 1.4 * scale,
+                np.y - ny * ridgeW * 0.72 + Math.sin(np.angle) * 1.4 * scale,
+            );
+            ctx.lineTo(
+                np.x + nx * ridgeW * 0.72 + Math.cos(np.angle) * 1.4 * scale,
+                np.y + ny * ridgeW * 0.72 + Math.sin(np.angle) * 1.4 * scale,
+            );
+            ctx.strokeStyle = pal.inkGrade("nong", 0.52 * layerA);
+            ctx.lineWidth = Math.max(0.6, 0.8 * scale);
+            ctx.stroke();
+        }
+        return;
+    }
+
     const leftEdge: Point2D[] = [];
     const rightEdge: Point2D[] = [];
     for (const p of spine) {
@@ -3028,27 +4686,7 @@ function drawTaperedBranch(
         rightEdge.push({ x: p.x - nx * p.hw, y: p.y - ny * p.hw });
     }
 
-    // Layer A: Soft wet-ink bleed on Xuan paper
-    if (!branch.ghost) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(spine[0].x, spine[0].y);
-        for (let i = 1; i < spine.length; i++) {
-            ctx.lineTo(spine[i].x, spine[i].y);
-        }
-        ctx.strokeStyle = pal.wash("ink", isFern ? 0.12 : 0.34);
-        ctx.lineWidth = Math.max(
-            1.2,
-            (branch.widthStart + branch.widthEnd) * (isFern ? 0.56 : 0.72) +
-                (isFern ? 1.1 : 2.4) * scale,
-        );
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    // Layer B: Expressive sumi-ink trunk body
+    // Layer B: Expressive sumi-ink trunk body + evenodd dry-brush feibai slits
     ctx.beginPath();
     ctx.moveTo(leftEdge[0].x, leftEdge[0].y);
     for (let i = 1; i < leftEdge.length; i++) {
@@ -3076,61 +4714,104 @@ function drawTaperedBranch(
         true,
     );
     ctx.closePath();
-    ctx.fillStyle = pal.stroke("ink", layerA);
-    ctx.fill();
 
-    // Layer C: True transparent dry-brush flying-white (feibai) streaks & moss dots
+    // True non-destructive evenodd dry-brush flying-white (feibai) slits
+    const allowFeibai = !isFern &&
+        !branch.ghost &&
+        !branch.midground &&
+        spine.length > 8 &&
+        (isOrchidBlade || branch.widthStart > 1.65 * scale);
+    if (allowFeibai) {
+        const slits = isOrchidBlade
+            ? [{ u0: 0.22, u1: 0.48, off: 0.14 }]
+            : branch.widthStart >= 4.2 * scale
+            ? [
+                { u0: 0.14, u1: 0.39, off: -0.26 },
+                { u0: 0.42, u1: 0.72, off: 0.22 },
+                { u0: 0.64, u1: 0.88, off: -0.14 },
+            ]
+            : [
+                { u0: 0.18, u1: 0.44, off: -0.24 },
+                { u0: 0.50, u1: 0.78, off: 0.20 },
+            ];
+        for (const sl of slits) {
+            const seg = spine.filter((p) => p.u >= sl.u0 && p.u <= sl.u1);
+            if (seg.length < 4) continue;
+            const sUp: Point2D[] = [];
+            const sLo: Point2D[] = [];
+            for (let i = 0; i < seg.length; i++) {
+                const p = seg[i];
+                const env = Math.sin((i / (seg.length - 1)) * Math.PI);
+                const nx = -Math.sin(p.angle);
+                const ny = Math.cos(p.angle);
+                const cx = p.x + nx * p.hw * sl.off;
+                const cy = p.y + ny * p.hw * sl.off;
+                const sr = Math.max(0.22, p.hw * 0.17 * env);
+                sUp.push({ x: cx - nx * sr, y: cy - ny * sr });
+                sLo.push({ x: cx + nx * sr, y: cy + ny * sr });
+            }
+            ctx.moveTo(sUp[0].x, sUp[0].y);
+            for (let i = 1; i < sUp.length; i++) {
+                ctx.lineTo(sUp[i].x, sUp[i].y);
+            }
+            for (let i = sLo.length - 1; i >= 0; i--) {
+                ctx.lineTo(sLo[i].x, sLo[i].y);
+            }
+            ctx.closePath();
+        }
+    }
+
+    const isWoodyHero = !isFern &&
+        !isOrchidBlade &&
+        !branch.ghost &&
+        !branch.midground;
+    ctx.fillStyle = isOrchidBlade
+        ? pal.inkGrade(branch.ghost ? "qing" : "nong", layerA)
+        : isWoodyHero
+        ? pal.inkGrade("nong", 0.86 * layerA)
+        : pal.stroke("ink", layerA);
+    ctx.fill(allowFeibai ? "evenodd" : "nonzero");
+
+    // 老辣古木：轻染苍古赭石皮色 + 背光侧破墨焦墨重脊
+    if (isWoodyHero && branch.widthStart >= 3.8 * scale && spine.length > 5) {
+        ctx.fillStyle = pal.wash("sub", 0.22 * layerA);
+        ctx.fill(allowFeibai ? "evenodd" : "nonzero");
+
+        const spineL: Point2D[] = [];
+        const spineR: Point2D[] = [];
+        for (const p of spine) {
+            const nx = -Math.sin(p.angle);
+            const ny = Math.cos(p.angle);
+            const cx = p.x - nx * p.hw * 0.30;
+            const cy = p.y - ny * p.hw * 0.30;
+            const rHw = Math.max(0.25, p.hw * 0.42);
+            spineL.push({ x: cx + nx * rHw, y: cy + ny * rHw });
+            spineR.push({ x: cx - nx * rHw, y: cy - ny * rHw });
+        }
+        ctx.beginPath();
+        ctx.moveTo(spineL[0].x, spineL[0].y);
+        for (let i = 1; i < spineL.length; i++) {
+            ctx.lineTo(spineL[i].x, spineL[i].y);
+        }
+        for (let i = spineR.length - 1; i >= 0; i--) {
+            ctx.lineTo(spineR[i].x, spineR[i].y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = pal.inkGrade("jiao", 0.94 * layerA);
+        ctx.fill();
+    }
+
+    // Horizontal moss dots (taidian) along main branch turns
     if (
         !isFern &&
+        !isOrchidBlade &&
         !branch.ghost &&
+        !branch.midground &&
         branch.widthStart > 1.8 * scale &&
         spine.length > 6
     ) {
-        const streakOffsets = [-0.26, 0.19];
-        ctx.save();
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.lineCap = "round";
-        for (let sIdx = 0; sIdx < streakOffsets.length; sIdx++) {
-            const offRatio = streakOffsets[sIdx];
-            ctx.beginPath();
-            let started = false;
-            for (let i = 0; i < spine.length; i++) {
-                const p = spine[i];
-                if (p.u < 0.16 || p.u > 0.84) continue;
-                const nx = -Math.sin(p.angle);
-                const ny = Math.cos(p.angle);
-                const px = p.x + nx * p.hw * offRatio;
-                const py = p.y + ny * p.hw * offRatio;
-                if (!started) {
-                    ctx.moveTo(px, py);
-                    started = true;
-                } else {
-                    ctx.lineTo(px, py);
-                }
-            }
-            if (started) {
-                const j1 = 7 + ((Math.round(branch.phase * 13) + sIdx * 5) % 9);
-                const j2 = 9 + ((Math.round(branch.phase * 7) + sIdx * 3) % 7);
-                const j3 = 4 + ((Math.round(branch.phase * 17) + sIdx * 2) % 6);
-                const j4 = 12 +
-                    ((Math.round(branch.phase * 11) + sIdx * 4) % 11);
-                ctx.setLineDash([
-                    j1 * scale,
-                    j2 * scale,
-                    j3 * scale,
-                    j4 * scale,
-                ]);
-                ctx.strokeStyle = "rgba(0,0,0,0.68)";
-                ctx.lineWidth = Math.max(0.5, 0.78 * scale);
-                ctx.stroke();
-            }
-        }
-        ctx.setLineDash([]);
-        ctx.restore();
-
-        // Horizontal moss dots (taidian) along main branch turns
         const knotTargets = [0.24, 0.46, 0.68, 0.82];
-        ctx.fillStyle = pal.stroke("ink", 0.82);
+        ctx.fillStyle = pal.inkGrade("jiao", 0.86);
         for (let k = 0; k < knotTargets.length; k++) {
             const targetU = knotTargets[k];
             if (bp < targetU + 0.05) continue;
@@ -3156,59 +4837,41 @@ function drawTaperedBranch(
         }
     }
 
-    // Bamboo nodes (crisp breathing gap + ink joint ridge)
-    if (
-        branch.bambooNodes && branch.bambooNodes.length > 0 && spine.length > 4
-    ) {
-        for (const nu of branch.bambooNodes) {
-            if (bp < nu + 0.04) continue;
-            const nIdx = Math.min(
-                spine.length - 1,
-                Math.floor(nu * totalSegs),
-            );
-            const np = spine[nIdx];
-            const nx = -Math.sin(np.angle);
-            const ny = Math.cos(np.angle);
-            const ridgeW = np.hw * 1.32;
-            ctx.beginPath();
-            ctx.moveTo(np.x - nx * ridgeW, np.y - ny * ridgeW);
-            ctx.quadraticCurveTo(
-                np.x - Math.cos(np.angle) * 2.2 * scale,
-                np.y - Math.sin(np.angle) * 2.2 * scale,
-                np.x + nx * ridgeW,
-                np.y + ny * ridgeW,
-            );
-            ctx.strokeStyle = pal.stroke("ink", branch.ghost ? 0.25 : 0.92);
-            ctx.lineWidth = Math.max(0.85, 1.35 * scale);
-            ctx.lineCap = "round";
-            ctx.stroke();
-        }
-    }
-
-    // Winter snow cushions on upper edge of plum branches
+    // Sculpted winter snow cushions on upper edge of plum branches
     if (branch.snowCushions && !branch.ghost && spine.length > 8) {
         ctx.save();
-        ctx.strokeStyle = pal.highlight(pal.isDark ? 0.45 : 0.88);
-        ctx.lineCap = "round";
-        for (let i = 3; i < spine.length - 3; i++) {
-            if (i % 7 > 3) continue;
+        for (let i = 3; i < spine.length - 5; i += 6) {
             const p0 = spine[i];
-            const p1 = spine[i + 1];
-            const nx = -Math.sin(p0.angle);
-            const ny = Math.cos(p0.angle);
+            const p1 = spine[i + 2];
+            const p2 = spine[i + 3];
+            const nx = -Math.sin(p1.angle);
+            const ny = Math.cos(p1.angle);
             const sign = ny < 0 ? 1 : -1;
-            const ox = nx * sign * (p0.hw + 0.9 * scale);
-            const oy = ny * sign * (p0.hw + 0.9 * scale) - 0.6 * scale;
+            const lift = p1.hw + 2.2 * scale;
+            const ax = p0.x + nx * sign * p0.hw * 0.82;
+            const ay = p0.y + ny * sign * p0.hw * 0.82;
+            const bx = p2.x + nx * sign * p2.hw * 0.82;
+            const by = p2.y + ny * sign * p2.hw * 0.82;
+            const cx = p1.x + nx * sign * lift;
+            const cy = p1.y + ny * sign * lift - 1.2 * scale;
             ctx.beginPath();
-            ctx.moveTo(p0.x + ox, p0.y + oy);
-            ctx.lineTo(p1.x + ox, p1.y + oy);
-            ctx.lineWidth = Math.max(1.2, p0.hw * 0.72);
+            ctx.moveTo(ax, ay);
+            ctx.quadraticCurveTo(cx, cy, bx, by);
+            ctx.quadraticCurveTo(p1.x, p1.y, ax, ay);
+            ctx.closePath();
+            ctx.fillStyle = pal.highlight(pal.isDark ? 0.48 : 0.90);
+            ctx.fill();
+            ctx.strokeStyle = pal.inkGrade("dan", 0.35);
+            ctx.lineWidth = Math.max(0.45, 0.55 * scale);
             ctx.stroke();
         }
         ctx.restore();
     }
 
-    if (!reducedMotion && !branch.ghost && bp > 0.02 && bp < 0.98) {
+    if (
+        !reducedMotion && !branch.ghost && !branch.midground && bp > 0.02 &&
+        bp < 0.98
+    ) {
         const tipFade = Math.sin(bp * Math.PI);
         ctx.beginPath();
         ctx.arc(tip.x, tip.y, 2.6, 0, Math.PI * 2);
@@ -3263,17 +4926,58 @@ function drawGinkgoLeaf(
     const midX = s * (1 - o.notch);
     const midY = o.profile ? s * 0.08 : 0;
 
+    // 银杏真叶双裂扇缘（两侧略带微波裂）
     const traceFan = () => {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.quadraticCurveTo(lx * 0.5, ly * 0.42, lx, ly);
-        ctx.bezierCurveTo(s * 0.95, ly * 0.9, s * 1.08, ly * 0.34, midX, midY);
-        ctx.bezierCurveTo(s * 1.08, ry * 0.34, s * 0.95, ry * 0.9, rx, ry);
+        ctx.bezierCurveTo(
+            s * 0.96,
+            ly * 0.94,
+            s * 1.09,
+            ly * 0.52,
+            s * 0.99,
+            ly * 0.34,
+        );
+        ctx.bezierCurveTo(
+            s * 1.07,
+            ly * 0.22,
+            s * 1.04,
+            ly * 0.08,
+            midX,
+            midY,
+        );
+        ctx.bezierCurveTo(
+            s * 1.04,
+            ry * 0.08,
+            s * 1.07,
+            ry * 0.22,
+            s * 0.99,
+            ry * 0.34,
+        );
+        ctx.bezierCurveTo(
+            s * 1.09,
+            ry * 0.52,
+            s * 0.96,
+            ry * 0.94,
+            rx,
+            ry,
+        );
         ctx.quadraticCurveTo(rx * 0.5, ry * 0.42, 0, 0);
         ctx.closePath();
     };
 
-    // Boneless side-brush splash 1: rich base bleeding softly outward
+    // Mokuhanga off-register under-wash
+    if (!o.ghost) {
+        ctx.save();
+        ctx.translate(1.1, 0.8);
+        traceFan();
+        ctx.fillStyle = pal.fill(o.tint, 0.42 * washP * layerA);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 撞水撞色主晕染
     const rOuter = Math.max(2, s * 1.15);
     const grad = ctx.createRadialGradient(
         s * 0.14,
@@ -3283,12 +4987,40 @@ function drawGinkgoLeaf(
         0,
         rOuter,
     );
-    grad.addColorStop(0, pal.wash(o.tint, 1.32 * washP * layerA));
-    grad.addColorStop(0.55, pal.fill(o.tint, 1.08 * washP * layerA));
-    grad.addColorStop(1, pal.fill(o.tint, 0.12 * washP * layerA));
+    grad.addColorStop(0, pal.wash(o.tint, 1.30 * washP * layerA));
+    grad.addColorStop(0.55, pal.fill(o.tint, 1.10 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.36 * washP * layerA));
     traceFan();
     ctx.fillStyle = grad;
     ctx.fill();
+
+    // 叶柄向扇心撞水伴色晕染（金叶透苍翠 / 墨叶边缘泛微金）
+    if (!o.ghost) {
+        const companionTint: TintRole = o.tint === "ink" ? "sub" : "sub";
+        const chargeGrad = ctx.createRadialGradient(
+            o.tint === "ink" ? s * 0.84 : s * 0.12,
+            0,
+            0.5,
+            o.tint === "ink" ? s * 0.74 : s * 0.24,
+            0,
+            Math.max(2, s * 0.72),
+        );
+        chargeGrad.addColorStop(
+            0,
+            pal.wash(
+                companionTint,
+                (o.tint === "ink" ? 0.44 : 0.65) * washP * layerA,
+            ),
+        );
+        chargeGrad.addColorStop(1, pal.fill(companionTint, 0));
+        traceFan();
+        ctx.fillStyle = chargeGrad;
+        ctx.fill();
+    }
+
+    if (!o.ghost && washP > 0.35) {
+        strokeWaterline(ctx, o.tint, pal, 1, 0.66 * washP * layerA, s);
+    }
 
     // Boneless side-brush splash 2: slightly offset overlapping brushstroke
     if (!o.ghost) {
@@ -3296,34 +5028,45 @@ function drawGinkgoLeaf(
         ctx.rotate(0.065 * Math.sin(o.phase * 2.1 + 0.7));
         ctx.scale(0.92, 0.94);
         traceFan();
-        ctx.fillStyle = pal.wash(o.tint, 0.62 * washP * layerA);
+        ctx.fillStyle = pal.wash(o.tint, 0.56 * washP * layerA);
         ctx.fill();
         ctx.restore();
     }
 
-    // Expressive dry-ink vein accents (no closed outline)
+    // 9–11 条极细二叉放射扇脉
     if (detailP > 0.02) {
-        const veins = o.profile ? 3 : 5;
-        ctx.strokeStyle = pal.stroke(
-            o.tint === "ink" ? "ink" : "ink",
-            0.52 * detailP * layerA,
-        );
+        const veins = o.profile ? 6 : 10;
+        ctx.strokeStyle = pal.stroke("ink", 0.46 * detailP * layerA);
         ctx.lineCap = "round";
         for (let i = 0; i < veins; i++) {
             const frac = i / (veins - 1);
-            const va = lerp(spreadL * 0.76, spreadR * 0.76, frac);
+            const va = lerp(spreadL * 0.80, spreadR * 0.80, frac);
             const rLen = s *
-                (0.48 + 0.32 * Math.abs(Math.sin(o.phase + i * 1.4))) * detailP;
+                (0.54 + 0.30 * Math.abs(Math.sin(o.phase + i * 1.1))) * detailP;
+            const mx = Math.cos(va + 0.03) * rLen * 0.52;
+            const my = Math.sin(va + 0.03) * rLen * 0.52;
             ctx.beginPath();
             ctx.moveTo(1.5, 0);
             ctx.quadraticCurveTo(
-                Math.cos(va + 0.04) * rLen * 0.5,
-                Math.sin(va + 0.04) * rLen * 0.5,
+                mx,
+                my,
                 Math.cos(va) * rLen,
                 Math.sin(va) * rLen,
             );
-            ctx.lineWidth = i % 2 === 0 ? 0.78 : 0.52;
+            ctx.lineWidth = i % 2 === 0 ? 0.50 : 0.36;
             ctx.stroke();
+
+            if (!o.ghost && i % 2 === 0 && rLen > 14) {
+                const forkA = va + (frac < 0.5 ? -0.14 : 0.14);
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.lineTo(
+                    Math.cos(forkA) * rLen * 0.94,
+                    Math.sin(forkA) * rLen * 0.94,
+                );
+                ctx.lineWidth = 0.34;
+                ctx.stroke();
+            }
         }
     }
     ctx.restore();
@@ -3393,7 +5136,7 @@ function drawEucalyptusLeaf(
         ctx.closePath();
     };
 
-    // Softly feathered two-layer ink/pigment wash (no hard-edged center spot)
+    // Mokuhanga watercolor wash with translucent edge + capillary waterline
     const cx = rx * 0.66;
     const cy = o.profile ? -ry * 0.24 : -ry * 0.08;
     const grad = ctx.createRadialGradient(
@@ -3404,12 +5147,15 @@ function drawEucalyptusLeaf(
         0,
         Math.max(2, rx * 1.12),
     );
-    grad.addColorStop(0, pal.wash(o.tint, 1.38 * washP * layerA));
-    grad.addColorStop(0.55, pal.fill(o.tint, 1.12 * washP * layerA));
-    grad.addColorStop(1, pal.fill(o.tint, 0.14 * washP * layerA));
+    grad.addColorStop(0, pal.wash(o.tint, 1.34 * washP * layerA));
+    grad.addColorStop(0.58, pal.fill(o.tint, 1.10 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.32 * washP * layerA));
     traceLeaf();
     ctx.fillStyle = grad;
     ctx.fill();
+    if (!o.ghost && washP > 0.35) {
+        strokeWaterline(ctx, o.tint, pal, 1, 0.56 * washP * layerA, rx * 1.4);
+    }
 
     if (!o.ghost) {
         const coreGrad = ctx.createRadialGradient(
@@ -3425,6 +5171,31 @@ function drawEucalyptusLeaf(
         coreGrad.addColorStop(1, pal.fill(o.tint, 0));
         traceLeaf();
         ctx.fillStyle = coreGrad;
+        ctx.fill();
+
+        // 尤加利银霜云母粉白微晕与伴色侧翼轻染
+        const frostGrad = ctx.createRadialGradient(
+            rx * 0.82,
+            cy * 0.4,
+            0.5,
+            rx * 0.90,
+            0,
+            Math.max(2, rx * 0.85),
+        );
+        frostGrad.addColorStop(
+            0,
+            pal.highlight((pal.isDark ? 0.10 : 0.26) * washP * layerA),
+        );
+        frostGrad.addColorStop(
+            0.65,
+            pal.wash(
+                o.tint === "sub" ? "accent" : "sub",
+                0.20 * washP * layerA,
+            ),
+        );
+        frostGrad.addColorStop(1, pal.highlight(0));
+        traceLeaf();
+        ctx.fillStyle = frostGrad;
         ctx.fill();
     }
 
@@ -3465,71 +5236,149 @@ function drawPlumBlossom(
     if (washP <= 0.01) return;
 
     const r = o.size;
+    const pose = o.pose ?? (o.profile ? "side" : "frontal");
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(o.rotation + angle * 0.2);
-    if (o.profile) ctx.scale(1.0, 0.74);
+    if (pose === "side") ctx.scale(1.0, 0.72);
+    else if (pose === "upward") ctx.scale(0.86, 0.94);
 
-    // Boneless 5-petal sumi-e dabs with side-brush ellipticity & pigment-edge bloom
-    for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2 + Math.sin(o.phase + i * 1.7) * 0.06;
-        const dist = r * (0.52 + Math.cos(o.phase * 1.4 + i) * 0.04) * washP;
-        const px = Math.cos(a) * dist;
-        const py = Math.sin(a) * dist;
-        const pr = Math.max(2, r * (0.52 + (i % 2) * 0.05) * washP);
-        const grad = ctx.createRadialGradient(
-            px * 0.82,
-            py * 0.82,
-            Math.max(0.5, pr * 0.08),
-            px,
-            py,
-            pr,
-        );
-        grad.addColorStop(0, pal.wash(o.tint, 1.42 * washP * layerA));
-        grad.addColorStop(0.58, pal.fill(o.tint, 1.22 * washP * layerA));
-        grad.addColorStop(0.78, pal.wash(o.tint, 0.92 * washP * layerA));
-        grad.addColorStop(0.98, pal.fill(o.tint, 0));
-        ctx.fillStyle = grad;
+    // 没骨撞粉倒卵微凹梅瓣（非椭圆）
+    const petalCount = pose === "side" ? 4 : 5;
+    for (let i = 0; i < petalCount; i++) {
+        const baseA = pose === "side"
+            ? -1.25 + (i / 3) * 2.5
+            : (i / 5) * Math.PI * 2;
+        const a = baseA + Math.sin(o.phase + i * 1.7) * 0.09;
+        const pLen = r * (0.94 + (i % 3) * 0.06) * washP;
+        const pW = pLen * (0.48 + (i % 2) * 0.05);
+
+        ctx.save();
+        ctx.rotate(a);
         ctx.beginPath();
-        ctx.ellipse(
-            px,
-            py,
-            pr,
-            pr * 0.84,
-            a + Math.sin(o.phase * 2 + i) * 0.16,
-            0,
-            Math.PI * 2,
+        ctx.moveTo(0, 0);
+        // 基部狭楔，上缘圆润略带微凹
+        ctx.bezierCurveTo(
+            pLen * 0.28,
+            -pW * 0.46,
+            pLen * 0.72,
+            -pW * 0.96,
+            pLen * 0.96,
+            -pW * 0.24,
         );
+        ctx.quadraticCurveTo(pLen * 0.91, 0, pLen * 0.96, pW * 0.24);
+        ctx.bezierCurveTo(
+            pLen * 0.72,
+            pW * 0.96,
+            pLen * 0.28,
+            pW * 0.46,
+            0,
+            0,
+        );
+        ctx.closePath();
+
+        const grad = ctx.createRadialGradient(
+            pLen * 0.16,
+            0,
+            Math.max(0.5, pLen * 0.04),
+            pLen * 0.56,
+            0,
+            Math.max(2, pLen * 0.85),
+        );
+        grad.addColorStop(
+            0,
+            pal.highlight((pal.isDark ? 0.24 : 0.76) * washP * layerA),
+        );
+        grad.addColorStop(0.55, pal.wash(o.tint, 1.40 * washP * layerA));
+        grad.addColorStop(1, pal.waterline(o.tint, 0.86 * washP * layerA));
+        ctx.fillStyle = grad;
         ctx.fill();
+
+        if (!o.ghost && (i === 0 || i === 2)) {
+            ctx.fillStyle = pal.wash(
+                o.tint === "accent" ? "sub" : "accent",
+                0.24 * washP * layerA,
+            );
+            ctx.fill();
+        }
+        if (!o.ghost && washP > 0.45 && i % 2 === 0) {
+            strokeWaterline(ctx, o.tint, pal, 1, 0.54 * washP * layerA, pLen);
+        }
+        ctx.restore();
     }
 
     if (stP > 0.04) {
-        // Dark sumi-ink calyx center dot
-        ctx.beginPath();
-        ctx.arc(0, 0, Math.max(1.2, r * 0.14 * stP), 0, Math.PI * 2);
-        ctx.fillStyle = pal.stroke("ink", 0.9 * stP * layerA);
-        ctx.fill();
+        if (pose === "back") {
+            // 背嫣：五出星芒状浓墨梅萼居中托起花蒂
+            ctx.fillStyle = pal.inkGrade("jiao", 0.92 * stP * layerA);
+            for (let k = 0; k < 5; k++) {
+                const ka = (k / 5) * Math.PI * 2 + 0.3;
+                ctx.beginPath();
+                ctx.ellipse(
+                    Math.cos(ka) * r * 0.19,
+                    Math.sin(ka) * r * 0.19,
+                    Math.max(1.2, r * 0.18 * stP),
+                    Math.max(0.75, r * 0.08 * stP),
+                    ka,
+                    0,
+                    Math.PI * 2,
+                );
+                ctx.fill();
+            }
+        } else {
+            if (pose === "side" || pose === "upward") {
+                // 侧/仰姿态：花托底部的 3 爪浓墨丁香梅萼
+                ctx.fillStyle = pal.inkGrade("jiao", 0.90 * stP * layerA);
+                for (let k = -1; k <= 1; k++) {
+                    const ka = Math.PI * 0.5 + k * 0.42;
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        Math.cos(ka) * r * 0.14,
+                        Math.sin(ka) * r * 0.14,
+                        Math.max(1.0, r * 0.13 * stP),
+                        Math.max(0.6, r * 0.07 * stP),
+                        ka,
+                        0,
+                        Math.PI * 2,
+                    );
+                    ctx.fill();
+                }
+            }
 
-        const stamenCount = r >= 18 ? 7 : 5;
-        for (let i = 0; i < stamenCount; i++) {
-            const a = (i / stamenCount) * Math.PI * 2 + 0.25;
-            const len = r * (i % 2 === 0 ? 0.52 : 0.36) * stP;
-            const ex = Math.cos(a) * len;
-            const ey = Math.sin(a) * len;
-            const cx = Math.cos(a + 0.18) * len * 0.54;
-            const cy = Math.sin(a + 0.18) * len * 0.54;
+            // 浓墨花心点与 11–15 根纤细攒簇游丝花蕊
             ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(cx, cy, ex, ey);
-            ctx.strokeStyle = pal.stroke("ink", 0.88 * stP * layerA);
-            ctx.lineWidth = 0.65;
-            ctx.lineCap = "round";
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(ex, ey, (r >= 18 ? 1.55 : 1.25) * stP, 0, Math.PI * 2);
-            ctx.fillStyle = pal.stroke("ink", 0.92 * stP * layerA);
+            ctx.arc(0, 0, Math.max(1.1, r * 0.12 * stP), 0, Math.PI * 2);
+            ctx.fillStyle = pal.inkGrade("jiao", 0.92 * stP * layerA);
             ctx.fill();
+
+            const stamenCount = r >= 18 ? 15 : 11;
+            for (let i = 0; i < stamenCount; i++) {
+                const a = (i / stamenCount) * Math.PI * 2 +
+                    Math.sin(o.phase + i) * 0.12;
+                const len = r * (0.32 + ((i * 7) % 5) * 0.075) * stP;
+                const ex = Math.cos(a) * len;
+                const ey = Math.sin(a) * len;
+                const cx = Math.cos(a + 0.16) * len * 0.56;
+                const cy = Math.sin(a + 0.16) * len * 0.56;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.quadraticCurveTo(cx, cy, ex, ey);
+                ctx.strokeStyle = pal.inkGrade("nong", 0.84 * stP * layerA);
+                ctx.lineWidth = Math.max(0.30, 0.38 * (r / 18));
+                ctx.lineCap = "round";
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(
+                    ex,
+                    ey,
+                    Math.max(0.6, (r >= 18 ? 1.15 : 0.92) * stP),
+                    0,
+                    Math.PI * 2,
+                );
+                ctx.fillStyle = pal.goldDust(0.95 * stP * layerA);
+                ctx.fill();
+            }
         }
     }
     ctx.restore();
@@ -3896,55 +5745,75 @@ function drawOrchidBlossom(
     ctx.rotate(o.rotation + angle * 0.25);
     if (o.profile) ctx.scale(1, 0.78);
 
-    // 5 slender orchid petals (3 outer sepals + 2 inner petals)
+    // 雕塑感春兰五瓣（三主副瓣修长收尖微扭 + 两捧瓣合抱鼻头）
     const petalAngles = [-1.57, -0.45, 0.45, -2.55, 2.55];
     for (let i = 0; i < petalAngles.length; i++) {
         const pa = petalAngles[i];
-        const plen = r * (i < 3 ? 1.05 : 0.78);
-        const pw = plen * 0.24;
+        const isInner = i >= 3;
+        const plen = r * (isInner ? 0.76 : 1.08);
+        const pw = plen * (isInner ? 0.28 : 0.21);
         ctx.save();
         ctx.rotate(pa);
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(plen * 0.35, -pw, plen * 0.78, -pw * 0.7, plen, 0);
-        ctx.bezierCurveTo(plen * 0.78, pw * 0.7, plen * 0.35, pw, 0, 0);
+        ctx.bezierCurveTo(
+            plen * 0.34,
+            -pw,
+            plen * 0.78,
+            -pw * 0.55,
+            plen,
+            isInner ? 0 : (i === 1 ? -pw * 0.25 : pw * 0.18),
+        );
+        ctx.bezierCurveTo(plen * 0.78, pw * 0.55, plen * 0.34, pw, 0, 0);
         ctx.closePath();
         const grad = ctx.createRadialGradient(
-            plen * 0.3,
+            plen * 0.24,
             0,
             0.5,
-            plen * 0.5,
+            plen * 0.52,
             0,
-            Math.max(2, plen * 0.7),
+            Math.max(2, plen * 0.75),
         );
-        grad.addColorStop(0, pal.wash(o.tint, 1.25 * washP * layerA));
-        grad.addColorStop(1, pal.fill(o.tint, 0.35 * washP * layerA));
+        grad.addColorStop(0, pal.wash("sub", 0.72 * washP * layerA));
+        grad.addColorStop(0.45, pal.wash(o.tint, 1.28 * washP * layerA));
+        grad.addColorStop(1, pal.fill(o.tint, 0.36 * washP * layerA));
         ctx.fillStyle = grad;
         ctx.fill();
         ctx.restore();
     }
 
-    // Labellum (lip) with vermilion/accent spots
+    // 卷曲唇瓣与朱砂点舌（三点朱砂）
     if (dotP > 0.02) {
         ctx.beginPath();
         ctx.ellipse(0, r * 0.28, r * 0.22, r * 0.30, 0, 0, Math.PI * 2);
-        ctx.fillStyle = pal.wash("accent", 1.15 * dotP * layerA);
+        ctx.fillStyle = pal.wash("accent", 1.18 * dotP * layerA);
         ctx.fill();
 
-        ctx.fillStyle = pal.stroke("ink", 0.9 * dotP * layerA);
+        ctx.fillStyle = pal.inkGrade("jiao", 0.90 * dotP * layerA);
         ctx.beginPath();
         ctx.arc(0, 0, Math.max(0.8, r * 0.09 * dotP), 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = pal.cinnabar(0.92 * dotP * layerA);
+        ctx.beginPath();
         ctx.arc(
             -r * 0.07,
-            r * 0.26,
-            Math.max(0.5, r * 0.05 * dotP),
+            r * 0.25,
+            Math.max(0.55, r * 0.052 * dotP),
             0,
             Math.PI * 2,
         );
         ctx.arc(
             r * 0.07,
-            r * 0.30,
-            Math.max(0.5, r * 0.05 * dotP),
+            r * 0.29,
+            Math.max(0.55, r * 0.052 * dotP),
+            0,
+            Math.PI * 2,
+        );
+        ctx.arc(
+            0,
+            r * 0.36,
+            Math.max(0.48, r * 0.046 * dotP),
             0,
             Math.PI * 2,
         );
@@ -3992,17 +5861,71 @@ function drawBambooLeaf(
     );
     ctx.closePath();
 
+    // 潇洒枯笔飞白破锋丝口（evenodd）
+    const useFeibai = o.feibai && !o.ghost && len >= 42 && strokeP > 0.7;
+    if (useFeibai) {
+        const s0 = 0.28;
+        const s1 = 0.68;
+        const steps = 6;
+        const fUp: Point2D[] = [];
+        const fLo: Point2D[] = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = lerp(s0, s1, i / steps);
+            const env = Math.sin((i / steps) * Math.PI);
+            const cx = t * len;
+            const cy = o.curve * len * Math.pow(t, 1.15) - w * 0.14;
+            const sr = Math.max(0.22, w * 0.14 * env);
+            fUp.push({ x: cx, y: cy - sr });
+            fLo.push({ x: cx, y: cy + sr });
+        }
+        ctx.moveTo(fUp[0].x, fUp[0].y);
+        for (let i = 1; i < fUp.length; i++) {
+            ctx.lineTo(fUp[i].x, fUp[i].y);
+        }
+        for (let i = fLo.length - 1; i >= 0; i--) {
+            ctx.lineTo(fLo[i].x, fLo[i].y);
+        }
+        ctx.closePath();
+    }
+
     const grad = ctx.createLinearGradient(
         0,
         0,
         Math.max(1, len),
         o.curve * len,
     );
-    grad.addColorStop(0, pal.wash(o.tint, 1.32 * strokeP * layerA));
-    grad.addColorStop(0.65, pal.fill(o.tint, 1.08 * strokeP * layerA));
-    grad.addColorStop(1, pal.fill(o.tint, 0.24 * strokeP * layerA));
+    if (o.tint === "ink") {
+        grad.addColorStop(
+            0,
+            pal.inkGrade(
+                o.midground ? "zhong" : "jiao",
+                (o.midground ? 0.76 : 0.92) * strokeP * layerA,
+            ),
+        );
+        grad.addColorStop(
+            0.7,
+            pal.inkGrade(
+                o.midground ? "dan" : "nong",
+                (o.midground ? 0.68 : 0.84) * strokeP * layerA,
+            ),
+        );
+        grad.addColorStop(
+            1,
+            pal.inkGrade(
+                "nong",
+                (o.midground ? 0.48 : 0.72) * strokeP * layerA,
+            ),
+        );
+    } else {
+        grad.addColorStop(0, pal.wash(o.tint, 1.32 * strokeP * layerA));
+        grad.addColorStop(0.65, pal.fill(o.tint, 1.12 * strokeP * layerA));
+        grad.addColorStop(1, pal.fill(o.tint, 0.42 * strokeP * layerA));
+    }
     ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fill(useFeibai ? "evenodd" : "nonzero");
+    if (!o.ghost && strokeP > 0.45) {
+        strokeWaterline(ctx, o.tint, pal, 1, 0.46 * strokeP * layerA, len);
+    }
 
     // Crisp central vein
     ctx.beginPath();
@@ -4055,24 +5978,55 @@ function drawMapleLeaf(
 
     ctx.translate(stem, 0);
     ctx.rotate(o.rotation);
+    if (o.profile) ctx.scale(1, 0.72);
 
-    // 5-lobed palmate maple silhouette
-    const lobes = [-1.45, -0.72, 0, 0.72, 1.45];
-    const lobeLens = [0.58, 0.86, 1.0, 0.86, 0.58];
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    for (let i = 0; i < lobes.length; i++) {
-        const la = lobes[i];
-        const ll = s * lobeLens[i];
-        const tipX = Math.cos(la) * ll;
-        const tipY = Math.sin(la) * ll;
-        const prevA = i === 0 ? -1.85 : (lobes[i - 1] + la) * 0.5;
-        const notchR = s * (i === 0 ? 0.22 : 0.34);
-        ctx.lineTo(Math.cos(prevA) * notchR, Math.sin(prevA) * notchR);
-        ctx.lineTo(tipX, tipY);
+    // 经典七裂鸡爪槭（5 主裂 + 2 微小基裂，裂尖修长锐美）
+    const lobes = [-2.02, -1.42, -0.72, 0, 0.72, 1.42, 2.02];
+    const lobeLens = [0.34, 0.62, 0.88, 1.04, 0.88, 0.62, 0.34];
+    const traceMaple = () => {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (let i = 0; i < lobes.length; i++) {
+            const la = lobes[i];
+            const ll = s * lobeLens[i];
+            const tipX = Math.cos(la) * ll;
+            const tipY = Math.sin(la) * ll;
+            const prevA = i === 0 ? -2.28 : (lobes[i - 1] + la) * 0.5;
+            const notchR = s * (i === 0 || i === 1 ? 0.19 : 0.32);
+            const nx = Math.cos(prevA) * notchR;
+            const ny = Math.sin(prevA) * notchR;
+            const ctrlA = (prevA + la) * 0.5;
+            ctx.quadraticCurveTo(
+                Math.cos(ctrlA) * ll * 0.54,
+                Math.sin(ctrlA) * ll * 0.54,
+                nx,
+                ny,
+            );
+            ctx.quadraticCurveTo(
+                nx * 0.52 + tipX * 0.48,
+                ny * 0.52 + tipY * 0.48,
+                tipX,
+                tipY,
+            );
+        }
+        ctx.quadraticCurveTo(
+            Math.cos(2.22) * s * 0.24,
+            Math.sin(2.22) * s * 0.24,
+            0,
+            0,
+        );
+        ctx.closePath();
+    };
+
+    // Off-register Mokuhanga base print
+    if (!o.ghost) {
+        ctx.save();
+        ctx.translate(1.0, 0.75);
+        traceMaple();
+        ctx.fillStyle = pal.fill(o.tint, 0.38 * washP * layerA);
+        ctx.fill();
+        ctx.restore();
     }
-    ctx.lineTo(Math.cos(1.85) * s * 0.22, Math.sin(1.85) * s * 0.22);
-    ctx.closePath();
 
     const grad = ctx.createRadialGradient(
         s * 0.25,
@@ -4082,22 +6036,44 @@ function drawMapleLeaf(
         0,
         Math.max(2, s * 1.05),
     );
-    grad.addColorStop(0, pal.wash(o.tint, 1.38 * washP * layerA));
-    grad.addColorStop(0.65, pal.fill(o.tint, 1.15 * washP * layerA));
-    grad.addColorStop(1, pal.fill(o.tint, 0.25 * washP * layerA));
+    grad.addColorStop(0, pal.wash(o.tint, 1.32 * washP * layerA));
+    grad.addColorStop(0.65, pal.fill(o.tint, 1.12 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.34 * washP * layerA));
+    traceMaple();
     ctx.fillStyle = grad;
     ctx.fill();
 
-    // 5 radiating palmate veins
-    ctx.strokeStyle = pal.vein("ink", 0.58 * washP * layerA);
-    ctx.lineWidth = o.ghost ? 0.38 : 0.55;
+    // 掌心暖金赭撞色晕染，自然向深绯裂尖过渡
+    if (!o.ghost) {
+        const coreGrad = ctx.createRadialGradient(
+            s * 0.14,
+            0,
+            0.5,
+            s * 0.22,
+            0,
+            Math.max(2, s * 0.62),
+        );
+        coreGrad.addColorStop(0, pal.wash("sub", 0.78 * washP * layerA));
+        coreGrad.addColorStop(1, pal.fill("sub", 0));
+        traceMaple();
+        ctx.fillStyle = coreGrad;
+        ctx.fill();
+    }
+
+    if (!o.ghost && washP > 0.4) {
+        strokeWaterline(ctx, o.tint, pal, 1, 0.56 * washP * layerA, s);
+    }
+
+    // 放射掌脉与细微侧脉
+    ctx.strokeStyle = pal.vein("ink", 0.56 * washP * layerA);
     ctx.lineCap = "round";
     for (let i = 0; i < lobes.length; i++) {
         const la = lobes[i];
-        const ll = s * lobeLens[i] * 0.74;
+        const ll = s * lobeLens[i] * 0.76;
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(Math.cos(la) * ll, Math.sin(la) * ll);
+        ctx.lineWidth = i >= 1 && i <= 5 ? 0.52 : 0.36;
         ctx.stroke();
     }
     ctx.restore();
@@ -4227,19 +6203,18 @@ function drawSparrow(
 ): void {
     if (alpha <= 0.02) return;
     const s = scale;
-    const bob = reducedMotion || flapping
+    // Occasional gentle head glance instead of perpetual mechanical bobbing
+    const glancePhase = timeSec % 9.5;
+    const headTilt = reducedMotion || flapping || glancePhase > 1.4
         ? 0
-        : Math.sin(timeSec * 2.2) * 0.7 * s;
-    const tailAngle = reducedMotion || flapping
-        ? -0.35
-        : -0.38 + Math.sin(timeSec * 1.4 + 0.8) * 0.08;
+        : Math.sin((glancePhase / 1.4) * Math.PI) * 0.14;
+    const tailAngle = reducedMotion || flapping ? -0.36 : -0.39;
 
     ctx.save();
-    ctx.translate(x, y + bob);
+    ctx.translate(x, y);
 
-    // Claws gripping the branch (when perched)
     if (!flapping) {
-        ctx.strokeStyle = pal.stroke("ink", 0.85 * alpha);
+        ctx.strokeStyle = pal.inkGrade("jiao", 0.85 * alpha);
         ctx.lineWidth = Math.max(0.7, 0.9 * s);
         ctx.lineCap = "round";
         ctx.beginPath();
@@ -4250,20 +6225,20 @@ function drawSparrow(
         ctx.stroke();
     }
 
-    // Tail feathers
+    // Stroke 1: Crisp upturned Xieyi tail brush
     ctx.save();
     ctx.translate(7 * s, -7 * s);
     ctx.rotate(tailAngle);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(13 * s, -3.5 * s);
-    ctx.lineTo(11.5 * s, 1.5 * s);
+    ctx.quadraticCurveTo(7 * s, -2.5 * s, 14 * s, -3.2 * s);
+    ctx.lineTo(12 * s, 1.4 * s);
     ctx.closePath();
-    ctx.fillStyle = pal.stroke("ink", 0.82 * alpha);
+    ctx.fillStyle = pal.inkGrade("nong", 0.86 * alpha);
     ctx.fill();
     ctx.restore();
 
-    // Plump ink-wash belly
+    // Stroke 2: Boneless pale-ink belly wash
     const bellyGrad = ctx.createRadialGradient(
         -2 * s,
         -9 * s,
@@ -4280,60 +6255,58 @@ function drawSparrow(
     ctx.fillStyle = bellyGrad;
     ctx.fill();
 
-    // Warm accent throat wash
+    // Warm ochre/accent throat dab
     ctx.beginPath();
     ctx.ellipse(-5 * s, -9.5 * s, 4.2 * s, 3.4 * s, -0.1, 0, Math.PI * 2);
-    ctx.fillStyle = pal.wash("accent", 0.36 * alpha);
+    ctx.fillStyle = pal.wash("accent", 0.38 * alpha);
     ctx.fill();
 
-    // Head & crown
+    // Stroke 3: Head, beak & negative-space bright eye
+    ctx.save();
+    ctx.translate(-6.2 * s, -13.5 * s);
+    ctx.rotate(headTilt);
     ctx.beginPath();
-    ctx.arc(-6.2 * s, -13.5 * s, 4.6 * s, 0, Math.PI * 2);
-    ctx.fillStyle = pal.stroke("ink", 0.88 * alpha);
+    ctx.arc(0, 0, 4.5 * s, 0, Math.PI * 2);
+    ctx.fillStyle = pal.inkGrade("jiao", 0.88 * alpha);
     ctx.fill();
-
-    // Cheek highlight
     ctx.beginPath();
-    ctx.ellipse(-5.2 * s, -12.6 * s, 2.2 * s, 1.5 * s, 0.1, 0, Math.PI * 2);
+    ctx.ellipse(1.0 * s, 0.9 * s, 2.2 * s, 1.5 * s, 0.1, 0, Math.PI * 2);
     ctx.fillStyle = pal.highlight(0.75 * alpha);
     ctx.fill();
-
-    // Beak
     ctx.beginPath();
-    ctx.moveTo(-10.2 * s, -14.2 * s);
-    ctx.lineTo(-14.2 * s, -13.1 * s);
-    ctx.lineTo(-10.2 * s, -12.1 * s);
+    ctx.moveTo(-4.0 * s, -0.7 * s);
+    ctx.lineTo(-8.0 * s, 0.4 * s);
+    ctx.lineTo(-4.0 * s, 1.4 * s);
     ctx.closePath();
-    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.fillStyle = pal.inkGrade("jiao", 0.92 * alpha);
     ctx.fill();
-
-    // Bright eye
     ctx.beginPath();
-    ctx.arc(-7.8 * s, -14.2 * s, Math.max(0.9, 1.05 * s), 0, Math.PI * 2);
+    ctx.arc(-1.6 * s, -0.7 * s, Math.max(0.9, 1.05 * s), 0, Math.PI * 2);
     ctx.fillStyle = pal.highlight(0.95 * alpha);
     ctx.fill();
+    ctx.restore();
 
-    // Folded or flapping wings
+    // Stroke 4: Folded or flapping Xieyi wings
     if (flapping) {
-        const flap = Math.sin(timeSec * 36) * 0.65;
+        const flap = Math.sin(timeSec * 34) * 0.65;
         for (const side of [-1, 1] as const) {
             ctx.save();
             ctx.translate(-1 * s, -11 * s);
             ctx.rotate(-0.4 + flap * side);
             ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(6 * s, -14 * s, 14 * s, -8 * s);
+            ctx.quadraticCurveTo(6 * s, -14 * s, 14.5 * s, -8 * s);
             ctx.quadraticCurveTo(7 * s, -2 * s, 0, 0);
-            ctx.fillStyle = pal.stroke("ink", 0.78 * alpha);
+            ctx.fillStyle = pal.inkGrade("nong", 0.82 * alpha);
             ctx.fill();
             ctx.restore();
         }
     } else {
         ctx.beginPath();
         ctx.moveTo(-2 * s, -11.5 * s);
-        ctx.quadraticCurveTo(5 * s, -12.5 * s, 9.5 * s, -6.5 * s);
+        ctx.quadraticCurveTo(5 * s, -12.8 * s, 10 * s, -6.5 * s);
         ctx.quadraticCurveTo(3 * s, -5.5 * s, -2 * s, -11.5 * s);
-        ctx.fillStyle = pal.stroke("ink", 0.85 * alpha);
+        ctx.fillStyle = pal.inkGrade("jiao", 0.86 * alpha);
         ctx.fill();
     }
 
@@ -4393,11 +6366,30 @@ function drawLadybug(
     ctx.lineWidth = Math.max(0.55, 0.7 * s);
     ctx.stroke();
 
-    // Pronotum (head cap)
+    // Pronotum (head cap) with white eye-spots & fine legs
     ctx.beginPath();
     ctx.arc(-3.5 * s, 0, 1.65 * s, 0, Math.PI * 2);
-    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.fillStyle = pal.inkGrade("jiao", 0.92 * alpha);
     ctx.fill();
+    ctx.fillStyle = pal.highlight(0.88 * alpha);
+    ctx.beginPath();
+    ctx.arc(-3.3 * s, -0.7 * s, Math.max(0.35, 0.48 * s), 0, Math.PI * 2);
+    ctx.arc(-3.3 * s, 0.7 * s, Math.max(0.35, 0.48 * s), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Fine gripping legs
+    ctx.strokeStyle = pal.inkGrade("nong", 0.65 * alpha);
+    ctx.lineWidth = Math.max(0.4, 0.5 * s);
+    ctx.beginPath();
+    ctx.moveTo(-1.2 * s, -2.8 * s);
+    ctx.lineTo(-2.4 * s, -4.4 * s);
+    ctx.moveTo(1.2 * s, -2.8 * s);
+    ctx.lineTo(1.8 * s, -4.4 * s);
+    ctx.moveTo(-1.2 * s, 2.8 * s);
+    ctx.lineTo(-2.4 * s, 4.4 * s);
+    ctx.moveTo(1.2 * s, 2.8 * s);
+    ctx.lineTo(1.8 * s, 4.4 * s);
+    ctx.stroke();
 
     // Antennae
     ctx.strokeStyle = pal.stroke("ink", 0.8 * alpha);
@@ -4671,7 +6663,7 @@ function drawButterfly(
         ? 0.85
         : flying
         ? 0.25 + 0.75 * Math.abs(Math.sin(timeSec * 24))
-        : 0.72 + 0.28 * Math.sin(timeSec * 1.6);
+        : 0.76 + 0.24 * Math.sin(timeSec * 1.4);
 
     ctx.save();
     ctx.translate(x, y);
@@ -4680,27 +6672,58 @@ function drawButterfly(
     for (const side of [-1, 1] as const) {
         ctx.save();
         ctx.scale(1, side * flap);
+
+        // Forewing (宽大前翅)
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(-4 * s, -12 * s, 9 * s, -13 * s, 7 * s, -2 * s);
-        ctx.bezierCurveTo(6 * s, 2 * s, 1 * s, 2 * s, 0, 0);
-        ctx.fillStyle = pal.wash("sub", 0.95 * alpha);
+        ctx.bezierCurveTo(
+            -3.5 * s,
+            -12.5 * s,
+            9.5 * s,
+            -13.5 * s,
+            8.2 * s,
+            -2.2 * s,
+        );
+        ctx.bezierCurveTo(6.2 * s, 1.2 * s, 1.2 * s, 1.2 * s, 0, 0);
+        ctx.fillStyle = pal.wash("sub", 0.92 * alpha);
         ctx.fill();
-        ctx.strokeStyle = pal.stroke("ink", 0.55 * alpha);
-        ctx.lineWidth = Math.max(0.45, 0.65 * s);
-        ctx.stroke();
+        strokeWaterline(ctx, "sub", pal, s, 0.52 * alpha, 8);
+
+        // Hindwing with swallowtail curve (带燕尾弧度的后翅)
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(
+            -5.2 * s,
+            -5.5 * s,
+            -7.8 * s,
+            -9.5 * s,
+            -4.5 * s,
+            -1.0 * s,
+        );
+        ctx.bezierCurveTo(-3.2 * s, 1.5 * s, -0.5 * s, 1.0 * s, 0, 0);
+        ctx.fillStyle = pal.fill("accent", 0.72 * alpha);
+        ctx.fill();
 
         ctx.beginPath();
-        ctx.arc(4 * s, -5 * s, Math.max(0.8, 1.4 * s), 0, Math.PI * 2);
+        ctx.arc(4.2 * s, -5.2 * s, Math.max(0.8, 1.35 * s), 0, Math.PI * 2);
         ctx.fillStyle = pal.stroke("accent", 0.85 * alpha);
         ctx.fill();
         ctx.restore();
     }
 
+    // Slender body & curved antennae
     ctx.beginPath();
-    ctx.ellipse(0, 0, 4.5 * s, 0.9 * s, 0, 0, Math.PI * 2);
-    ctx.fillStyle = pal.stroke("ink", 0.9 * alpha);
+    ctx.ellipse(0, 0, 4.5 * s, 0.85 * s, 0, 0, Math.PI * 2);
+    ctx.fillStyle = pal.inkGrade("jiao", 0.9 * alpha);
     ctx.fill();
+    ctx.strokeStyle = pal.inkGrade("nong", 0.72 * alpha);
+    ctx.lineWidth = Math.max(0.4, 0.55 * s);
+    ctx.beginPath();
+    ctx.moveTo(4.0 * s, 0);
+    ctx.quadraticCurveTo(6.8 * s, -1.8 * s, 8.2 * s, -2.5 * s);
+    ctx.moveTo(4.0 * s, 0);
+    ctx.quadraticCurveTo(6.8 * s, 1.8 * s, 8.2 * s, 2.5 * s);
+    ctx.stroke();
     ctx.restore();
 }
 
@@ -4727,38 +6750,498 @@ function drawDragonfly(
     ctx.translate(x, y);
     ctx.rotate(-0.48);
 
-    // 4 translucent veined wings
+    // 4 translucent veined gossamer wings
     for (const side of [-1, 1] as const) {
         for (const pair of [0, 1] as const) {
             ctx.save();
             ctx.translate(-1 * s + pair * 2 * s, 0);
             ctx.rotate(side * (1.15 - pair * 0.25 + wingBuzz));
             ctx.beginPath();
-            ctx.ellipse(6.5 * s, 0, 6.8 * s, 1.5 * s, 0, 0, Math.PI * 2);
+            ctx.ellipse(6.5 * s, 0, 7.0 * s, 1.45 * s, 0, 0, Math.PI * 2);
             ctx.fillStyle = pal.highlight(0.48 * alpha);
             ctx.fill();
-            ctx.strokeStyle = pal.stroke("ink", 0.45 * alpha);
+            ctx.strokeStyle = pal.inkGrade("zhong", 0.45 * alpha);
             ctx.lineWidth = Math.max(0.4, 0.52 * s);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(1.2 * s, 0);
+            ctx.lineTo(11.5 * s, 0);
+            ctx.strokeStyle = pal.inkGrade("dan", 0.42 * alpha);
+            ctx.lineWidth = Math.max(0.3, 0.38 * s);
             ctx.stroke();
             ctx.restore();
         }
     }
 
-    // Slender segmented crimson/accent abdomen
+    // Slender segmented crimson/accent abdomen with ink node rings
     ctx.beginPath();
     ctx.moveTo(-4 * s, 0);
-    ctx.lineTo(14 * s, 0);
+    ctx.lineTo(14.5 * s, 0);
     ctx.strokeStyle = pal.stroke("accent", 0.92 * alpha);
-    ctx.lineWidth = Math.max(1.0, 1.65 * s);
+    ctx.lineWidth = Math.max(1.0, 1.6 * s);
     ctx.lineCap = "round";
     ctx.stroke();
 
-    // Head & eyes
+    ctx.fillStyle = pal.inkGrade("jiao", 0.72 * alpha);
+    for (const segX of [2, 5.5, 9, 12.2]) {
+        ctx.beginPath();
+        ctx.arc(segX * s, 0, Math.max(0.45, 0.6 * s), 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Dumbbell compound eyes
+    ctx.fillStyle = pal.inkGrade("jiao", 0.94 * alpha);
     ctx.beginPath();
-    ctx.arc(-4.6 * s, 0, Math.max(1.1, 1.7 * s), 0, Math.PI * 2);
-    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.arc(-4.6 * s, -0.95 * s, Math.max(0.85, 1.2 * s), 0, Math.PI * 2);
+    ctx.arc(-4.6 * s, 0.95 * s, Math.max(0.85, 1.2 * s), 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
+}
+
+type SealStrokeOp =
+    | readonly ["M", number, number]
+    | readonly ["L", number, number]
+    | readonly ["Q", number, number, number, number];
+
+type SealGlyph = readonly (readonly SealStrokeOp[])[];
+
+// 二十四节气全字库汉印小篆矢量印谱（27 个唯一汉字，归一化印格 [-1, 1] × [-1, 1]）
+const SEAL_GLYPH_STROKES: Readonly<Record<string, SealGlyph>> = {
+    "小": [
+        [["M", 0, -0.82], ["L", 0, 0.85]],
+        [["M", -0.34, -0.42], ["Q", -0.45, 0.15, -0.68, 0.56]],
+        [["M", 0.34, -0.42], ["Q", 0.45, 0.15, 0.68, 0.56]],
+    ],
+    "寒": [
+        [["M", 0, -0.88], ["L", 0, -0.66]],
+        [["M", -0.74, -0.38], ["Q", -0.74, -0.68, 0, -0.68], [
+            "Q",
+            0.74,
+            -0.68,
+            0.74,
+            -0.38,
+        ]],
+        [["M", -0.52, -0.34], ["L", 0.52, -0.34]],
+        [["M", -0.54, -0.06], ["L", 0.54, -0.06]],
+        [["M", -0.24, -0.50], ["L", -0.24, 0.18]],
+        [["M", 0.24, -0.50], ["L", 0.24, 0.18]],
+        [["M", -0.76, 0.18], ["L", 0.76, 0.18]],
+        [["M", -0.18, 0.18], ["Q", -0.48, 0.46, -0.74, 0.66]],
+        [["M", 0.18, 0.18], ["Q", 0.48, 0.46, 0.74, 0.66]],
+        [["M", -0.26, 0.48], ["L", 0.26, 0.56]],
+        [["M", -0.24, 0.74], ["L", 0.24, 0.84]],
+    ],
+    "大": [
+        [["M", 0, -0.84], ["L", 0, 0.35]],
+        [["M", -0.76, -0.32], ["Q", 0, -0.42, 0.76, -0.32]],
+        [["M", 0, -0.32], ["Q", -0.38, 0.30, -0.72, 0.84]],
+        [["M", 0, -0.32], ["Q", 0.38, 0.30, 0.72, 0.84]],
+    ],
+    "立": [
+        [["M", 0, -0.84], ["L", 0, -0.44]],
+        [["M", -0.68, -0.44], ["L", 0.68, -0.44]],
+        [["M", -0.36, -0.32], ["Q", -0.24, 0.22, -0.18, 0.66]],
+        [["M", 0.36, -0.32], ["Q", 0.24, 0.22, 0.18, 0.66]],
+        [["M", -0.78, 0.68], ["L", 0.78, 0.68]],
+    ],
+    "春": [
+        [["M", 0, -0.90], ["L", 0, -0.18]],
+        [["M", -0.62, -0.74], ["L", 0.62, -0.74]],
+        [["M", -0.48, -0.46], ["L", 0.48, -0.46]],
+        [["M", -0.74, -0.18], ["L", 0.74, -0.18]],
+        [["M", 0, -0.18], ["Q", -0.42, 0.14, -0.76, 0.42]],
+        [["M", 0, -0.18], ["Q", 0.42, 0.14, 0.76, 0.42]],
+        [["M", -0.36, 0.30], ["L", 0.36, 0.30], ["L", 0.36, 0.86], [
+            "L",
+            -0.36,
+            0.86,
+        ], ["L", -0.36, 0.30]],
+        [["M", -0.36, 0.58], ["L", 0.36, 0.58]],
+    ],
+    "雨": [
+        [["M", -0.74, -0.78], ["L", 0.74, -0.78]],
+        [["M", -0.72, -0.44], ["Q", -0.72, -0.62, 0, -0.62], [
+            "Q",
+            0.72,
+            -0.62,
+            0.72,
+            -0.44,
+        ]],
+        [["M", -0.72, -0.44], ["L", -0.72, 0.78]],
+        [["M", 0.72, -0.44], ["L", 0.72, 0.78]],
+        [["M", 0, -0.78], ["L", 0, 0.78]],
+        [["M", -0.40, -0.22], ["L", -0.34, 0.04]],
+        [["M", -0.40, 0.28], ["L", -0.34, 0.54]],
+        [["M", 0.40, -0.22], ["L", 0.34, 0.04]],
+        [["M", 0.40, 0.28], ["L", 0.34, 0.54]],
+    ],
+    "水": [
+        [["M", 0, -0.86], ["Q", 0.10, 0, -0.02, 0.86]],
+        [["M", -0.62, -0.58], ["Q", -0.32, -0.24, -0.58, 0.12], [
+            "Q",
+            -0.34,
+            0.42,
+            -0.64,
+            0.76,
+        ]],
+        [["M", 0.62, -0.58], ["Q", 0.32, -0.24, 0.58, 0.12], [
+            "Q",
+            0.34,
+            0.42,
+            0.64,
+            0.76,
+        ]],
+    ],
+    "惊": [
+        [["M", -0.56, -0.78], ["L", -0.56, 0.82]],
+        [["M", -0.76, -0.28], ["Q", -0.76, -0.02, -0.64, 0.18]],
+        [["M", -0.34, -0.32], ["L", -0.24, -0.04]],
+        [["M", 0.24, -0.82], ["L", 0.24, -0.62]],
+        [["M", -0.18, -0.62], ["L", 0.72, -0.62]],
+        [["M", 0, -0.38], ["L", 0.56, -0.38], ["L", 0.56, -0.06], [
+            "L",
+            0,
+            -0.06,
+        ], ["L", 0, -0.38]],
+        [["M", 0.28, 0.14], ["L", 0.28, 0.82]],
+        [["M", -0.12, 0.28], ["Q", 0.28, 0.12, 0.68, 0.28]],
+        [["M", -0.06, 0.50], ["Q", -0.16, 0.68, -0.24, 0.80]],
+        [["M", 0.58, 0.48], ["Q", 0.68, 0.66, 0.76, 0.78]],
+    ],
+    "蛰": [
+        [["M", -0.68, -0.58], ["L", -0.08, -0.58]],
+        [["M", -0.38, -0.86], ["L", -0.38, 0.04]],
+        [["M", -0.72, -0.22], ["L", -0.06, -0.34]],
+        [["M", 0.26, -0.84], ["L", 0.26, -0.04]],
+        [["M", 0.02, -0.56], ["Q", 0.58, -0.64, 0.66, -0.32], [
+            "Q",
+            0.70,
+            -0.02,
+            0.52,
+            0.04,
+        ]],
+        [["M", -0.44, 0.22], ["L", 0.44, 0.22], ["L", 0.44, 0.54], [
+            "L",
+            -0.44,
+            0.54,
+        ], ["L", -0.44, 0.22]],
+        [["M", 0, 0.04], ["L", 0, 0.80]],
+        [["M", -0.62, 0.84], ["L", 0.62, 0.72]],
+        [["M", 0.46, 0.62], ["L", 0.72, 0.88]],
+    ],
+    "分": [
+        [["M", -0.18, -0.82], ["Q", -0.46, -0.44, -0.76, -0.14]],
+        [["M", 0.18, -0.82], ["Q", 0.46, -0.44, 0.76, -0.14]],
+        [["M", -0.54, 0.02], ["L", 0.56, 0.02], ["Q", 0.56, 0.58, 0.36, 0.82]],
+        [["M", -0.06, 0.02], ["Q", -0.22, 0.48, -0.62, 0.82]],
+    ],
+    "清": [
+        [["M", -0.64, -0.74], ["Q", -0.48, -0.30, -0.68, 0.04], [
+            "Q",
+            -0.46,
+            0.40,
+            -0.66,
+            0.78,
+        ]],
+        [["M", -0.40, -0.34], ["L", -0.40, 0.42]],
+        [["M", 0.26, -0.84], ["L", 0.26, -0.12]],
+        [["M", -0.14, -0.64], ["L", 0.68, -0.64]],
+        [["M", -0.08, -0.40], ["L", 0.62, -0.40]],
+        [["M", -0.20, -0.14], ["L", 0.74, -0.14]],
+        [["M", -0.04, 0.06], ["L", 0.58, 0.06], ["L", 0.58, 0.82]],
+        [["M", -0.04, 0.06], ["L", -0.04, 0.82]],
+        [["M", -0.04, 0.34], ["L", 0.58, 0.34]],
+        [["M", -0.04, 0.58], ["L", 0.58, 0.58]],
+    ],
+    "明": [
+        [["M", -0.74, -0.58], ["L", -0.16, -0.58], ["L", -0.16, 0.56], [
+            "L",
+            -0.74,
+            0.56,
+        ], ["L", -0.74, -0.58]],
+        [["M", -0.74, 0], ["L", -0.16, 0]],
+        [["M", 0.12, -0.74], ["L", 0.72, -0.74], ["L", 0.72, 0.82]],
+        [["M", 0.12, -0.74], ["Q", 0.12, 0.28, -0.02, 0.82]],
+        [["M", 0.12, -0.24], ["L", 0.72, -0.24]],
+        [["M", 0.10, 0.22], ["L", 0.72, 0.22]],
+    ],
+    "谷": [
+        [["M", -0.22, -0.82], ["Q", -0.46, -0.54, -0.72, -0.32]],
+        [["M", 0.22, -0.82], ["Q", 0.46, -0.54, 0.72, -0.32]],
+        [["M", 0, -0.54], ["Q", -0.38, -0.18, -0.76, 0.12]],
+        [["M", 0, -0.54], ["Q", 0.38, -0.18, 0.76, 0.12]],
+        [["M", -0.44, 0.26], ["L", 0.44, 0.26], ["L", 0.44, 0.82], [
+            "L",
+            -0.44,
+            0.82,
+        ], ["L", -0.44, 0.26]],
+    ],
+    "夏": [
+        [["M", -0.72, -0.80], ["L", 0.72, -0.80]],
+        [["M", 0, -0.80], ["L", -0.12, -0.56]],
+        [["M", -0.46, -0.56], ["L", 0.46, -0.56], ["L", 0.46, 0.18], [
+            "L",
+            -0.46,
+            0.18,
+        ], ["L", -0.46, -0.56]],
+        [["M", -0.46, -0.32], ["L", 0.46, -0.32]],
+        [["M", -0.46, -0.08], ["L", 0.46, -0.08]],
+        [["M", -0.18, 0.18], ["Q", -0.42, 0.50, -0.68, 0.78]],
+        [["M", -0.16, 0.40], ["L", 0.48, 0.40], ["Q", 0.18, 0.64, -0.48, 0.84]],
+        [["M", 0.04, 0.46], ["Q", 0.36, 0.66, 0.72, 0.84]],
+    ],
+    "满": [
+        [["M", -0.66, -0.74], ["Q", -0.50, -0.30, -0.68, 0.04], [
+            "Q",
+            -0.48,
+            0.40,
+            -0.66,
+            0.78,
+        ]],
+        [["M", -0.42, -0.34], ["L", -0.42, 0.42]],
+        [["M", -0.18, -0.64], ["L", 0.72, -0.64]],
+        [["M", 0.06, -0.84], ["L", 0.06, -0.46]],
+        [["M", 0.48, -0.84], ["L", 0.48, -0.46]],
+        [["M", -0.14, -0.36], ["L", 0.70, -0.36]],
+        [["M", 0.26, -0.36], ["L", 0.26, 0.78]],
+        [["M", -0.14, -0.04], ["L", 0.68, -0.04], ["L", 0.68, 0.80]],
+        [["M", -0.14, -0.04], ["L", -0.14, 0.80]],
+        [["M", -0.02, 0.28], ["Q", 0.12, 0.48, 0.02, 0.64]],
+        [["M", 0.52, 0.28], ["Q", 0.40, 0.48, 0.50, 0.64]],
+    ],
+    "芒": [
+        [["M", -0.72, -0.58], ["L", 0.72, -0.58]],
+        [["M", -0.34, -0.84], ["L", -0.34, -0.38]],
+        [["M", 0.34, -0.84], ["L", 0.34, -0.38]],
+        [["M", 0, -0.36], ["L", 0, -0.06]],
+        [["M", -0.68, -0.06], ["L", 0.68, -0.06]],
+        [["M", -0.48, -0.06], ["L", -0.48, 0.76], ["L", 0.62, 0.76]],
+    ],
+    "种": [
+        [["M", -0.22, -0.78], ["Q", -0.46, -0.64, -0.72, -0.56]],
+        [["M", -0.74, -0.26], ["L", -0.16, -0.26]],
+        [["M", -0.44, -0.62], ["L", -0.44, 0.82]],
+        [["M", -0.44, -0.26], ["Q", -0.58, 0.14, -0.76, 0.44]],
+        [["M", -0.44, -0.16], ["L", -0.18, 0.16]],
+        [["M", 0.02, -0.38], ["L", 0.72, -0.38], ["L", 0.72, 0.24], [
+            "L",
+            0.02,
+            0.24,
+        ], ["L", 0.02, -0.38]],
+        [["M", 0.37, -0.84], ["L", 0.37, 0.84]],
+    ],
+    "至": [
+        [["M", -0.72, -0.76], ["L", 0.72, -0.76]],
+        [["M", 0, -0.76], ["Q", -0.24, -0.32, -0.50, -0.08], [
+            "L",
+            0.44,
+            -0.14,
+        ]],
+        [["M", 0.28, -0.34], ["L", 0.64, 0.04]],
+        [["M", -0.56, 0.28], ["L", 0.56, 0.28]],
+        [["M", 0, 0.04], ["L", 0, 0.78]],
+        [["M", -0.76, 0.78], ["L", 0.76, 0.78]],
+    ],
+    "暑": [
+        [["M", -0.48, -0.82], ["L", 0.48, -0.82], ["L", 0.48, -0.36], [
+            "L",
+            -0.48,
+            -0.36,
+        ], ["L", -0.48, -0.82]],
+        [["M", -0.48, -0.59], ["L", 0.48, -0.59]],
+        [["M", -0.52, -0.12], ["L", 0.52, -0.12]],
+        [["M", 0, -0.30], ["L", 0, 0.14]],
+        [["M", -0.72, 0.14], ["L", 0.72, 0.14]],
+        [["M", 0.48, -0.22], ["Q", -0.12, 0.20, -0.72, 0.46]],
+        [["M", -0.34, 0.34], ["L", 0.44, 0.34], ["L", 0.44, 0.84], [
+            "L",
+            -0.34,
+            0.84,
+        ], ["L", -0.34, 0.34]],
+        [["M", -0.34, 0.59], ["L", 0.44, 0.59]],
+    ],
+    "秋": [
+        [["M", -0.22, -0.78], ["Q", -0.46, -0.64, -0.72, -0.56]],
+        [["M", -0.74, -0.26], ["L", -0.16, -0.26]],
+        [["M", -0.44, -0.62], ["L", -0.44, 0.82]],
+        [["M", -0.44, -0.26], ["Q", -0.58, 0.14, -0.76, 0.44]],
+        [["M", -0.44, -0.16], ["L", -0.18, 0.16]],
+        [["M", 0.36, -0.82], ["Q", 0.36, 0.20, -0.06, 0.82]],
+        [["M", 0.36, 0.06], ["Q", 0.52, 0.48, 0.78, 0.82]],
+        [["M", 0.04, -0.34], ["L", 0.16, -0.04]],
+        [["M", 0.68, -0.38], ["L", 0.52, -0.06]],
+    ],
+    "处": [
+        [["M", -0.22, -0.82], ["Q", -0.44, -0.38, -0.70, -0.04]],
+        [["M", -0.34, -0.48], ["L", 0.22, -0.48], [
+            "Q",
+            0.04,
+            0.24,
+            -0.74,
+            0.78,
+        ]],
+        [["M", -0.52, -0.12], ["Q", 0.10, 0.38, 0.76, 0.78]],
+        [["M", 0.38, -0.78], ["L", 0.38, 0.48]],
+        [["M", 0.38, -0.14], ["L", 0.72, 0.16]],
+    ],
+    "白": [
+        [["M", 0.06, -0.84], ["L", -0.16, -0.44]],
+        [["M", -0.54, -0.44], ["L", 0.54, -0.44], ["L", 0.54, 0.78], [
+            "L",
+            -0.54,
+            0.78,
+        ], ["L", -0.54, -0.44]],
+        [["M", -0.54, 0.16], ["L", 0.54, 0.16]],
+    ],
+    "露": [
+        [["M", -0.72, -0.82], ["L", 0.72, -0.82]],
+        [["M", -0.70, -0.52], ["Q", -0.70, -0.68, 0, -0.68], [
+            "Q",
+            0.70,
+            -0.68,
+            0.70,
+            -0.52,
+        ]],
+        [["M", 0, -0.82], ["L", 0, -0.26]],
+        [["M", -0.42, -0.46], ["L", -0.34, -0.32]],
+        [["M", 0.42, -0.46], ["L", 0.34, -0.32]],
+        [["M", -0.64, -0.12], ["L", -0.14, -0.12], ["L", -0.14, 0.24], [
+            "L",
+            -0.64,
+            0.24,
+        ], ["L", -0.64, -0.12]],
+        [["M", -0.38, 0.24], ["L", -0.38, 0.76]],
+        [["M", -0.68, 0.78], ["L", -0.08, 0.64]],
+        [["M", 0.24, -0.18], ["Q", 0.10, 0.08, -0.02, 0.24]],
+        [["M", 0.24, -0.04], ["L", 0.64, -0.04], [
+            "Q",
+            0.38,
+            0.32,
+            -0.04,
+            0.50,
+        ]],
+        [["M", 0.12, 0.08], ["Q", 0.42, 0.32, 0.74, 0.48]],
+        [["M", 0.06, 0.56], ["L", 0.64, 0.56], ["L", 0.64, 0.84], [
+            "L",
+            0.06,
+            0.84,
+        ], ["L", 0.06, 0.56]],
+    ],
+    "霜": [
+        [["M", -0.72, -0.82], ["L", 0.72, -0.82]],
+        [["M", -0.70, -0.52], ["Q", -0.70, -0.68, 0, -0.68], [
+            "Q",
+            0.70,
+            -0.68,
+            0.70,
+            -0.52,
+        ]],
+        [["M", 0, -0.82], ["L", 0, -0.26]],
+        [["M", -0.42, -0.46], ["L", -0.34, -0.32]],
+        [["M", 0.42, -0.46], ["L", 0.34, -0.32]],
+        [["M", -0.72, 0.06], ["L", -0.08, 0.06]],
+        [["M", -0.38, -0.16], ["L", -0.38, 0.84]],
+        [["M", -0.38, 0.06], ["Q", -0.56, 0.42, -0.74, 0.64]],
+        [["M", -0.38, 0.18], ["L", -0.10, 0.42]],
+        [["M", 0.08, -0.08], ["L", 0.66, -0.08], ["L", 0.66, 0.82], [
+            "L",
+            0.08,
+            0.82,
+        ], ["L", 0.08, -0.08]],
+        [["M", 0.08, 0.22], ["L", 0.66, 0.22]],
+        [["M", 0.08, 0.52], ["L", 0.66, 0.52]],
+    ],
+    "降": [
+        [["M", -0.70, -0.78], ["L", -0.36, -0.78], ["L", -0.50, -0.42], [
+            "Q",
+            -0.28,
+            -0.16,
+            -0.46,
+            0.08,
+        ]],
+        [["M", -0.70, -0.78], ["L", -0.70, 0.82]],
+        [["M", 0.12, -0.82], ["Q", -0.04, -0.54, -0.22, -0.34]],
+        [["M", 0.12, -0.64], ["L", 0.62, -0.64], [
+            "Q",
+            0.32,
+            -0.26,
+            -0.22,
+            0.02,
+        ]],
+        [["M", 0.02, -0.50], ["Q", 0.38, -0.24, 0.76, -0.02]],
+        [["M", -0.10, 0.24], ["L", 0.66, 0.24]],
+        [["M", -0.18, 0.52], ["L", 0.72, 0.52]],
+        [["M", 0.34, 0.06], ["L", 0.34, 0.84]],
+    ],
+    "冬": [
+        [["M", -0.08, -0.84], ["Q", -0.36, -0.46, -0.68, -0.16]],
+        [["M", -0.18, -0.62], ["L", 0.44, -0.62], [
+            "Q",
+            0.16,
+            -0.10,
+            -0.72,
+            0.30,
+        ]],
+        [["M", -0.36, -0.36], ["Q", 0.14, 0.02, 0.74, 0.28]],
+        [["M", -0.14, 0.34], ["L", 0.18, 0.48]],
+        [["M", -0.18, 0.64], ["L", 0.22, 0.82]],
+    ],
+    "雪": [
+        [["M", -0.72, -0.80], ["L", 0.72, -0.80]],
+        [["M", -0.70, -0.48], ["Q", -0.70, -0.64, 0, -0.64], [
+            "Q",
+            0.70,
+            -0.64,
+            0.70,
+            -0.48,
+        ]],
+        [["M", 0, -0.80], ["L", 0, -0.16]],
+        [["M", -0.42, -0.40], ["L", -0.34, -0.24]],
+        [["M", 0.42, -0.40], ["L", 0.34, -0.24]],
+        [["M", -0.52, 0.08], ["L", 0.54, 0.08], ["L", 0.54, 0.78], [
+            "L",
+            -0.52,
+            0.78,
+        ]],
+        [["M", -0.48, 0.42], ["L", 0.54, 0.42]],
+    ],
+};
+
+export function hasSealVectorGlyph(term: string): boolean {
+    const chars = Array.from(term);
+    return chars.length > 0 &&
+        chars.every((ch) => Object.hasOwn(SEAL_GLYPH_STROKES, ch));
+}
+
+function drawSealGlyph(
+    ctx: CanvasRenderingContext2D,
+    char: string,
+    cx: number,
+    cy: number,
+    halfW: number,
+    halfH: number,
+): boolean {
+    const strokes = SEAL_GLYPH_STROKES[char];
+    if (!strokes) return false;
+    ctx.beginPath();
+    for (const stroke of strokes) {
+        for (const op of stroke) {
+            if (op[0] === "M") {
+                ctx.moveTo(cx + op[1] * halfW, cy + op[2] * halfH);
+            } else if (op[0] === "L") {
+                ctx.lineTo(cx + op[1] * halfW, cy + op[2] * halfH);
+            } else {
+                ctx.quadraticCurveTo(
+                    cx + op[1] * halfW,
+                    cy + op[2] * halfH,
+                    cx + op[3] * halfW,
+                    cy + op[4] * halfH,
+                );
+            }
+        }
+    }
+    ctx.stroke();
+    return true;
 }
 
 function drawSolarTermSeal(
@@ -4767,51 +7250,155 @@ function drawSolarTermSeal(
     height: number,
     scale: number,
     term: string,
+    season: SolarTermInfo["season"],
     sceneSide: "left" | "right",
     pal: BotanicalPalette,
     alpha: number,
+    dockInsets?: BotanicalDockInsets,
 ): void {
     if (alpha <= 0.02 || !term) return;
     const s = scale;
     const isNarrow = width < 720;
-    const wBox = 15 * s;
-    const hBox = 28 * s;
-    const x = sceneSide === "left" ? 28 * s : width - 28 * s;
-    const y = isNarrow ? height - 118 * s : height - 46 * s;
-    const sealAlpha = (pal.overPhoto ? 0.34 : 0.48) * alpha;
+    const wBox = 18 * s;
+    const hBox = 35 * s;
+    const insetLeft = dockInsets?.left ?? 0;
+    const insetRight = dockInsets?.right ?? 0;
+    const insetBottom = dockInsets?.bottom ?? 0;
+    const x = sceneSide === "left"
+        ? 30 * s + insetLeft
+        : width - 30 * s - insetRight;
+    const y = (isNarrow ? height - 118 * s : height - 46 * s) - insetBottom;
+    const sealAlpha = (pal.overPhoto ? 0.42 : 0.62) * alpha;
+    const isIntaglio = season === "autumn" || season === "winter";
+    const hw = wBox / 2;
+    const hh = hBox / 2;
+
+    // 手工金石残破印石轮廓（带微切角与天然击边缺口）
+    const stoneOutline: readonly Point2D[] = [
+        { x: -hw + 2.2 * s, y: -hh },
+        { x: -hw * 0.25, y: -hh + 0.35 * s },
+        { x: hw * 0.42, y: -hh },
+        { x: hw - 1.8 * s, y: -hh + 0.4 * s },
+        { x: hw, y: -hh + 2.1 * s },
+        { x: hw - 0.35 * s, y: -hh * 0.15 },
+        { x: hw, y: hh * 0.48 },
+        { x: hw - 1.6 * s, y: hh },
+        { x: hw * 0.18, y: hh - 0.3 * s },
+        { x: -hw + 2.0 * s, y: hh },
+        { x: -hw, y: hh - 2.2 * s },
+        { x: -hw + 0.3 * s, y: -hh * 0.35 },
+    ];
+
+    const traceStonePoly = () => {
+        ctx.moveTo(stoneOutline[0].x, stoneOutline[0].y);
+        for (let i = 1; i < stoneOutline.length; i++) {
+            ctx.lineTo(stoneOutline[i].x, stoneOutline[i].y);
+        }
+        ctx.closePath();
+    };
 
     ctx.save();
     ctx.translate(x, y);
-    ctx.beginPath();
-    ctx.moveTo(-wBox / 2 + 2 * s, -hBox / 2);
-    ctx.lineTo(wBox / 2 - 2 * s, -hBox / 2);
-    ctx.quadraticCurveTo(wBox / 2, -hBox / 2, wBox / 2, -hBox / 2 + 2 * s);
-    ctx.lineTo(wBox / 2, hBox / 2 - 2 * s);
-    ctx.quadraticCurveTo(wBox / 2, hBox / 2, wBox / 2 - 2 * s, hBox / 2);
-    ctx.lineTo(-wBox / 2 + 2 * s, hBox / 2);
-    ctx.quadraticCurveTo(-wBox / 2, hBox / 2, -wBox / 2, hBox / 2 - 2 * s);
-    ctx.lineTo(-wBox / 2, -hBox / 2 + 2 * s);
-    ctx.quadraticCurveTo(-wBox / 2, -hBox / 2, -wBox / 2 + 2 * s, -hBox / 2);
-    ctx.closePath();
 
-    ctx.fillStyle = pal.fill("accent", sealAlpha * 0.45);
-    ctx.fill();
-    ctx.strokeStyle = pal.stroke("accent", sealAlpha);
-    ctx.lineWidth = Math.max(0.75, 1.05 * s);
-    ctx.stroke();
+    if (isIntaglio) {
+        // 秋冬白文阴刻：醇厚朱砂印泥石面 + 不规则金石崩碴砂眼（evenodd）
+        ctx.beginPath();
+        traceStonePoly();
+        const chips: readonly (readonly Point2D[])[] = [
+            [
+                { x: -hw * 0.72, y: -hh * 0.76 },
+                { x: -hw * 0.54, y: -hh * 0.72 },
+                { x: -hw * 0.62, y: -hh * 0.62 },
+            ],
+            [
+                { x: hw * 0.48, y: hh * 0.68 },
+                { x: hw * 0.66, y: hh * 0.63 },
+                { x: hw * 0.60, y: hh * 0.75 },
+                { x: hw * 0.46, y: hh * 0.74 },
+            ],
+            [
+                { x: -hw * 0.58, y: hh * 0.36 },
+                { x: -hw * 0.44, y: hh * 0.39 },
+                { x: -hw * 0.52, y: hh * 0.48 },
+            ],
+        ];
+        for (const poly of chips) {
+            ctx.moveTo(poly[0].x, poly[0].y);
+            for (let pi = 1; pi < poly.length; pi++) {
+                ctx.lineTo(poly[pi].x, poly[pi].y);
+            }
+            ctx.closePath();
+        }
+        ctx.fillStyle = pal.cinnabar(sealAlpha * 0.90);
+        ctx.fill("evenodd");
+    } else {
+        // 春夏朱文阳刻：淡印泥底晕 + 三段击边断口朱砂边框（零虚线）
+        ctx.beginPath();
+        traceStonePoly();
+        ctx.fillStyle = pal.cinnabar(sealAlpha * 0.09);
+        ctx.fill();
 
-    if (typeof ctx.fillText === "function") {
-        const chars = Array.from(term).slice(0, 2);
-        const fontSize = Math.max(8, Math.round(9.5 * s));
-        ctx.font = `${fontSize}px "Noto Serif SC", "Songti SC", serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = pal.stroke("accent", Math.min(1, sealAlpha * 1.35));
-        if (chars.length === 2) {
-            ctx.fillText(chars[0], 0, -5.5 * s);
-            ctx.fillText(chars[1], 0, 5.5 * s);
-        } else if (chars.length === 1) {
-            ctx.fillText(chars[0], 0, 0);
+        ctx.strokeStyle = pal.cinnabar(sealAlpha);
+        ctx.lineWidth = Math.max(0.85, 1.15 * s);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // 边框段 1：顶边至右上侧
+        ctx.beginPath();
+        ctx.moveTo(-hw + 1.8 * s, -hh);
+        ctx.lineTo(hw - 1.8 * s, -hh + 0.3 * s);
+        ctx.lineTo(hw, -hh + 2.1 * s);
+        ctx.lineTo(hw - 0.3 * s, -hh * 0.08);
+        ctx.stroke();
+
+        // 边框段 2：右下侧至底边
+        ctx.beginPath();
+        ctx.moveTo(hw, hh * 0.16);
+        ctx.lineTo(hw, hh - 2.0 * s);
+        ctx.lineTo(hw - 1.6 * s, hh);
+        ctx.lineTo(-hw * 0.25, hh - 0.25 * s);
+        ctx.stroke();
+
+        // 边框段 3：左下角至左上侧
+        ctx.beginPath();
+        ctx.moveTo(-hw * 0.52, hh);
+        ctx.lineTo(-hw, hh - 2.0 * s);
+        ctx.lineTo(-hw + 0.28 * s, -hh + 2.8 * s);
+        ctx.stroke();
+    }
+
+    const chars = Array.from(term).slice(0, 2);
+    const glyphColor = isIntaglio
+        ? pal.highlight(pal.isDark ? 0.90 * alpha : 0.95 * alpha)
+        : pal.cinnabar(Math.min(1, sealAlpha * 1.35));
+    ctx.strokeStyle = glyphColor;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    const glyphW = hw * 0.54;
+    const glyphH = hh * 0.34;
+    const centers = chars.length === 2 ? [-hh * 0.44, hh * 0.44] : [0];
+    for (let i = 0; i < chars.length; i++) {
+        const strokes = SEAL_GLYPH_STROKES[chars[i]];
+        const strokeWeightScale = strokes && strokes.length >= 9 ? 0.88 : 1.0;
+        ctx.lineWidth = Math.max(
+            0.70,
+            (isIntaglio ? 1.02 : 0.96) * s * strokeWeightScale,
+        );
+        const drawn = drawSealGlyph(
+            ctx,
+            chars[i],
+            0,
+            centers[i],
+            glyphW,
+            glyphH,
+        );
+        if (!drawn && typeof ctx.fillText === "function") {
+            ctx.fillStyle = glyphColor;
+            ctx.font = `${Math.max(8, Math.round(9.5 * s))}px serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(chars[i], 0, centers[i]);
         }
     }
     ctx.restore();
@@ -4842,6 +7429,7 @@ function drawRewardBloom(
         scene.scale,
         frameSeq,
         breezeImpulse,
+        runtime,
     )[reward.idx];
     const s = scene.scale;
 
@@ -4870,6 +7458,7 @@ function drawRewardBloom(
                 s,
                 frameSeq,
                 breezeImpulse,
+                runtime,
             )[bud.idx];
             const blossom: PlumOrnament = {
                 ...bud,
@@ -5078,6 +7667,287 @@ function drawRewardBloom(
     }
 }
 
+function drawAtmosphericStage(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    scale: number,
+    pal: BotanicalPalette,
+    rawProgress: number,
+    embedded: boolean,
+): void {
+    if (pal.overPhoto || rawProgress <= 0.06) return;
+    const stageFade = easeOutCubic(clamp((rawProgress - 0.06) / 0.58, 0, 1)) *
+        (embedded ? 0.68 : 1);
+    if (stageFade <= 0.01) return;
+
+    const isNarrow = !embedded && width < 720;
+
+    if (!pal.isDark) {
+        // 浅色极简冷灰白：仅在生长侧远景铺设宋画冷墨远岫与晴岚白雾，保持 #F4F4F5 纯净底色
+        const ridge1Top = (isNarrow ? 195 : 118) * scale;
+        const ridge1Base = ridge1Top + 108 * scale;
+        const x1Left = width - (isNarrow ? 210 : 410) * scale;
+        const x1Peak = width - (isNarrow ? 112 : 225) * scale;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x1Left, ridge1Base);
+        ctx.bezierCurveTo(
+            lerp(x1Left, x1Peak, 0.45),
+            ridge1Top + 34 * scale,
+            lerp(x1Left, x1Peak, 0.82),
+            ridge1Top,
+            x1Peak,
+            ridge1Top,
+        );
+        ctx.bezierCurveTo(
+            lerp(x1Peak, width, 0.42),
+            ridge1Top + 10 * scale,
+            lerp(x1Peak, width, 0.78),
+            ridge1Top + 48 * scale,
+            width + 16 * scale,
+            ridge1Top + 62 * scale,
+        );
+        ctx.lineTo(width + 16 * scale, ridge1Base);
+        ctx.closePath();
+
+        const g1 = ctx.createLinearGradient(0, ridge1Top, 0, ridge1Base);
+        g1.addColorStop(0, pal.inkGrade("qing", 0.20 * stageFade));
+        g1.addColorStop(0.68, pal.inkGrade("qing", 0.08 * stageFade));
+        g1.addColorStop(1, pal.inkGrade("qing", 0));
+        ctx.fillStyle = g1;
+        ctx.fill();
+
+        // 远岫二：偏右低峰
+        const ridge2Top = (isNarrow ? 235 : 168) * scale;
+        const ridge2Base = ridge2Top + 96 * scale;
+        const x2Left = width - (isNarrow ? 148 : 265) * scale;
+        const x2Peak = width - (isNarrow ? 58 : 115) * scale;
+
+        ctx.beginPath();
+        ctx.moveTo(x2Left, ridge2Base);
+        ctx.quadraticCurveTo(
+            lerp(x2Left, x2Peak, 0.6),
+            ridge2Top + 6 * scale,
+            x2Peak,
+            ridge2Top,
+        );
+        ctx.quadraticCurveTo(
+            lerp(x2Peak, width + 16 * scale, 0.55),
+            ridge2Top + 18 * scale,
+            width + 16 * scale,
+            ridge2Top + 36 * scale,
+        );
+        ctx.lineTo(width + 16 * scale, ridge2Base);
+        ctx.closePath();
+
+        const g2 = ctx.createLinearGradient(0, ridge2Top, 0, ridge2Base);
+        g2.addColorStop(0, pal.inkGrade("dan", 0.13 * stageFade));
+        g2.addColorStop(1, pal.inkGrade("dan", 0));
+        ctx.fillStyle = g2;
+        ctx.fill();
+
+        // 山腰断云晴岚白雾
+        const mistBands = [
+            {
+                x: width - (isNarrow ? 120 : 215) * scale,
+                y: ridge1Top + 62 * scale,
+                rx: (isNarrow ? 95 : 175) * scale,
+                ry: 24 * scale,
+                a: 0.72,
+            },
+            {
+                x: width - (isNarrow ? 65 : 120) * scale,
+                y: ridge2Top + 56 * scale,
+                rx: (isNarrow ? 75 : 135) * scale,
+                ry: 20 * scale,
+                a: 0.62,
+            },
+        ];
+        for (const m of mistBands) {
+            ctx.save();
+            ctx.translate(m.x, m.y);
+            ctx.scale(1, m.ry / Math.max(1, m.rx));
+            const mg = ctx.createRadialGradient(
+                0,
+                0,
+                1,
+                0,
+                0,
+                Math.max(2, m.rx),
+            );
+            mg.addColorStop(0, pal.highlight(m.a * stageFade));
+            mg.addColorStop(0.55, pal.highlight(m.a * 0.42 * stageFade));
+            mg.addColorStop(1, pal.highlight(0));
+            ctx.fillStyle = mg;
+            ctx.beginPath();
+            ctx.arc(0, 0, m.rx, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.restore();
+        return;
+    }
+
+    // 深色模式：川濑巴水式清朗圆月 · 纤长平刷夜岚流云
+    const moonX = width - (isNarrow ? 112 : 242) * scale;
+    const moonY = (isNarrow ? 182 : embedded ? 148 : 158) * scale;
+    const moonR = (isNarrow ? 32 : embedded ? 44 : 56) * scale;
+    const haloR = Math.max(4, moonR * 3.8);
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    const haloGrad = ctx.createRadialGradient(
+        moonX,
+        moonY,
+        Math.max(1, moonR * 0.2),
+        moonX,
+        moonY,
+        haloR,
+    );
+    haloGrad.addColorStop(
+        0,
+        `rgba(222,232,248,${(0.09 * stageFade).toFixed(4)})`,
+    );
+    haloGrad.addColorStop(0.36, pal.wash("sub", 0.03 * stageFade));
+    haloGrad.addColorStop(1, "rgba(222,232,248,0)");
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, haloR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 月轮外缘微羽化晕 + 上半弧清朗木版 Bokashi 拭擦月面
+    const featherR = Math.max(2, moonR * 1.05);
+    const featherGrad = ctx.createRadialGradient(
+        moonX,
+        moonY,
+        Math.max(1, moonR * 0.82),
+        moonX,
+        moonY,
+        featherR,
+    );
+    featherGrad.addColorStop(
+        0,
+        `rgba(224,234,248,${(0.045 * stageFade).toFixed(4)})`,
+    );
+    featherGrad.addColorStop(1, "rgba(224,234,248,0)");
+    ctx.fillStyle = featherGrad;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, featherR, 0, Math.PI * 2);
+    ctx.fill();
+
+    const moonGrad = ctx.createLinearGradient(
+        moonX - moonR * 0.35,
+        moonY - moonR,
+        moonX + moonR * 0.25,
+        moonY + moonR,
+    );
+    moonGrad.addColorStop(
+        0,
+        `rgba(244,247,254,${(0.24 * stageFade).toFixed(4)})`,
+    );
+    moonGrad.addColorStop(
+        0.52,
+        `rgba(224,232,248,${(0.15 * stageFade).toFixed(4)})`,
+    );
+    moonGrad.addColorStop(
+        0.86,
+        `rgba(198,210,234,${(0.045 * stageFade).toFixed(4)})`,
+    );
+    moonGrad.addColorStop(1, "rgba(198,210,234,0)");
+    ctx.fillStyle = moonGrad;
+    ctx.beginPath();
+    ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3 条纤长平刷东方流云丝带（柳叶长弧，两端尖收归零，彻底消除椭圆洞）
+    const drawCloudRibbon = (
+        cx: number,
+        cy: number,
+        halfLen: number,
+        halfThick: number,
+        isVeilDark: boolean,
+        peakAlpha: number,
+    ) => {
+        const xL = cx - halfLen;
+        const xR = cx + halfLen;
+        ctx.beginPath();
+        ctx.moveTo(xL, cy);
+        ctx.bezierCurveTo(
+            lerp(xL, cx, 0.45),
+            cy - halfThick * 1.15,
+            lerp(cx, xR, 0.55),
+            cy - halfThick * 0.85,
+            xR,
+            cy,
+        );
+        ctx.bezierCurveTo(
+            lerp(cx, xR, 0.55),
+            cy + halfThick * 0.95,
+            lerp(xL, cx, 0.45),
+            cy + halfThick * 1.05,
+            xL,
+            cy,
+        );
+        ctx.closePath();
+
+        const cg = ctx.createLinearGradient(xL, cy, xR, cy);
+        if (isVeilDark) {
+            cg.addColorStop(0, "rgba(7,8,12,0)");
+            cg.addColorStop(
+                0.28,
+                `rgba(7,8,12,${(peakAlpha * stageFade).toFixed(4)})`,
+            );
+            cg.addColorStop(
+                0.72,
+                `rgba(7,8,12,${(peakAlpha * stageFade).toFixed(4)})`,
+            );
+            cg.addColorStop(1, "rgba(7,8,12,0)");
+        } else {
+            cg.addColorStop(0, "rgba(220,230,246,0)");
+            cg.addColorStop(
+                0.45,
+                `rgba(220,230,246,${(peakAlpha * stageFade).toFixed(4)})`,
+            );
+            cg.addColorStop(1, "rgba(220,230,246,0)");
+        }
+        ctx.fillStyle = cg;
+        ctx.fill();
+    };
+
+    // 第一条暗夜云带轻掩月脚下 1/3
+    drawCloudRibbon(
+        moonX + moonR * 0.16,
+        moonY + moonR * 0.56,
+        moonR * 1.9,
+        5.8 * scale,
+        true,
+        0.62,
+    );
+    // 紧贴上缘与右下的两道纤薄月白银雾丝带
+    drawCloudRibbon(
+        moonX - moonR * 0.24,
+        moonY + moonR * 0.42,
+        moonR * 1.65,
+        3.2 * scale,
+        false,
+        0.075,
+    );
+    drawCloudRibbon(
+        moonX + moonR * 0.58,
+        moonY + moonR * 0.78,
+        moonR * 2.15,
+        3.8 * scale,
+        false,
+        0.055,
+    );
+
+    // 避免未使用参数警告
+    void height;
+}
+
 export function renderBotanicalFrame(params: BotanicalRenderParams): number {
     const {
         ctx,
@@ -5098,6 +7968,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         runtime,
         sceneSide = "right",
         dateKey = "2026-11-27",
+        dockInsets,
     } = params;
     let nextDriftSpawn = params.lastDriftSpawn;
 
@@ -5120,12 +7991,30 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             runtime.breezeImpulseStrength
         : 0;
 
+    if (runtime && !reducedMotion && !embedded && rawProgress >= 1) {
+        if (runtime.nextGustSec < -100) {
+            runtime.nextGustSec = timeSec + 4.5;
+        } else if (timeSec >= runtime.nextGustSec) {
+            triggerBotanicalGust(runtime, timeSec, 0.85, 4.6);
+        }
+    }
+
     ctx.clearRect(0, 0, width, height);
     if (mirrorLeft) {
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
     }
+
+    drawAtmosphericStage(
+        ctx,
+        width,
+        height,
+        scene.scale,
+        palette,
+        rawProgress,
+        embedded,
+    );
 
     // Precompute ornament world transforms & interactive physics once per frame
     const pSpeed = embedded ? 0 : Math.hypot(pointer.vx, pointer.vy);
@@ -5149,6 +8038,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             scene.scale,
             frameSeq,
             breezeImpulse,
+            runtime,
         )[o.idx];
 
         if (!reducedMotion && !o.ghost && !embedded) {
@@ -5184,9 +8074,16 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             o.vel = 0;
         }
 
+        const isGusting = Boolean(
+            runtime &&
+                timeSec >= runtime.gustStartSec &&
+                timeSec <= runtime.gustStartSec + runtime.gustDurationSec,
+        );
         const sway = reducedMotion
             ? 0
-            : Math.sin(timeSec * 1.15 + o.phase) * 0.036 * windCalm + o.push;
+            : (isGusting || Math.abs(breezeImpulse) > 0.01
+                ? Math.sin(timeSec * 1.85 + o.phase) * 0.042 * windCalm
+                : 0) + o.push;
         activeOrns.push({
             o,
             wx: wp.x,
@@ -5196,7 +8093,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         });
     }
 
-    // Layer 1: Distant ghost echo branches & ornaments
+    // Layer 1: Distant ghost & midground echo branches & ornaments
     for (const b of scene.branches) {
         if (b.ghost) {
             drawTaperedBranch(
@@ -5211,6 +8108,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 frameSeq,
                 palette,
                 breezeImpulse,
+                runtime,
             );
         }
     }
@@ -5224,14 +8122,12 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 item.angle,
                 item.op,
                 palette,
-                0.22,
+                0.15,
             );
         }
     }
-
-    // Layer 2: Foreground calligraphic branches
     for (const b of scene.branches) {
-        if (!b.ghost) {
+        if (b.midground && !b.ghost) {
             drawTaperedBranch(
                 ctx,
                 b,
@@ -5244,13 +8140,53 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 frameSeq,
                 palette,
                 breezeImpulse,
+                runtime,
+            );
+        }
+    }
+    for (const item of activeOrns) {
+        if (item.o.midground && !item.o.ghost) {
+            renderOrnamentItem(
+                ctx,
+                item.o,
+                item.wx,
+                item.wy,
+                item.angle,
+                item.op,
+                palette,
+                0.45,
+            );
+        }
+    }
+
+    // Slope rocks & moss base (for orchid & fern)
+    for (const rock of scene.rocks) {
+        drawRockBase(ctx, rock, rawProgress, scene.scale, palette);
+    }
+
+    // Layer 2: Foreground calligraphic branches
+    for (const b of scene.branches) {
+        if (!b.ghost && !b.midground) {
+            drawTaperedBranch(
+                ctx,
+                b,
+                scene.species,
+                rawProgress,
+                timeSec,
+                reducedMotion,
+                windCalm,
+                scene.scale,
+                frameSeq,
+                palette,
+                breezeImpulse,
+                runtime,
             );
         }
     }
 
     // Layer 3: Foreground botanical ornaments
     for (const item of activeOrns) {
-        if (!item.o.ghost) {
+        if (!item.o.ghost && !item.o.midground) {
             if (
                 palette.isDark &&
                 !embedded &&
@@ -5310,7 +8246,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         }
     }
 
-    // Layer 4: Expressive ink & vermilion/accent splatter dots near foreground branch tips
+    // Layer 4: 泥金砂子与飞墨微尘（点亮主景花簇周边空间）
     if (rawProgress > 0.72) {
         const speckFade = easeOutCubic(
             clamp((rawProgress - 0.72) / 0.28, 0, 1),
@@ -5328,23 +8264,35 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 scene.scale,
                 frameSeq,
                 breezeImpulse,
+                runtime,
             );
             if (pts.length < 3) continue;
-            const anchorIdx = Math.floor(pts.length * (bi === 0 ? 0.88 : 0.72));
+            const anchorIdx = Math.floor(pts.length * (bi === 0 ? 0.84 : 0.68));
             const anchor = pts[anchorIdx];
-            for (let k = 0; k < 4; k++) {
-                const seedAngle = b.phase * 3.1 + k * 1.65 + bi * 1.2;
-                const dist = (14 + k * 14) * scene.scale;
+            const speckCount = bi === 0 ? 5 : 4;
+            for (let k = 0; k < speckCount; k++) {
+                const seedAngle = b.phase * 3.1 + k * 1.38 + bi * 1.4;
+                const dist = (12 + k * 15) * scene.scale;
                 const sx = anchor.x + Math.cos(seedAngle) * dist;
                 const sy = anchor.y + Math.sin(seedAngle) * dist * 0.78;
                 const sr = (scene.species === "fern"
-                    ? (0.85 + ((k + bi) % 2) * 0.55)
-                    : (1.1 + ((k + bi) % 3) * 0.9)) * scene.scale;
+                    ? (0.65 + ((k + bi) % 3) * 0.35)
+                    : (0.60 + ((k + bi) % 4) * 0.28)) * scene.scale;
                 ctx.beginPath();
                 ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-                ctx.fillStyle = k % 2 === 0
-                    ? palette.stroke("accent", 0.52 * speckFade)
-                    : palette.stroke("ink", 0.40 * speckFade);
+                if (palette.isDark) {
+                    ctx.fillStyle = k % 3 === 1
+                        ? palette.waterline("accent", 0.38 * speckFade)
+                        : palette.goldDust(
+                            (0.36 + (k % 3) * 0.16) * speckFade,
+                        );
+                } else {
+                    ctx.fillStyle = k % 3 === 0
+                        ? palette.goldDust(0.38 * speckFade)
+                        : k % 3 === 1
+                        ? palette.waterline("accent", 0.36 * speckFade)
+                        : palette.inkGrade("nong", 0.28 * speckFade);
+                }
                 ctx.fill();
             }
         }
@@ -5381,6 +8329,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 scene.scale,
                 frameSeq,
                 breezeImpulse,
+                runtime,
             )[va.idx];
 
             if (va.kind === "sparrow") {
@@ -5420,6 +8369,10 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorMode = "returning";
                         runtime.visitorStateStartSec = timeSec;
                     } else {
+                        // Accelerating flap into upward parabolic glide arc
+                        const lift = dAge < 0.45 ? -48 * dt : -14 * dt;
+                        runtime.visitorVx -= 18 * dt;
+                        runtime.visitorVy += lift;
                         runtime.visitorX += runtime.visitorVx * scene.scale *
                             dt;
                         runtime.visitorY += runtime.visitorVy * scene.scale *
@@ -5432,7 +8385,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             scene.scale,
                             flyAlpha,
                             palette,
-                            true,
+                            dAge < 0.55 || Math.floor(dAge * 5) % 2 === 0,
                             timeSec,
                             reducedMotion,
                         );
@@ -5497,6 +8450,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorMode = "returning";
                         runtime.visitorStateStartSec = timeSec;
                     } else {
+                        runtime.visitorVy -= 14 * dt;
                         runtime.visitorX += (runtime.visitorVx +
                             Math.sin(dAge * 5) * 28) * scene.scale * dt;
                         runtime.visitorY += runtime.visitorVy * scene.scale *
@@ -5571,6 +8525,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorMode = "returning";
                         runtime.visitorStateStartSec = timeSec;
                     } else {
+                        runtime.visitorVy -= 16 * dt;
                         runtime.visitorX += (runtime.visitorVx +
                             Math.sin(dAge * 5) * 32) * scene.scale * dt;
                         runtime.visitorY += runtime.visitorVy * scene.scale *
@@ -5670,16 +8625,18 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
 
     if (!embedded && rawProgress > 0.85) {
         const sealFade = easeOutCubic(clamp((rawProgress - 0.85) / 0.15, 0, 1));
-        const { term } = resolveSolarTerm(dateKey);
+        const { term, season } = resolveSolarTerm(dateKey);
         drawSolarTermSeal(
             ctx,
             width,
             height,
             scene.scale,
             term,
+            season,
             mirrorLeft ? "left" : "right",
             palette,
             sealFade,
+            dockInsets,
         );
     }
 

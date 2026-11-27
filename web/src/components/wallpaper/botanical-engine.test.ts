@@ -4,11 +4,16 @@ import {
     type ConcreteBotanicalSpecies,
     createBotanicalRuntimeState,
     generateBotanicalScene,
+    hasSealVectorGlyph,
+    isBotanicalSceneActive,
+    nextBotanicalWakeDelayMs,
     renderBotanicalFrame,
     resolveBotanicalSpecies,
     resolveBotanicalViewport,
     resolveDiurnalWindScale,
     resolveSolarTerm,
+    SOLAR_TERMS_BY_MMDD,
+    triggerBotanicalGust,
     triggerBotanicalResonance,
 } from "./botanical-engine.ts";
 
@@ -711,5 +716,446 @@ Deno.test("renderBotanicalFrame: supports left-mirrored layout, snow cushions, s
             localHour: 18,
         });
         assertFiniteCoords();
+    }
+});
+
+Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-breaking bamboo, and idle sleep", () => {
+    const pal = buildBotanicalPalette(
+        false,
+        "oklch(0.54 0.16 25)",
+        "#1d1d1f",
+    );
+    assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.waterline("accent")));
+    assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.inkGrade("jiao")));
+    assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.inkGrade("qing")));
+
+    // Wide non-embedded bamboo breaks boldly out of the top edge
+    const wideBamboo = generateBotanicalScene(
+        "bamboo",
+        1440,
+        900,
+        "2026-06-21",
+        false,
+    );
+    assert(
+        wideBamboo.branches.some((b) => b.points.some((p) => p.y < 0)),
+        "Expected wide desktop bamboo culm to pierce top viewport edge",
+    );
+
+    // Orchid carries slope rock base
+    const wideOrchid = generateBotanicalScene(
+        "orchid",
+        1440,
+        900,
+        "2026-04-05",
+        false,
+    );
+    assert(wideOrchid.rocks.length >= 1, "Expected slope rock base for orchid");
+
+    // Branch feibai must not use destination-out on main canvas
+    const ops: string[] = [];
+    const { ctx } = createMockCanvasContext();
+    const origDesc = Object.getOwnPropertyDescriptor(
+        ctx,
+        "globalCompositeOperation",
+    );
+    let gco = "source-over";
+    Object.defineProperty(ctx, "globalCompositeOperation", {
+        get: () => gco,
+        set: (v: string) => {
+            gco = v;
+            ops.push(v);
+        },
+        configurable: true,
+    });
+    const plum = generateBotanicalScene("plum", 1440, 900, "2026-12-22", false);
+    renderBotanicalFrame({
+        ctx,
+        scene: plum,
+        width: 1440,
+        height: 900,
+        timeSec: 12,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: true,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: pal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 0,
+        frameSeq: 1,
+    });
+    if (origDesc) {
+        Object.defineProperty(ctx, "globalCompositeOperation", origDesc);
+    }
+    assert(
+        !ops.includes("destination-out"),
+        "Branch feibai must not use destination-out on main canvas",
+    );
+
+    // Idle sleep & gust wakeup
+    const runtime = createBotanicalRuntimeState();
+    assertEquals(
+        isBotanicalSceneActive({
+            runtime,
+            rawProgress: 1,
+            timeSec: 10,
+            scene: plum,
+            drifters: [],
+            reducedMotion: false,
+            embedded: false,
+        }),
+        false,
+    );
+    triggerBotanicalGust(runtime, 10, 0.85, 4.6);
+    assertEquals(
+        isBotanicalSceneActive({
+            runtime,
+            rawProgress: 1,
+            timeSec: 11,
+            scene: plum,
+            drifters: [],
+            reducedMotion: false,
+            embedded: false,
+        }),
+        true,
+    );
+    assert(nextBotanicalWakeDelayMs(runtime, 15) >= 250);
+
+    // Ginkgo phenology: Frost (霜降) has significantly more golden accent/sub leaves than early summer
+    const ginkgoFrost = generateBotanicalScene(
+        "ginkgo",
+        1440,
+        900,
+        "2026-10-25",
+        false,
+    );
+    const ginkgoSummer = generateBotanicalScene(
+        "ginkgo",
+        1440,
+        900,
+        "2026-05-10",
+        false,
+    );
+    const goldCount = (s: typeof ginkgoFrost) =>
+        s.ornaments.filter((o) =>
+            !o.ghost && (o.tint === "accent" || o.tint === "sub")
+        ).length;
+    assert(
+        goldCount(ginkgoFrost) > goldCount(ginkgoSummer),
+        `Expected Frost ginkgo golden leaves (${
+            goldCount(ginkgoFrost)
+        }) > Summer (${goldCount(ginkgoSummer)})`,
+    );
+
+    // Plum phenology: 立春 has higher open-blossom share than 冬至
+    const plumSpring = generateBotanicalScene(
+        "plum",
+        1440,
+        900,
+        "2026-02-06",
+        false,
+    );
+    const plumWinter = generateBotanicalScene(
+        "plum",
+        1440,
+        900,
+        "2026-12-22",
+        false,
+    );
+    const blossomCount = (s: typeof plumSpring) =>
+        s.ornaments.filter((o) => !o.ghost && o.kind === "plumBlossom").length;
+    assert(
+        blossomCount(plumSpring) > blossomCount(plumWinter),
+        `Expected 立春 plum blossoms (${blossomCount(plumSpring)}) > 冬至 (${
+            blossomCount(plumWinter)
+        })`,
+    );
+
+    // Fern & Orchid include slope rocks on wide desktop
+    const wideFern = generateBotanicalScene(
+        "fern",
+        1440,
+        900,
+        "2026-07-10",
+        false,
+    );
+    assert(
+        wideFern.rocks.length >= 1,
+        "Expected slope rock base for wide fern",
+    );
+
+    // Rendering with dockInsets emits valid finite coordinates
+    const { ctx: dockCtx, assertFiniteCoords: assertDockCoords } =
+        createMockCanvasContext();
+    renderBotanicalFrame({
+        ctx: dockCtx,
+        scene: plumSpring,
+        width: 1440,
+        height: 900,
+        timeSec: 14,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: true,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: pal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 0,
+        frameSeq: 2,
+        dockInsets: { top: 0, right: 64, bottom: 56, left: 0 },
+    });
+    assertDockCoords();
+});
+
+Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/goldDust, and trunk weight", () => {
+    const palLight = buildBotanicalPalette(false, "#be123c", "#1d1d1f");
+    const palDark = buildBotanicalPalette(true, "#fb7185", "#f5f5f7");
+    for (
+        const s of [
+            palLight.cinnabar(),
+            palLight.goldDust(),
+            palDark.cinnabar(),
+            palDark.goldDust(),
+        ]
+    ) {
+        assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(s), `Invalid rgba: ${s}`);
+    }
+
+    // 全部 24 节气均具备手工矢量小篆字模
+    for (const entry of SOLAR_TERMS_BY_MMDD) {
+        assert(
+            hasSealVectorGlyph(entry.term),
+            `Expected vector seal glyph for solar term ${entry.term}`,
+        );
+    }
+
+    // 桌面端寒梅、红枫、银杏主干具备苍劲量感且末梢收细
+    for (const sp of ["plum", "maple", "ginkgo"] as const) {
+        const scene = generateBotanicalScene(
+            sp,
+            1440,
+            900,
+            "2026-04-05",
+            false,
+        );
+        const hero = scene.branches.find((b) => !b.ghost && !b.parentRef);
+        assert(hero, `${sp}: expected hero trunk`);
+        assert(
+            hero.widthStart >= 6 * scene.scale,
+            `${sp}: expected calligraphic trunk widthStart >= 6*S, got ${hero.widthStart}`,
+        );
+        const minTip = Math.min(...scene.branches.map((b) => b.widthEnd));
+        assert(
+            minTip <= 0.75 * scene.scale,
+            `${sp}: expected fine twig widthEnd <= 0.75*S, got ${minTip}`,
+        );
+    }
+
+    // 完整渲染帧期间零 fillText、零非空虚线 setLineDash（覆盖春夏朱文与秋冬白文）
+    for (const dateKey of ["2026-04-05", "2026-11-22"]) {
+        for (const isDark of [false, true]) {
+            const pal = buildBotanicalPalette(
+                isDark,
+                "#be123c",
+                isDark ? "#f5f5f7" : "#1d1d1f",
+            );
+            const scene = generateBotanicalScene(
+                "plum",
+                1440,
+                900,
+                dateKey,
+                false,
+            );
+            const { ctx, assertFiniteCoords } = createMockCanvasContext();
+            let fillTextCalls = 0;
+            let nonEmptyDashCalls = 0;
+            ctx.fillText = () => {
+                fillTextCalls++;
+            };
+            ctx.setLineDash = (segs: number[]) => {
+                if (segs.length > 0) nonEmptyDashCalls++;
+            };
+            renderBotanicalFrame({
+                ctx,
+                scene,
+                width: 1440,
+                height: 900,
+                timeSec: 12,
+                dt: 0.016,
+                rawProgress: 1,
+                reducedMotion: true,
+                windCalm: 1,
+                searchFocused: false,
+                embedded: false,
+                palette: pal,
+                pointer: {
+                    x: -9999,
+                    y: -9999,
+                    vx: 0,
+                    vy: 0,
+                    lastT: 0,
+                    lastRustleSpawn: 0,
+                },
+                drifters: [],
+                lastDriftSpawn: 0,
+                frameSeq: 1,
+                dateKey,
+            });
+            assertFiniteCoords();
+            assertEquals(
+                fillTextCalls,
+                0,
+                `${dateKey} (dark=${isDark}): seal must render vector glyphs without fillText`,
+            );
+            assertEquals(
+                nonEmptyDashCalls,
+                0,
+                `${dateKey} (dark=${isDark}): finished frame must not use dashed strokes`,
+            );
+        }
+    }
+});
+
+Deno.test("museum polish: intrinsic species color harmony, maple search clearance, and staggered bamboo leaves", () => {
+    const parseRgb = (s: string) => {
+        const m = s.match(/^rgba\((\d+),(\d+),(\d+),/);
+        assert(m, `Expected rgba string: ${s}`);
+        return [Number(m[1]), Number(m[2]), Number(m[3])] as const;
+    };
+
+    // 1. 植物博物本色基因融合：在玫瑰红强调色下，银杏呈暖金黄、尤加利呈冷翠绿、寒梅保持绯红
+    const ginkgoPal = buildBotanicalPalette(
+        false,
+        "#be123c",
+        "#1d1d1f",
+        false,
+        12,
+        "ginkgo",
+    );
+    const [gr, gg, gb] = parseRgb(ginkgoPal.stroke("accent"));
+    assert(
+        gr > gb && gg > gb * 1.25,
+        `Expected golden ginkgo accent under rose theme, got (${gr},${gg},${gb})`,
+    );
+
+    const eucPal = buildBotanicalPalette(
+        false,
+        "#be123c",
+        "#1d1d1f",
+        false,
+        12,
+        "eucalyptus",
+    );
+    const [er, eg, eb] = parseRgb(eucPal.stroke("accent"));
+    assert(
+        eg > er,
+        `Expected cool celadon eucalyptus accent (g > r) under rose theme, got (${er},${eg},${eb})`,
+    );
+
+    const plumPal = buildBotanicalPalette(
+        false,
+        "#be123c",
+        "#1d1d1f",
+        false,
+        12,
+        "plum",
+    );
+    const [pr, pg, pb] = parseRgb(plumPal.stroke("accent"));
+    assert(
+        pr > pg && pr > pb,
+        `Expected crimson plum accent under rose theme, got (${pr},${pg},${pb})`,
+    );
+
+    // 2. 红枫桌面 1440x900 全部分支采样点必须避让中央搜索框安全区
+    const wideMaple = generateBotanicalScene(
+        "maple",
+        1440,
+        900,
+        "2026-10-23",
+        false,
+    );
+    for (const b of wideMaple.branches) {
+        for (const p of b.points) {
+            const insideSearch = p.x >= 420 && p.x <= 1020 && p.y >= 320 &&
+                p.y <= 410;
+            assert(
+                !insideSearch,
+                `Maple branch point (${p.x.toFixed(1)}, ${
+                    p.y.toFixed(1)
+                }) intruded search zone`,
+            );
+        }
+    }
+
+    // 3. 夏竹前景叶簇着生于枝条多个不同节点，打破单点对称放射
+    const wideBamboo = generateBotanicalScene(
+        "bamboo",
+        1440,
+        900,
+        "2026-06-21",
+        false,
+    );
+    const fgBambooLeaves = wideBamboo.ornaments.filter(
+        (o) => o.kind === "bambooLeaf" && !o.ghost && !o.midground,
+    );
+    const distinctIdx = new Set(fgBambooLeaves.map((o) => o.idx));
+    assert(
+        distinctIdx.size >= 3,
+        `Expected staggered bamboo leaf attachment nodes (>=3), got ${distinctIdx.size}`,
+    );
+
+    // 4. 经典蓝下寒梅仍保持宋画「宫粉胭脂梅 × 绿萼」，不染成蓝梅花
+    const plumBluePal = buildBotanicalPalette(
+        false,
+        "#0a66c2",
+        "#1d1d1f",
+        false,
+        12,
+        "plum",
+    );
+    const [pbr, pbg, pbb] = parseRgb(plumBluePal.stroke("accent"));
+    assert(
+        pbr > pbg && pbr > pbb,
+        `Expected crimson/pink plum accent even under blue theme, got (${pbr},${pbg},${pbb})`,
+    );
+
+    // 5. 寒梅桌面 1440x900 全部分支采样点必须避让中央搜索框安全区
+    const widePlum = generateBotanicalScene(
+        "plum",
+        1440,
+        900,
+        "2026-02-04",
+        false,
+    );
+    for (const b of widePlum.branches) {
+        for (const p of b.points) {
+            const insideSearch = p.x >= 420 && p.x <= 1020 && p.y >= 315 &&
+                p.y <= 420;
+            assert(
+                !insideSearch,
+                `Plum branch point (${p.x.toFixed(1)}, ${
+                    p.y.toFixed(1)
+                }) intruded search zone`,
+            );
+        }
     }
 });

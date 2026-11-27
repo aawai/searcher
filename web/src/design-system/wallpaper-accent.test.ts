@@ -4,8 +4,10 @@ import {
     classifyMastheadBackdrop,
     deriveWallpaperAccent,
     type HighContrastAccent,
+    oklchToSrgb,
     resolveBackdropPolarity,
     resolveMastheadBackdrop,
+    srgbToOklch,
     wallpaperDarkTone,
     type WallpaperPixels,
 } from "./wallpaper-accent.ts";
@@ -618,4 +620,24 @@ Deno.test("resolveMastheadBackdrop & classifyMastheadBackdrop: classifies polari
         }),
         "contrast",
     );
+});
+
+Deno.test("srgbToOklch & oklchToSrgb: round-trips in-gamut colors and clamps out-of-gamut chroma", () => {
+    const samples: Rgb[] = [
+        [29, 29, 31],
+        [190, 18, 60],
+        [10, 102, 194],
+        [244, 244, 245],
+    ];
+    for (const [r, g, b] of samples) {
+        const [L, C, H] = srgbToOklch(r, g, b);
+        const [rr, rg, rb] = oklchToSrgb(L, C, H);
+        assert(Math.abs(rr - r) <= 1, `r mismatch: ${rr} vs ${r}`);
+        assert(Math.abs(rg - g) <= 1, `g mismatch: ${rg} vs ${g}`);
+        assert(Math.abs(rb - b) <= 1, `b mismatch: ${rb} vs ${b}`);
+    }
+    const clamped = oklchToSrgb(0.65, 0.5, 145);
+    for (const ch of clamped) {
+        assert(Number.isInteger(ch) && ch >= 0 && ch <= 255);
+    }
 });

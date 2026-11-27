@@ -796,6 +796,27 @@ function darkToneFromSummary(summary: PixelSummary): WallpaperDarkTone {
     };
 }
 
+/** sRGB (0–255) → OKLCH `[lightness, chroma, hueDeg]`. */
+export function srgbToOklch(
+    r: number,
+    g: number,
+    b: number,
+): readonly [number, number, number] {
+    const [L, a, ob] = oklab(r, g, b);
+    const C = Math.hypot(a, ob);
+    const H = C < 1e-6 ? 0 : ((Math.atan2(ob, a) * 180) / Math.PI + 360) % 360;
+    return [L, C, H];
+}
+
+/** OKLCH → 8-bit sRGB `[r, g, b]`, reducing chroma in gamut if needed. */
+export function oklchToSrgb(
+    lightness: number,
+    chroma: number,
+    hue: number,
+): readonly [number, number, number] {
+    return toSrgb(lightness, chroma, hue);
+}
+
 /**
  * Derive wallpaper mean OKLab perceptual lightness and dual-tone ambient glow pair.
  */

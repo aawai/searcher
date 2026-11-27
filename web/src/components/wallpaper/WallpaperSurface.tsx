@@ -92,6 +92,7 @@ export function WallpaperSurface({
             data-wallpaper-mode={effectiveMode}
             data-wallpaper-image={hasImage ? "true" : undefined}
             data-wallpaper-scene={botanicalSpecies ?? undefined}
+            data-scene-side={botanicalSpecies ? sceneSide : undefined}
             data-testid={testId}
             style={{
                 ...style,
