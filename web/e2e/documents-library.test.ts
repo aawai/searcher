@@ -1046,7 +1046,7 @@ Deno.test("production documents library workspace contracts", async (t) => {
                                     el.scrollWidth > el.clientWidth + 2,
                                 vertical: (() => {
                                     const nav = el.querySelector(
-                                        "#notes-sidebar",
+                                        "#notes-sidebar .documents-sidebar-scroll",
                                     );
                                     return nav !== null &&
                                         nav.scrollHeight > nav.clientHeight;

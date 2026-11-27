@@ -603,9 +603,7 @@ export function LibraryAppsView({
                                 <EmptyState
                                     illustration="empty-apps"
                                     illustrationSize="md"
-                                    headingLevel={3}
                                     density="compact"
-                                    title="文件夹中还没有应用"
                                     action={
                                         <Button
                                             variant="default"
@@ -644,9 +642,7 @@ export function LibraryAppsView({
                             <EmptyState
                                 illustration="empty-apps"
                                 illustrationSize="md"
-                                headingLevel={3}
                                 density="compact"
-                                title="还没有应用"
                                 action={
                                     <Button
                                         variant="default"

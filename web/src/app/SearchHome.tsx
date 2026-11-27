@@ -331,7 +331,6 @@ export function DesktopHost(
         : notesWindow?.active
         ? "notes"
         : null;
-    const activeSlot = activeLibrary ? libraryWindows[activeLibrary] : null;
 
     const dock = useDock();
     const [noteFullScreen, setNoteFullScreen] = useState(false);
@@ -388,7 +387,6 @@ export function DesktopHost(
     const homeRef = useRef<HTMLElement>(null);
     const home = useHomeViewport();
     const [appForm, setAppForm] = useState<AppFormTarget | null>(null);
-    const [feedbackHost, setFeedbackHost] = useState<HTMLElement | null>(null);
     const dirtyForm = useRef(false);
     const isNoteDirty = useCallback(() => dirtyForm.current, []);
     const [pendingAction, setPendingAction] = useState<PendingAction | null>(
@@ -1723,7 +1721,6 @@ export function DesktopHost(
         if (noteFullScreen) setNoteFullScreen(false);
         else minimizeLibrary();
     }, "host");
-    const mobileFeedback = Boolean(activeSlot?.narrow);
     function renderLibraryWindow(id: LibraryWindowId) {
         const slot = libraryWindows[id];
         if (!user || !slot) return null;
@@ -1755,16 +1752,6 @@ export function DesktopHost(
                     <LibraryWindowBody
                         fullScreen={isNotes && noteFullScreen}
                         editor={isNotes && editor}
-                        feedback={slot.narrow && error
-                            ? (
-                                <StatusBanner tone="error" density="compact">
-                                    {error}
-                                </StatusBanner>
-                            )
-                            : undefined}
-                        onFeedbackHost={slot.narrow && slot.active
-                            ? setFeedbackHost
-                            : undefined}
                     >
                         {isNotes
                             ? (
@@ -1914,7 +1901,6 @@ export function DesktopHost(
                     <Button
                         key={record.id}
                         variant="ghost"
-                        size="sm"
                         disabled={record.isRestoring}
                         aria-label={record.error
                             ? `重试恢复 ${name}`
@@ -1935,7 +1921,6 @@ export function DesktopHost(
                         <Button
                             key={`pin-${record.id}`}
                             variant="ghost"
-                            size="sm"
                             disabled={record.isPinning || record.isRestoring}
                             aria-label={currentUndoQueue.length > 1
                                 ? `固定 ${recordName(record)} 到首页`
@@ -1949,7 +1934,6 @@ export function DesktopHost(
             )}
             <Button
                 variant="ghost"
-                size="sm"
                 render={<Link to={routes.trash} />}
             >
                 前往回收站
@@ -1961,8 +1945,8 @@ export function DesktopHost(
             open={currentUndoQueue.length > 0}
             message={undoErrors ? `${undoText} ${undoErrors}` : undoText}
             hidden={overlayActive}
-            host={feedbackHost}
-            placement={mobileFeedback ? "inline" : "floating"}
+            host={null}
+            placement="floating"
             onUndo={() =>
                 void restoreUndoItems(
                     undoableRecords.map((record) => record.id),
@@ -1978,8 +1962,8 @@ export function DesktopHost(
             open={taskConflictId !== null}
             message="笔记已在别处修改"
             hidden={overlayActive}
-            host={feedbackHost}
-            placement={mobileFeedback ? "inline" : "floating"}
+            host={null}
+            placement="floating"
             onUndo={() => {
                 if (taskConflictId) openDocumentRef.current(taskConflictId);
                 setTaskConflictId(null);
@@ -2008,7 +1992,7 @@ export function DesktopHost(
                     <StatusBanner
                         tone="error"
                         presentation="floating"
-                        open={Boolean(error) && !mobileFeedback}
+                        open={Boolean(error)}
                     >
                         <span>{error}</span>
                         <Button

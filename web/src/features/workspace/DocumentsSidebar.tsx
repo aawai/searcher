@@ -1000,136 +1000,141 @@ export function DocumentsSidebar({
                     </Tooltip>
                 )}
             </div>
-            <div className="documents-sidebar-scroll">
-                {notebookError && (
-                    <StatusBanner tone="error" density="compact">
-                        <div className="documents-status-row">
-                            <span>{notebookError}</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={refresh}
-                            >
-                                重试
-                            </Button>
-                        </div>
-                    </StatusBanner>
-                )}
-                {moveError && (
-                    <StatusBanner tone="error" density="compact">
-                        {moveError}
-                    </StatusBanner>
-                )}
-                {actionError && (
-                    <StatusBanner tone="error" density="compact">
-                        <div className="documents-status-row">
-                            <span>{actionError}</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setActionError(null)}
-                            >
-                                关闭
-                            </Button>
-                        </div>
-                    </StatusBanner>
-                )}
-                <div
-                    className="documents-fixed-entries"
-                    role="group"
-                    aria-label="固定入口"
-                >
-                    <Button
-                        variant="ghost"
-                        className="documents-entry"
-                        aria-pressed={!isSearching && scope.type === "recent"}
-                        onClick={() => showFixedEntry("recent")}
-                    >
-                        <Clock className="icon-md" aria-hidden="true" />
-                        <span>最近</span>
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        className="documents-entry"
-                        aria-pressed={!isSearching && scope.type === "favorite"}
-                        onClick={() => showFixedEntry("favorite")}
-                    >
-                        <Star className="icon-md" aria-hidden="true" />
-                        <span>收藏</span>
-                    </Button>
+            {(notebookError || moveError || actionError) && (
+                <div className="documents-sidebar-alerts">
+                    {notebookError && (
+                        <StatusBanner tone="error" density="compact">
+                            <div className="documents-status-row">
+                                <span>{notebookError}</span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={refresh}
+                                >
+                                    重试
+                                </Button>
+                            </div>
+                        </StatusBanner>
+                    )}
+                    {moveError && (
+                        <StatusBanner tone="error" density="compact">
+                            {moveError}
+                        </StatusBanner>
+                    )}
+                    {actionError && (
+                        <StatusBanner tone="error" density="compact">
+                            <div className="documents-status-row">
+                                <span>{actionError}</span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        setActionError(null)}
+                                >
+                                    关闭
+                                </Button>
+                            </div>
+                        </StatusBanner>
+                    )}
                 </div>
-                <section
-                    className="documents-notebook-area"
-                    aria-label="笔记本"
+            )}
+            <div
+                className="documents-fixed-entries"
+                role="group"
+                aria-label="固定入口"
+            >
+                <Button
+                    variant="ghost"
+                    className="documents-entry"
+                    aria-pressed={!isSearching && scope.type === "recent"}
+                    onClick={() => showFixedEntry("recent")}
                 >
-                    <div className="documents-notebooks-row">
-                        <HeadingTag className="documents-notebooks-heading">
-                            <Button
-                                variant="ghost"
-                                className="documents-entry"
-                                aria-current={treeMode ? "true" : undefined}
-                                aria-label={treeMode
-                                    ? undefined
-                                    : `返回笔记本，当前：${scopeName}`}
-                                title={treeMode ? undefined : "返回笔记本"}
-                                onClick={showTree}
-                            >
-                                {treeMode ? "笔记本" : (
-                                    <>
-                                        <ChevronLeft
-                                            className="icon-sm"
-                                            aria-hidden="true"
-                                        />
-                                        <span>{scopeName}</span>
-                                    </>
-                                )}
-                            </Button>
-                        </HeadingTag>
-                        <Tooltip>
-                            <TooltipTrigger
-                                render={
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="documents-heading-action"
-                                        aria-label="新建笔记"
-                                        onClick={() =>
-                                            newNote(createTarget.notebookId)}
+                    <Clock className="icon-md" aria-hidden="true" />
+                    <span>最近</span>
+                </Button>
+                <Button
+                    variant="ghost"
+                    className="documents-entry"
+                    aria-pressed={!isSearching && scope.type === "favorite"}
+                    onClick={() => showFixedEntry("favorite")}
+                >
+                    <Star className="icon-md" aria-hidden="true" />
+                    <span>收藏</span>
+                </Button>
+            </div>
+            <section
+                className="documents-notebook-area"
+                aria-label="笔记本"
+            >
+                <div className="documents-notebooks-row">
+                    <HeadingTag className="documents-notebooks-heading">
+                        <Button
+                            variant="ghost"
+                            className="documents-entry"
+                            aria-current={treeMode ? "true" : undefined}
+                            aria-label={treeMode
+                                ? undefined
+                                : `返回笔记本，当前：${scopeName}`}
+                            title={treeMode ? undefined : "返回笔记本"}
+                            onClick={showTree}
+                        >
+                            {treeMode ? "笔记本" : (
+                                <>
+                                    <ChevronLeft
+                                        className="icon-sm"
+                                        aria-hidden="true"
                                     />
-                                }
-                            >
-                                <Plus className="icon-md" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {createTargetTitle(createTarget)}
-                            </TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                            <TooltipTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="documents-heading-action"
-                                        aria-label="新建笔记本"
-                                        disabled={ops.isPending}
-                                        onClick={() =>
-                                            ops.createNotebook(
-                                                newNotebookParent ?? "",
-                                            )}
-                                    />
-                                }
-                            >
-                                <FolderPlus className="icon-md" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                {parentName
-                                    ? `新建子笔记本（在「${parentName}」下）`
-                                    : "新建笔记本"}
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
+                                    <span>{scopeName}</span>
+                                </>
+                            )}
+                        </Button>
+                    </HeadingTag>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="documents-heading-action"
+                                    aria-label="新建笔记"
+                                    onClick={() =>
+                                        newNote(createTarget.notebookId)}
+                                />
+                            }
+                        >
+                            <Plus className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {createTargetTitle(createTarget)}
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="documents-heading-action"
+                                    aria-label="新建笔记本"
+                                    disabled={ops.isPending}
+                                    onClick={() =>
+                                        ops.createNotebook(
+                                            newNotebookParent ?? "",
+                                        )}
+                                />
+                            }
+                        >
+                            <FolderPlus className="icon-md" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {parentName
+                                ? `新建子笔记本（在「${parentName}」下）`
+                                : "新建笔记本"}
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+                <div className="documents-sidebar-scroll">
                     {treeMode
                         ? (
                             <div ref={treeRoot}>
@@ -1296,8 +1301,8 @@ export function DocumentsSidebar({
                                 )}
                             </section>
                         )}
-                </section>
-            </div>
+                </div>
+            </section>
             <div className="documents-sidebar-footer">
                 <Button
                     variant="ghost"

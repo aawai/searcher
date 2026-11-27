@@ -500,10 +500,6 @@ export function SearcherComposer({
                     </div>
                 </div>
             </ComposerPrimitive.Root>
-
-            <div className="ask-composer__disclaimer">
-                AI 可能出错，请核对重要信息。
-            </div>
         </div>
     );
 }

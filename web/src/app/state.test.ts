@@ -643,3 +643,60 @@ Deno.test("Appearance: normalizes darkWallpaperMode, darkWallpaper, and preserve
     assertEquals(invalid.darkWallpaperMode, "follow");
     assertEquals(invalid.darkWallpaper, "");
 });
+
+Deno.test("Appearance: anonymous guests default to rose accent and plum botanical scene while preserving explicit overrides", async () => {
+    const guestDefaults = normalizeAppearance({}, { guest: true });
+    assertEquals(guestDefaults.accent, "rose");
+    assertEquals(guestDefaults.botanicalScene, "plum");
+
+    const invalidGuest = normalizeAppearance(
+        { accent: "neon", botanicalScene: "bamboo" },
+        { guest: true },
+    );
+    assertEquals(invalidGuest.accent, "rose");
+    assertEquals(invalidGuest.botanicalScene, "plum");
+
+    const explicitOff = normalizeAppearance(
+        { accent: "wallpaper", botanicalScene: null },
+        { guest: true },
+    );
+    assertEquals(explicitOff.accent, "wallpaper");
+    assertEquals(explicitOff.botanicalScene, null);
+
+    const legacyScene = normalizeAppearance(
+        { wallpaper: "scene:botanical:ginkgo" },
+        { guest: true },
+    );
+    assertEquals(legacyScene.botanicalScene, "ginkgo");
+
+    const db = new Map<string, Appearance>();
+    const store = createAppearanceOwnerStore<Appearance>({
+        userId: null,
+        initial: guestDefaults,
+        normalize: (raw) => normalizeAppearance(raw, { guest: true }),
+        readLocal: (key) => Promise.resolve(db.get(key)),
+        writeLocal: (key, value) => {
+            db.set(key, value);
+            return Promise.resolve();
+        },
+        onChange: () => {},
+    });
+    await store.hydrate();
+    assertEquals(store.current().accent, "rose");
+    assertEquals(store.current().botanicalScene, "plum");
+
+    await store.update({ botanicalScene: null });
+    const rehydrated = createAppearanceOwnerStore<Appearance>({
+        userId: null,
+        initial: guestDefaults,
+        normalize: (raw) => normalizeAppearance(raw, { guest: true }),
+        readLocal: (key) => Promise.resolve(db.get(key)),
+        writeLocal: (key, value) => {
+            db.set(key, value);
+            return Promise.resolve();
+        },
+        onChange: () => {},
+    });
+    await rehydrated.hydrate();
+    assertEquals(rehydrated.current().botanicalScene, null);
+});

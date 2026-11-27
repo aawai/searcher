@@ -167,6 +167,19 @@ Deno.test("EmptyState: renders illustration for default/compact and hides it for
         />,
     );
     assertEquals(inlineHtml.includes("empty-state__illustration"), false);
+
+    const actionOnlyHtml = ReactDOMServer.renderToString(
+        <EmptyState
+            density="compact"
+            illustration="empty-apps"
+            illustrationSize="md"
+            action={<button type="button">添加应用</button>}
+        />,
+    );
+    assertEquals(actionOnlyHtml.includes("empty-state__illustration"), true);
+    assertEquals(actionOnlyHtml.includes("添加应用"), true);
+    assertEquals(actionOnlyHtml.includes("<h2"), false);
+    assertEquals(actionOnlyHtml.includes("<h3"), false);
 });
 
 Deno.test("ThemeCelestialIcon: renders dual-tone hidden svg for all theme ids", () => {

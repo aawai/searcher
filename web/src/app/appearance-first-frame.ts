@@ -1,5 +1,7 @@
 import {
     type AccentPreference,
+    DEFAULT_ACCENT,
+    DEFAULT_GUEST_ACCENT,
     type GlassIntensity,
     normalizeAccent,
     normalizeGlassIntensity,
@@ -38,10 +40,11 @@ function snapshotKey(userId: string | null): string {
 
 export function normalizeFirstFrame(
     saved: Record<string, unknown>,
+    defaultAccent: AccentPreference = DEFAULT_ACCENT,
 ): FirstFrameAppearance {
     return {
         theme: normalizeTheme(saved.theme),
-        accent: normalizeAccent(saved.accent),
+        accent: normalizeAccent(saved.accent, defaultAccent),
         shape: saved.shape === "pill" ? "pill" : "rounded",
         glassIntensity: normalizeGlassIntensity(saved.glassIntensity),
         tabIcon: normalizeTabIcon(saved.tabIcon),
@@ -86,6 +89,7 @@ export function readFirstFrame(
         saved && typeof saved === "object" && !Array.isArray(saved)
             ? saved as Record<string, unknown>
             : {},
+        userId === null ? DEFAULT_GUEST_ACCENT : DEFAULT_ACCENT,
     );
 }
 

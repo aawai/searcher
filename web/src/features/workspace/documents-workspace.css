@@ -81,7 +81,14 @@
     background: var(--documents-sidebar-bg);
 }
 /* The card's gap is the drawer's trailing inset; no second inset inside. */
-.documents-sidebar--drawer :is(.documents-sidebar-header, .documents-sidebar-scroll, .documents-sidebar-footer) {
+.documents-sidebar--drawer :is(
+    .documents-sidebar-header,
+    .documents-sidebar-alerts,
+    .documents-fixed-entries,
+    .documents-notebooks-row,
+    .documents-sidebar-scroll,
+    .documents-sidebar-footer
+) {
     padding-inline-end: 0;
 }
 /* On the grouped canvas the current entry keeps the card's surface, the same
@@ -177,8 +184,9 @@
     left: 0;
 }
 
-/* Sidebar: pinned search header, independently scrolling directory list (scrollbar
-   hidden), and pinned trash footer aligned with the editor's status bar. */
+/* Sidebar: pinned search header, alerts, fixed entries and notebook heading row,
+   independently scrolling directory list (scrollbar hidden), and pinned trash
+   footer aligned with the editor's status bar. */
 .documents-workspace {
     height: 100%;
     min-height: 0;
@@ -202,6 +210,14 @@
 .documents-sidebar-header > [data-slot="button"] {
     flex: none;
 }
+.documents-sidebar-alerts {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-inline-end: var(--space-4);
+}
 .documents-sidebar-scroll {
     display: flex;
     flex: 1 1 0;
@@ -218,18 +234,30 @@
 .documents-sidebar-scroll::-webkit-scrollbar {
     display: none;
 }
-.documents-fixed-entries,
-.documents-notebook-area {
+.documents-fixed-entries {
     display: flex;
+    flex: none;
     flex-direction: column;
     gap: var(--space-1);
     min-width: 0;
+    padding-inline-end: var(--space-4);
+}
+.documents-notebook-area {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
 }
 .documents-notebooks-row {
     display: flex;
+    flex: none;
     align-items: center;
     gap: 0;
     min-width: 0;
+    padding-inline-end: var(--space-4);
 }
 .documents-notebooks-row > .documents-notebooks-heading {
     flex: 1;
@@ -607,7 +635,7 @@
    their hit areas would cover each other. The lone footer entry keeps the
    compact size there and aligns with the editor footer. */
 @media (any-pointer: coarse) {
-    .documents-sidebar-scroll :is([data-slot="button"].documents-summary-open, [data-slot="button"].documents-entry, .documents-tree-row) {
+    :is(.documents-fixed-entries, .documents-notebook-area) :is([data-slot="button"].documents-summary-open, [data-slot="button"].documents-entry, .documents-tree-row) {
         min-height: var(--control-touch-target);
     }
 }

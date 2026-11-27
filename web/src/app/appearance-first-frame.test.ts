@@ -64,9 +64,10 @@ Deno.test("First frame: each owner paints its own snapshot and the last confirme
         glassIntensity: "off",
         tabIcon: "keycap",
     });
-    // An account never seen on this device starts from the defaults, not
-    // from another owner's snapshot.
+    // An account never seen on this device starts from the account defaults,
+    // not from another owner's snapshot or guest defaults.
     assertEquals(readFirstFrame(storage, "user-b").theme, "system");
+    assertEquals(readFirstFrame(storage, "user-b").accent, "wallpaper");
     // Local wallpapers stay in IndexedDB; the synchronous store keeps only the
     // first-frame fields.
     assertEquals(
@@ -87,12 +88,18 @@ Deno.test("First frame: corrupt, missing or unwritable storage falls back to the
     assertEquals(readFirstFrameOwner(storage), null);
     assertEquals(readFirstFrame(storage, null), {
         theme: "system",
-        accent: "wallpaper",
+        accent: "rose",
         shape: "rounded",
         glassIntensity: "regular",
         tabIcon: "editorial",
     });
-    assertEquals(readFirstFrame(null, null).theme, "system");
+    assertEquals(readFirstFrame(null, null), {
+        theme: "system",
+        accent: "rose",
+        shape: "rounded",
+        glassIntensity: "regular",
+        tabIcon: "editorial",
+    });
 
     storage.failWrites = true;
     writeFirstFrame(storage, null, normalizeAppearance({ theme: "dark" }));
