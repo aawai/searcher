@@ -1,10 +1,14 @@
 import { Link } from "react-router-dom";
-import { Check, Loader2, Sparkles } from "lucide-react";
 import {
-    LOGO_STYLES,
-    type LogoStyle,
-} from "../../../../src/features/ai/types.ts";
-import { LOGO_STYLE_LABELS, type LogoSession } from "./useLogoSession.ts";
+    Check,
+    ChevronDown,
+    ChevronUp,
+    Loader2,
+    RotateCcw,
+    Sparkles,
+} from "lucide-react";
+import { ICON_PROMPT_MAX_LENGTH } from "../../../../src/shared/icon-prompts.ts";
+import type { LogoSession } from "./useLogoSession.ts";
 import {
     Dialog,
     DialogContent,
@@ -24,6 +28,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../ui/select.tsx";
+import { Switch } from "../ui/switch.tsx";
+import { Textarea } from "../ui/textarea.tsx";
 import { cn } from "../../lib/utils.ts";
 import { SettingsRow } from "./semantic.tsx";
 
@@ -35,8 +41,16 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         providers,
         selectedId,
         style,
+        styleOptions,
+        count,
         imageProtocol,
         description,
+        referenceIcon,
+        useReferenceIcon,
+        effectiveReference,
+        effectivePrompt,
+        isPromptCustomized,
+        promptExpanded,
         confirmOpen,
         confirmSnapshot,
         candidates,
@@ -44,8 +58,12 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         busy,
         setSelectedId,
         setStyle,
+        setCount,
         setImageProtocol,
         setDescription,
+        setUseReferenceIcon,
+        setCustomPrompt,
+        setPromptExpanded,
         setConfirmOpen,
         setConfirmSnapshot,
         setCandidates,
@@ -56,6 +74,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
         siteName,
         onClose,
     } = session;
+
     if (loadingModels) {
         return (
             <SettingsRow title="AI 生成">
@@ -96,9 +115,41 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
             } · ${item.modelId}`,
         ]),
     );
+    const styleItems = Object.fromEntries(
+        styleOptions.map((item) => [item.id, item.label]),
+    );
 
     return (
         <>
+            {referenceIcon
+                ? (
+                    <SettingsRow
+                        title="基于当前图标美化"
+                        labelFor="ai-use-reference-icon"
+                        description="将当前真实图标作为参考图发给 AI，保留品牌特征并统一桌面风格"
+                    >
+                        <img
+                            src={referenceIcon.previewUrl}
+                            alt=""
+                            width={28}
+                            height={28}
+                            className="app-ai-ref-thumb"
+                        />
+                        <Switch
+                            id="ai-use-reference-icon"
+                            aria-label="基于当前图标美化"
+                            checked={useReferenceIcon}
+                            disabled={busy}
+                            onCheckedChange={setUseReferenceIcon}
+                        />
+                    </SettingsRow>
+                )
+                : (
+                    <SettingsRow
+                        title="参考图标"
+                        description="暂无可用原图，将按名称与风格从零生成；也可先通过“网站图标”或“上传图片”获取原图。"
+                    />
+                )}
             <SettingsRow title="模型" labelFor="ai-model-select">
                 <Select
                     items={modelItems}
@@ -120,30 +171,62 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                     </SelectContent>
                 </Select>
             </SettingsRow>
-            <SettingsRow title="风格" labelFor="ai-style-select">
+            <SettingsRow
+                title="风格"
+                labelFor="ai-style-select"
+                description={
+                    <Link
+                        to={routes.settings("ai")}
+                        className="app-ai-settings-link"
+                        onClick={onClose}
+                    >
+                        在 AI 设置中管理全局风格与模板
+                    </Link>
+                }
+            >
                 <Select
-                    items={LOGO_STYLE_LABELS}
+                    items={styleItems}
                     value={style}
                     onValueChange={(next) => {
-                        if (next !== null) setStyle(next as LogoStyle);
+                        if (next !== null) setStyle(next);
                     }}
-                    disabled={busy}
+                    disabled={busy || isPromptCustomized}
                 >
                     <SelectTrigger id="ai-style-select" aria-label="风格">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        {LOGO_STYLES.map((styleKey) => (
-                            <SelectItem key={styleKey} value={styleKey}>
-                                {LOGO_STYLE_LABELS[styleKey]}
+                        {styleOptions.map((item) => (
+                            <SelectItem key={item.id} value={item.id}>
+                                {item.label}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
             </SettingsRow>
+            <SettingsRow title="生成数量">
+                <RadioGroup
+                    variant="segmented"
+                    aria-label="生成数量"
+                    value={String(count)}
+                    disabled={busy}
+                    onValueChange={(next) => {
+                        const parsed = Number(next);
+                        if (parsed === 1 || parsed === 2 || parsed === 3) {
+                            setCount(parsed);
+                        }
+                    }}
+                >
+                    <RadioGroupItem value="1">1 张</RadioGroupItem>
+                    <RadioGroupItem value="2">2 张</RadioGroupItem>
+                    <RadioGroupItem value="3">3 张</RadioGroupItem>
+                </RadioGroup>
+            </SettingsRow>
             <SettingsRow
                 title="图片协议"
-                message="仅用于本次生成，不修改模型配置。"
+                message={effectiveReference && imageProtocol === "openai"
+                    ? "携带参考图时将调用 /images/edits 接口；部分中转站不支持该接口，可改用 Gemini 原生。"
+                    : "仅用于本次生成，不修改模型配置。"}
                 messageId="ai-image-protocol-hint"
             >
                 <RadioGroup
@@ -166,7 +249,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                 </RadioGroup>
             </SettingsRow>
             <SettingsRow
-                title="用途（可选）"
+                title="补充描述（可选）"
                 labelFor="ai-description-input"
                 className="settings-row--vertical"
                 description={description.length > 0
@@ -176,16 +259,71 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                 <Input
                     id="ai-description-input"
                     type="text"
-                    placeholder="简要描述应用的用途"
+                    placeholder="简要描述应用用途或想要调整的细节"
                     maxLength={300}
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    disabled={busy}
+                    disabled={busy || isPromptCustomized}
                 />
             </SettingsRow>
             <SettingsRow
-                title="候选图标"
-                description="根据名称、域名和用途生成 3 个原创图标"
+                title="提示词"
+                description={isPromptCustomized
+                    ? "已手动覆盖提示词，将原样发送"
+                    : "默认按风格与参考图自动组装，可展开完全自定义"}
+            >
+                {isPromptCustomized && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => setCustomPrompt(null)}
+                    >
+                        <RotateCcw size="1em" className="icon-sm" />
+                        <span>恢复默认</span>
+                    </Button>
+                )}
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    aria-expanded={promptExpanded}
+                    onClick={() => setPromptExpanded(!promptExpanded)}
+                >
+                    {promptExpanded
+                        ? <ChevronUp size="1em" className="icon-sm" />
+                        : <ChevronDown size="1em" className="icon-sm" />}
+                    <span>
+                        {promptExpanded ? "收起提示词" : "查看 / 自定义"}
+                    </span>
+                </Button>
+            </SettingsRow>
+            {promptExpanded && (
+                <SettingsRow
+                    title="最终提示词"
+                    labelFor="ai-custom-prompt"
+                    className="settings-row--vertical"
+                    description={`${effectivePrompt.length}/${ICON_PROMPT_MAX_LENGTH}`}
+                >
+                    <Textarea
+                        id="ai-custom-prompt"
+                        className="app-ai-prompt-textarea"
+                        placeholder="输入完整英文或中文生图提示词"
+                        rows={7}
+                        maxLength={ICON_PROMPT_MAX_LENGTH}
+                        value={effectivePrompt}
+                        disabled={busy}
+                        onChange={(event) =>
+                            setCustomPrompt(event.target.value)}
+                    />
+                </SettingsRow>
+            )}
+            <SettingsRow
+                title="生成图标"
+                description={effectiveReference
+                    ? `基于当前图标生成 ${count} 张统一风格图标`
+                    : `根据名称与风格生成 ${count} 张图标`}
             >
                 {candidates.length > 0 && (
                     <Button
@@ -198,14 +336,15 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                             setSelectedCandidateIndex(null);
                         }}
                     >
-                        清除生成结果
+                        清除结果
                     </Button>
                 )}
                 <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={busy || !selectedId || !siteName.trim()}
+                    disabled={busy || !selectedId || !siteName.trim() ||
+                        (isPromptCustomized && !effectivePrompt.trim())}
                     onClick={promptGenerateConfirm}
                 >
                     {busy
@@ -233,6 +372,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                 >
                     <RadioGroup
                         className="app-ai-candidates-grid"
+                        data-count={String(candidates.length)}
                         aria-label="AI 图标候选"
                         disabled={busy}
                         value={selectedCandidateIndex !== null
@@ -259,7 +399,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     )}
                                     aria-label={`选用第 ${
                                         index + 1
-                                    } 个 AI 图标候选`}
+                                    } 个 AI 图标`}
                                 >
                                     <div className="app-ai-candidate-img-box">
                                         <img
@@ -281,7 +421,13 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                                 />
                                             )}
                                         </span>
-                                        <span>图标 {index + 1}</span>
+                                        <span>
+                                            {isSelected
+                                                ? "已选用"
+                                                : candidates.length === 1
+                                                ? "应用此图标"
+                                                : `图标 ${index + 1}`}
+                                        </span>
                                     </div>
                                 </RadioGroupItem>
                             );
@@ -306,7 +452,7 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                     生成 AI 图标
                                 </DialogTitle>
                                 <DialogDescription>
-                                    应用名称、域名和用途将发送至以下服务商，可能产生费用。
+                                    以下请求内容将发送至服务商，可能产生费用。
                                 </DialogDescription>
                             </DialogHeader>
                             <div className="app-ai-confirm-body">
@@ -330,6 +476,37 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                 </div>
                                 <div className="app-ai-confirm-item">
                                     <span className="app-ai-confirm-label">
+                                        模式
+                                    </span>
+                                    <span className="app-ai-confirm-value app-ai-confirm-ref-row">
+                                        {confirmSnapshot.referenceIcon
+                                            ? (
+                                                <>
+                                                    <img
+                                                        src={confirmSnapshot
+                                                            .referenceIcon
+                                                            .previewUrl}
+                                                        alt=""
+                                                        width={20}
+                                                        height={20}
+                                                        className="app-ai-ref-thumb"
+                                                    />
+                                                    <span>
+                                                        基于当前图标美化（{confirmSnapshot
+                                                            .count} 张）
+                                                    </span>
+                                                </>
+                                            )
+                                            : (
+                                                <span>
+                                                    纯文字生成（{confirmSnapshot
+                                                        .count} 张）
+                                                </span>
+                                            )}
+                                    </span>
+                                </div>
+                                <div className="app-ai-confirm-item">
+                                    <span className="app-ai-confirm-label">
                                         图片协议
                                     </span>
                                     <span className="app-ai-confirm-value">
@@ -344,7 +521,9 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                         风格
                                     </span>
                                     <span className="app-ai-confirm-value">
-                                        {confirmSnapshot.styleLabel}
+                                        {confirmSnapshot.isPromptCustomized
+                                            ? "完全自定义提示词"
+                                            : confirmSnapshot.styleLabel}
                                     </span>
                                 </div>
                                 <div className="app-ai-confirm-item">
@@ -365,18 +544,13 @@ export function LogoCandidatePicker({ session }: { session: LogoSession }) {
                                         </span>
                                     </div>
                                 )}
-                                {confirmSnapshot.description && (
-                                    <div className="app-ai-confirm-item">
-                                        <span className="app-ai-confirm-label">
-                                            用途描述
-                                        </span>
-                                        <span className="app-ai-confirm-value">
-                                            {confirmSnapshot.description}
-                                        </span>
+                                <div className="app-ai-confirm-prompt-box">
+                                    <div className="app-ai-confirm-prompt-title">
+                                        最终发送提示词
                                     </div>
-                                )}
-                                <div className="app-ai-confirm-hint">
-                                    将生成 3 个原创图标，非官方品牌标志。
+                                    <pre className="app-ai-confirm-prompt-pre">
+                                        {confirmSnapshot.finalPrompt}
+                                    </pre>
                                 </div>
                             </div>
                             <DialogFooter>

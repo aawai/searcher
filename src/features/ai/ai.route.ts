@@ -25,7 +25,12 @@ import {
     resolveEffectiveReasoningEffort,
     validateReasoningEffort,
 } from "./reasoning.ts";
-import { IMAGE_PROTOCOLS, LOGO_STYLES } from "./types.ts";
+import {
+    DEFAULT_ICON_STYLE_ID,
+    ICON_PROMPT_MAX_LENGTH,
+} from "@shared/icon-prompts.ts";
+import { WebAppIconService } from "../webapp-icons/service.ts";
+import { IMAGE_PROTOCOLS } from "./types.ts";
 import type {
     ChatStreamRequest,
     CreateProviderInput,
@@ -152,8 +157,26 @@ const LogoSchema = {
     siteName: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
     siteDomain: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(253))),
     description: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(300))),
-    style: v.picklist(LOGO_STYLES),
+    style: v.optional(
+        v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(64)),
+        DEFAULT_ICON_STYLE_ID,
+    ),
     imageProtocol: v.optional(v.picklist(IMAGE_PROTOCOLS), "openai"),
+    count: v.optional(
+        v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(3)),
+        1,
+    ),
+    referenceIconAssetId: v.optional(
+        v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(128)),
+    ),
+    customPrompt: v.optional(
+        v.pipe(
+            v.string(),
+            v.trim(),
+            v.minLength(1),
+            v.maxLength(ICON_PROMPT_MAX_LENGTH),
+        ),
+    ),
 };
 
 export function registerAiRoutes(
@@ -165,6 +188,7 @@ export function registerAiRoutes(
         new AiService({
             store: deps.store,
             now: deps.now,
+            icons: deps.icons ?? new WebAppIconService(),
         });
 
     // 1. GET /api/ai/providers - 获取 Provider 列表
@@ -856,20 +880,29 @@ export function registerAiRoutes(
             description: json(LogoSchema.description),
             style: json(LogoSchema.style),
             imageProtocol: json(LogoSchema.imageProtocol),
+            count: json(LogoSchema.count),
+            referenceIconAssetId: json(LogoSchema.referenceIconAssetId),
+            customPrompt: json(LogoSchema.customPrompt),
         }),
         async (c, data) => {
             try {
-                const images = await service.generateLogo(
+                const result = await service.generateLogo(
                     c.get("user").id,
-                    data.providerId,
-                    data.modelId,
-                    data.siteName,
-                    data.siteDomain,
-                    data.description,
-                    data.style,
-                    data.imageProtocol,
+                    {
+                        providerId: data.providerId,
+                        modelId: data.modelId,
+                        siteName: data.siteName,
+                        siteDomain: data.siteDomain,
+                        description: data.description,
+                        style: data.style,
+                        imageProtocol: data.imageProtocol,
+                        count: data.count,
+                        referenceIconAssetId: data.referenceIconAssetId,
+                        customPrompt: data.customPrompt,
+                        icons: deps.icons,
+                    },
                 );
-                return c.success({ images });
+                return c.success(result);
             } catch (err) {
                 if (err instanceof AiServiceError) {
                     return c.fail(
@@ -882,6 +915,11 @@ export function registerAiRoutes(
                         ? "图像服务商请求过于频繁，请稍后重试。"
                         : err.statusCode === 401 || err.statusCode === 403
                         ? "图像服务商拒绝了请求，请检查服务商配置。"
+                        : (err.statusCode === 404 || err.statusCode === 405 ||
+                                err.statusCode === 501) &&
+                                data.referenceIconAssetId &&
+                                data.imageProtocol === "openai"
+                        ? "当前 OpenAI 图像服务商不支持参考图编辑接口（/images/edits），请关闭“基于当前图标美化”或切换 Gemini 原生协议。"
                         : "图标生成失败，请检查服务商配置后重试。";
                     return c.fail(400, message);
                 }

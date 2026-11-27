@@ -9,6 +9,28 @@ export interface CandidateIcon {
     type: "apple-touch-icon" | "manifest" | "icon" | "favicon";
     url: string;
     sizes?: string;
+    contentType?: string;
+}
+
+function maxIconDimension(sizes?: string): number {
+    if (!sizes) return 0;
+    let best = 0;
+    for (const part of sizes.trim().split(/\s+/)) {
+        const match = /^(\d+)x(\d+)$/i.exec(part);
+        if (!match) continue;
+        const edge = Math.max(Number(match[1]), Number(match[2]));
+        if (Number.isFinite(edge) && edge > best) best = edge;
+    }
+    return best;
+}
+
+function isSvgCandidate(icon: CandidateIcon): boolean {
+    if (icon.contentType?.toLowerCase().includes("svg")) return true;
+    try {
+        return new URL(icon.url).pathname.toLowerCase().endsWith(".svg");
+    } catch {
+        return false;
+    }
 }
 export function extractSiteNameFromHtml(html: string): string | null {
     const match = /<title\b[^>]*>([^<]*)<\/title>/i.exec(html);
@@ -63,6 +85,8 @@ export function extractCandidateIconsFromHtml(
         );
         const sizesMatch = /sizes\s*=\s*(?:'([^']*)'|"([^"]*)"|([^\s>]+))/i
             .exec(tag);
+        const typeMatch = /type\s*=\s*(?:'([^']*)'|"([^"]*)"|([^\s>]+))/i
+            .exec(tag);
 
         if (!relMatch || !hrefMatch) continue;
         const rel = (relMatch[1] || relMatch[2] || relMatch[3] || "")
@@ -71,6 +95,9 @@ export function extractCandidateIconsFromHtml(
             .trim();
         const sizes = sizesMatch
             ? (sizesMatch[1] || sizesMatch[2] || sizesMatch[3] || "").trim()
+            : undefined;
+        const contentType = typeMatch
+            ? (typeMatch[1] || typeMatch[2] || typeMatch[3] || "").trim()
             : undefined;
 
         if (!href) continue;
@@ -87,17 +114,23 @@ export function extractCandidateIconsFromHtml(
                 type: "apple-touch-icon",
                 url: absoluteUrl,
                 sizes,
+                contentType,
             });
         } else if (rel === "manifest") {
             manifestLinks.push(absoluteUrl);
         } else if (rel.includes("icon")) {
-            linkIcons.push({ type: "icon", url: absoluteUrl, sizes });
+            linkIcons.push({
+                type: "icon",
+                url: absoluteUrl,
+                sizes,
+                contentType,
+            });
         }
     }
 
     // 1. apple-touch-icon
     const distanceFrom180 = (icon: CandidateIcon) =>
-        Math.abs((Number.parseInt(icon.sizes ?? "") || 180) - 180);
+        Math.abs((maxIconDimension(icon.sizes) || 180) - 180);
     appleIcons.sort((a, b) => distanceFrom180(a) - distanceFrom180(b));
     candidates.push(...appleIcons);
 
@@ -106,7 +139,13 @@ export function extractCandidateIconsFromHtml(
         candidates.push({ type: "manifest", url: mUrl });
     }
 
-    // 3. link rel="icon"
+    // 3. link rel="icon" (SVG first, then larger sizes)
+    linkIcons.sort((a, b) => {
+        const aSvg = isSvgCandidate(a) ? 1 : 0;
+        const bSvg = isSvgCandidate(b) ? 1 : 0;
+        if (aSvg !== bSvg) return bSvg - aSvg;
+        return maxIconDimension(b.sizes) - maxIconDimension(a.sizes);
+    });
     candidates.push(...linkIcons);
 
     // 4. Default /favicon.ico fallback
@@ -121,80 +160,107 @@ export function extractCandidateIconsFromHtml(
 export interface FetchIconOptions {
     timeoutMs?: number;
     maxBytes?: number;
+    maxRedirects?: number;
     allowDnsLookup?: boolean;
     accept?: string;
     fetchFn?: typeof fetch;
 }
 
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
 export async function fetchWithSafeLimit(
     url: string,
     options: FetchIconOptions = {},
-): Promise<{ bytes: Uint8Array; contentType: string }> {
+): Promise<{ bytes: Uint8Array; contentType: string; finalUrl: string }> {
     const {
         timeoutMs = 8000,
         maxBytes = 2 * 1024 * 1024,
+        maxRedirects = 3,
         allowDnsLookup = true,
         accept =
             "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
         fetchFn = fetch,
     } = options;
-    await validateUrlForSafeFetch(url, { allowDnsLookup });
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    let currentUrl = url;
     try {
-        const response = await fetchFn(url, {
-            signal: controller.signal,
-            redirect: "error",
-            headers: {
-                "User-Agent": "Searcher-Icon-Bot/1.0 (+https://searcher.local)",
-                "Accept": accept,
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`获取资源失败，HTTP 状态码: ${response.status}`);
-        }
-        const contentLength = Number(
-            response.headers.get("content-length") || 0,
-        );
-        if (contentLength > maxBytes) {
-            await response.body?.cancel();
-            throw new Error(`图片文件超出允许大小限制 (${maxBytes} 字节)`);
-        }
-        if (!response.body) throw new Error("资源响应缺少内容");
+        for (let redirects = 0;; redirects++) {
+            await validateUrlForSafeFetch(currentUrl, { allowDnsLookup });
 
-        const reader = response.body.getReader();
-        const chunks: Uint8Array[] = [];
-        let length = 0;
-        try {
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                length += value.byteLength;
-                if (length > maxBytes) {
-                    throw new Error(
-                        `图片文件超出允许大小限制 (${maxBytes} 字节)`,
-                    );
+            const response = await fetchFn(currentUrl, {
+                signal: controller.signal,
+                redirect: maxRedirects > 0 ? "manual" : "error",
+                headers: {
+                    "User-Agent":
+                        "Searcher-Icon-Bot/1.0 (+https://searcher.local)",
+                    "Accept": accept,
+                },
+            });
+
+            if (REDIRECT_STATUSES.has(response.status)) {
+                await response.body?.cancel();
+                if (redirects >= maxRedirects) {
+                    throw new Error("重定向次数超过限制");
                 }
-                chunks.push(value);
+                const location = response.headers.get("location");
+                if (!location) {
+                    throw new Error("重定向响应缺少 Location");
+                }
+                currentUrl = new URL(location, currentUrl).toString();
+                continue;
             }
-        } catch (error) {
-            await reader.cancel().catch(() => {});
-            throw error;
-        } finally {
-            reader.releaseLock();
+
+            if (!response.ok) {
+                await response.body?.cancel();
+                throw new Error(
+                    `获取资源失败，HTTP 状态码: ${response.status}`,
+                );
+            }
+            const contentLength = Number(
+                response.headers.get("content-length") || 0,
+            );
+            if (contentLength > maxBytes) {
+                await response.body?.cancel();
+                throw new Error(`图片文件超出允许大小限制 (${maxBytes} 字节)`);
+            }
+            if (!response.body) throw new Error("资源响应缺少内容");
+
+            const reader = response.body.getReader();
+            const chunks: Uint8Array[] = [];
+            let length = 0;
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    length += value.byteLength;
+                    if (length > maxBytes) {
+                        throw new Error(
+                            `图片文件超出允许大小限制 (${maxBytes} 字节)`,
+                        );
+                    }
+                    chunks.push(value);
+                }
+            } catch (error) {
+                await reader.cancel().catch(() => {});
+                throw error;
+            } finally {
+                reader.releaseLock();
+            }
+            const bytes = new Uint8Array(length);
+            let offset = 0;
+            for (const chunk of chunks) {
+                bytes.set(chunk, offset);
+                offset += chunk.length;
+            }
+            return {
+                bytes,
+                contentType: response.headers.get("content-type") ||
+                    "application/octet-stream",
+                finalUrl: currentUrl,
+            };
         }
-        const bytes = new Uint8Array(length);
-        let offset = 0;
-        for (const chunk of chunks) {
-            bytes.set(chunk, offset);
-            offset += chunk.length;
-        }
-        return {
-            bytes,
-            contentType: response.headers.get("content-type") ||
-                "application/octet-stream",
-        };
     } finally {
         clearTimeout(timeout);
     }

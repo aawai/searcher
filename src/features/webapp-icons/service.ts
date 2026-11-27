@@ -16,6 +16,8 @@ import { validateImageBytes } from "./validator.ts";
 import { validateUrlForSafeFetch } from "./ssrf.ts";
 import { normalizeIcon } from "./presentation.ts";
 
+export const CURRENT_PRESENTATION_VERSION = 2 as const;
+
 export interface IconRecord {
     id: string;
     ownerUserId: string | null;
@@ -24,7 +26,7 @@ export interface IconRecord {
     sha256: string;
     relativePath: string;
     createdAt: number;
-    presentationVersion?: 1;
+    presentationVersion?: 1 | 2;
 }
 
 export class WebAppIconService {
@@ -139,6 +141,7 @@ export class WebAppIconService {
     async saveIcon(
         userId: string | null,
         rawBytes: Uint8Array,
+        options?: { forceFullBleed?: boolean },
     ): Promise<IconRecord & { url: string }> {
         const validation = validateImageBytes(rawBytes);
         if (!validation.valid) {
@@ -148,6 +151,7 @@ export class WebAppIconService {
         const finalBytes = await normalizeIcon(
             validation.sanitizedBytes ?? rawBytes,
             validation.contentType,
+            options,
         );
         const sha256 = await this.#computeSha256(finalBytes);
 
@@ -165,7 +169,7 @@ export class WebAppIconService {
             }
 
             const id = crypto.randomUUID();
-            const ext = "png";
+            const ext = "webp";
 
             const fileName = `${id}.${ext}`;
             const relativePath = fileName;
@@ -177,12 +181,12 @@ export class WebAppIconService {
             const record: IconRecord = {
                 id,
                 ownerUserId: userId,
-                contentType: "image/png",
+                contentType: "image/webp",
                 size: finalBytes.length,
                 sha256,
                 relativePath,
                 createdAt: this.#now(),
-                presentationVersion: 1,
+                presentationVersion: CURRENT_PRESENTATION_VERSION,
             };
 
             manifest.set(id, record);
@@ -209,14 +213,28 @@ export class WebAppIconService {
             const fullPath = join(this.#storageDir, record.relativePath);
             try {
                 let bytes: Uint8Array = await Deno.readFile(fullPath);
-                if (record.presentationVersion !== 1) {
+                if (
+                    record.presentationVersion !== CURRENT_PRESENTATION_VERSION
+                ) {
                     bytes = await normalizeIcon(bytes, record.contentType);
-                    await Deno.writeFile(fullPath, bytes);
-                    record.contentType = "image/png";
+                    const nextRelativePath = `${record.id}.webp`;
+                    const nextFullPath = join(
+                        this.#storageDir,
+                        nextRelativePath,
+                    );
+                    await Deno.writeFile(nextFullPath, bytes);
+                    const oldRelativePath = record.relativePath;
+                    record.relativePath = nextRelativePath;
+                    record.contentType = "image/webp";
                     record.size = bytes.length;
                     record.sha256 = await this.#computeSha256(bytes);
-                    record.presentationVersion = 1;
+                    record.presentationVersion = CURRENT_PRESENTATION_VERSION;
                     await this.#atomicWriteManifest([...manifest.values()]);
+                    if (oldRelativePath !== nextRelativePath) {
+                        await Deno.remove(
+                            join(this.#storageDir, oldRelativePath),
+                        ).catch(() => {});
+                    }
                 }
                 return { record, bytes };
             } catch {
@@ -235,10 +253,11 @@ export class WebAppIconService {
     ): Promise<IconRecord & { url: string; siteName: string | null }> {
         const validatedUrl = await validateUrlForSafeFetch(targetUrl);
 
-        // Never follow redirects or buffer unbounded remote HTML.
+        // Never follow unbounded redirects or buffer unbounded remote HTML.
         let html = "";
+        let resolvedBaseUrl = validatedUrl.toString();
         try {
-            const { bytes } = await fetchWithSafeLimit(
+            const { bytes, finalUrl } = await fetchWithSafeLimit(
                 validatedUrl.toString(),
                 {
                     timeoutMs: 6000,
@@ -247,6 +266,7 @@ export class WebAppIconService {
                 },
             );
             html = new TextDecoder().decode(bytes);
+            resolvedBaseUrl = finalUrl;
         } catch {
             // Fall back to /favicon.ico directly if HTML cannot be read.
         }
@@ -254,7 +274,7 @@ export class WebAppIconService {
         const siteName = extractSiteNameFromHtml(html);
         const candidates = extractCandidateIconsFromHtml(
             html,
-            validatedUrl.toString(),
+            resolvedBaseUrl,
         );
 
         let lastError: Error | null = null;

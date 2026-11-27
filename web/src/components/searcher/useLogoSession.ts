@@ -1,26 +1,37 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
     AiModelDto,
     AiProviderDto,
     ImageProtocol,
     LogoStyle,
 } from "../../../../src/features/ai/types.ts";
+import {
+    buildIconPrompt,
+    BUILTIN_ICON_STYLES,
+    DEFAULT_ICON_STYLE_ID,
+    ICON_CANDIDATE_COUNT_DEFAULT,
+    type IconGenerationPreferences,
+    resolveIconStyle,
+} from "../../../../src/shared/icon-prompts.ts";
+import type { PreferencesDto } from "../../../../src/shared/contracts.ts";
 import { type api, json } from "../../lib/api.ts";
+
 interface Candidate {
     dataUrl: string;
     style: LogoStyle;
 }
 
-export const LOGO_STYLE_LABELS: Record<LogoStyle, string> = {
-    minimal: "极简",
-    geometric: "几何",
-    glyph: "符号",
-    monoline: "线性",
-    duotone: "双色",
-    gradient: "柔和渐变",
-    soft3d: "柔和3D",
-    mascot: "图形角色",
-};
+export interface StyleOption {
+    id: string;
+    label: string;
+    prompt: string;
+    isCustom: boolean;
+}
+
+export interface ReferenceIconInfo {
+    assetId: string;
+    previewUrl: string;
+}
 
 interface ConfirmedRequestSnapshot {
     providerId: string;
@@ -31,9 +42,14 @@ interface ConfirmedRequestSnapshot {
     modelDisplayName: string;
     style: LogoStyle;
     styleLabel: string;
+    count: 1 | 2 | 3;
     siteName: string;
     siteDomain?: string;
     description?: string;
+    referenceIcon?: ReferenceIconInfo | null;
+    finalPrompt: string;
+    isPromptCustomized: boolean;
+    customPrompt?: string;
 }
 
 export interface LogoSessionOptions {
@@ -43,16 +59,23 @@ export interface LogoSessionOptions {
     request: typeof api;
     siteName: string;
     siteDomain?: string;
+    currentIconAssetId?: string | null;
+    currentIconPreviewUrl?: string | null;
+    currentIconSource?: "website" | "upload" | "url" | "ai" | "default";
     onSelect: (asset: { id: string; url: string }) => void;
     onError: (message: string) => void;
     onClose: () => void;
 }
+
 export function useLogoSession(options: LogoSessionOptions) {
     const {
         sessionKey,
         enabled,
         siteName,
         siteDomain,
+        currentIconAssetId,
+        currentIconPreviewUrl,
+        currentIconSource,
         onError,
         onClose,
         request,
@@ -70,13 +93,23 @@ export function useLogoSession(options: LogoSessionOptions) {
         return alive.current && Boolean(key) &&
             latest.current.sessionKey === key;
     }
+
     const [loadingModels, setLoadingModels] = useState(true);
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
+    const [iconPrefs, setIconPrefs] = useState<IconGenerationPreferences>({});
     const [selectedId, setSelectedId] = useState("");
-    const [style, setStyle] = useState<LogoStyle>("minimal");
+    const [style, setStyle] = useState<LogoStyle>(DEFAULT_ICON_STYLE_ID);
+    const [count, setCount] = useState<1 | 2 | 3>(ICON_CANDIDATE_COUNT_DEFAULT);
     const [imageProtocol, setImageProtocol] = useState<ImageProtocol>("openai");
     const [description, setDescription] = useState("");
+    const [referenceIcon, setReferenceIcon] = useState<
+        ReferenceIconInfo | null
+    >(null);
+    const [useReferenceIcon, setUseReferenceIcon] = useState(true);
+    const [customPrompt, setCustomPrompt] = useState<string | null>(null);
+    const [promptExpanded, setPromptExpanded] = useState(false);
+
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [confirmSnapshot, setConfirmSnapshot] = useState<
         ConfirmedRequestSnapshot | null
@@ -92,6 +125,9 @@ export function useLogoSession(options: LogoSessionOptions) {
     >(null);
     const operationVersion = useRef(0);
     const initialModelId = useRef("");
+    const initialStyle = useRef<string>(DEFAULT_ICON_STYLE_ID);
+    const initialCount = useRef<1 | 2 | 3>(ICON_CANDIDATE_COUNT_DEFAULT);
+    const initialProtocol = useRef<ImageProtocol>("openai");
 
     const [initializedKey, setInitializedKey] = useState<string | null>(null);
     if (initializedKey !== sessionKey) {
@@ -99,19 +135,57 @@ export function useLogoSession(options: LogoSessionOptions) {
         busyRun.current = null;
         operationVersion.current++;
         initialModelId.current = "";
+        initialStyle.current = DEFAULT_ICON_STYLE_ID;
+        initialCount.current = ICON_CANDIDATE_COUNT_DEFAULT;
+        initialProtocol.current = "openai";
         setModels([]);
         setProviders([]);
+        setIconPrefs({});
         setLoadingModels(true);
         setSelectedId("");
-        setStyle("minimal");
+        setStyle(DEFAULT_ICON_STYLE_ID);
+        setCount(ICON_CANDIDATE_COUNT_DEFAULT);
         setImageProtocol("openai");
         setDescription("");
+        setReferenceIcon(
+            currentIconAssetId && currentIconPreviewUrl
+                ? {
+                    assetId: currentIconAssetId,
+                    previewUrl: currentIconPreviewUrl,
+                }
+                : null,
+        );
+        setUseReferenceIcon(true);
+        setCustomPrompt(null);
+        setPromptExpanded(false);
         setConfirmOpen(false);
         setConfirmSnapshot(null);
         setCandidates([]);
         setSelectedCandidateIndex(null);
         setBusy(false);
     }
+
+    // Keep reference icon synced with non-AI icon updates (e.g. website fetch or upload),
+    // while preserving the original reference icon when the user applies an AI result.
+    useEffect(() => {
+        if (!currentIconAssetId || !currentIconPreviewUrl) {
+            if (currentIconSource === "default") {
+                setReferenceIcon(null);
+            }
+            return;
+        }
+        if (currentIconSource !== "ai") {
+            setReferenceIcon({
+                assetId: currentIconAssetId,
+                previewUrl: currentIconPreviewUrl,
+            });
+        } else if (!referenceIcon) {
+            setReferenceIcon({
+                assetId: currentIconAssetId,
+                previewUrl: currentIconPreviewUrl,
+            });
+        }
+    }, [currentIconAssetId, currentIconPreviewUrl, currentIconSource]);
 
     useEffect(() => {
         if (!enabled || !sessionKey || loadedKey.current === sessionKey) return;
@@ -120,7 +194,8 @@ export function useLogoSession(options: LogoSessionOptions) {
         void Promise.all([
             request<AiModelDto[]>("/api/ai/models"),
             request<AiProviderDto[]>("/api/ai/providers"),
-        ]).then(([items, availableProviders]) => {
+            request<PreferencesDto>("/api/preferences").catch(() => null),
+        ]).then(([items, availableProviders, prefs]) => {
             if (!isCurrent(sessionKey)) return;
             setProviders(availableProviders);
             const available = items.filter((item) =>
@@ -130,6 +205,22 @@ export function useLogoSession(options: LogoSessionOptions) {
             setModels(available);
             initialModelId.current = available[0]?.id || "";
             setSelectedId((current) => current || available[0]?.id || "");
+
+            const ig = prefs?.aiGenerationDefaults?.iconGeneration ?? {};
+            setIconPrefs(ig);
+            const resolvedDefault = resolveIconStyle(
+                ig.defaultStyle,
+                ig.customStyles,
+            );
+            const nextStyle = resolvedDefault?.id ?? DEFAULT_ICON_STYLE_ID;
+            const nextCount = ig.defaultCount ?? ICON_CANDIDATE_COUNT_DEFAULT;
+            const nextProtocol = ig.defaultProtocol ?? "openai";
+            initialStyle.current = nextStyle;
+            initialCount.current = nextCount;
+            initialProtocol.current = nextProtocol;
+            setStyle(nextStyle);
+            setCount(nextCount);
+            setImageProtocol(nextProtocol);
         }).catch((error) => {
             if (isCurrent(sessionKey) && latest.current.enabled) {
                 latest.current.onError(String(error));
@@ -139,12 +230,73 @@ export function useLogoSession(options: LogoSessionOptions) {
         });
     }, [sessionKey, enabled, request]);
 
+    const styleOptions: StyleOption[] = useMemo(() => [
+        ...BUILTIN_ICON_STYLES.map((item) => ({
+            id: item.id,
+            label: item.label,
+            prompt: item.prompt,
+            isCustom: false,
+        })),
+        ...(iconPrefs.customStyles ?? []).map((item) => ({
+            id: item.id,
+            label: `${item.name}（自定义）`,
+            prompt: item.prompt,
+            isCustom: true,
+        })),
+    ], [iconPrefs.customStyles]);
+
+    const resolvedStyle = useMemo(
+        () =>
+            resolveIconStyle(style, iconPrefs.customStyles) ??
+                resolveIconStyle(DEFAULT_ICON_STYLE_ID)!,
+        [style, iconPrefs.customStyles],
+    );
+
+    const effectiveReference = useReferenceIcon && referenceIcon
+        ? referenceIcon
+        : null;
+
+    const autoPrompt = useMemo(() => {
+        const name = siteName.trim().slice(0, 100) || "App";
+        const domain = siteDomain?.trim().slice(0, 253) || undefined;
+        const desc = description.trim().slice(0, 300) || undefined;
+        const hasRef = Boolean(effectiveReference);
+        return buildIconPrompt({
+            siteName: name,
+            siteDomain: domain,
+            description: desc,
+            stylePrompt: resolvedStyle.prompt,
+            hasReference: hasRef,
+            template: hasRef
+                ? iconPrefs.referenceTemplate
+                : iconPrefs.textTemplate,
+            candidateIndex: 1,
+            candidateCount: count,
+        });
+    }, [
+        siteName,
+        siteDomain,
+        description,
+        resolvedStyle.prompt,
+        effectiveReference,
+        iconPrefs.referenceTemplate,
+        iconPrefs.textTemplate,
+        count,
+    ]);
+
+    const isPromptCustomized = customPrompt !== null;
+    const effectivePrompt = customPrompt !== null ? customPrompt : autoPrompt;
+
     function promptGenerateConfirm() {
         const model = models.find((item) => item.id === selectedId);
         if (!model) return;
         const name = siteName.trim().slice(0, 100);
         if (!name) {
             onError("请先填写应用名称或网址");
+            return;
+        }
+        if (isPromptCustomized && !customPrompt.trim()) {
+            onError("自定义提示词不能为空");
             return;
         }
         const provider = providers.find((item) => item.id === model.providerId);
@@ -166,11 +318,16 @@ export function useLogoSession(options: LogoSessionOptions) {
             modelId: model.modelId,
             imageProtocol,
             modelDisplayName: model.displayName || model.modelId,
-            style,
-            styleLabel: LOGO_STYLE_LABELS[style] ?? style,
+            style: resolvedStyle.id,
+            styleLabel: resolvedStyle.label,
+            count,
             siteName: name,
             siteDomain: finalDomain,
             description: finalDesc,
+            referenceIcon: effectiveReference,
+            finalPrompt: effectivePrompt.trim(),
+            isPromptCustomized,
+            customPrompt: isPromptCustomized ? customPrompt.trim() : undefined,
         };
 
         setConfirmSnapshot(snapshot);
@@ -196,20 +353,30 @@ export function useLogoSession(options: LogoSessionOptions) {
                 imageProtocol: ImageProtocol;
                 siteName: string;
                 style: LogoStyle;
+                count: number;
                 siteDomain?: string;
                 description?: string;
+                referenceIconAssetId?: string;
+                customPrompt?: string;
             } = {
                 providerId: snapshot.providerId,
                 modelId: snapshot.modelId,
                 imageProtocol: snapshot.imageProtocol,
                 siteName: snapshot.siteName,
                 style: snapshot.style,
+                count: snapshot.count,
             };
             if (snapshot.siteDomain) {
                 body.siteDomain = snapshot.siteDomain;
             }
             if (snapshot.description) {
                 body.description = snapshot.description;
+            }
+            if (snapshot.referenceIcon?.assetId) {
+                body.referenceIconAssetId = snapshot.referenceIcon.assetId;
+            }
+            if (snapshot.customPrompt) {
+                body.customPrompt = snapshot.customPrompt;
             }
 
             const result = await request<{ images: Candidate[] }>(
@@ -252,7 +419,8 @@ export function useLogoSession(options: LogoSessionOptions) {
                 !latest.current.enabled
             ) return;
             const form = new FormData();
-            form.append("icon", blob, "generated-icon.png");
+            form.append("icon", blob, "generated-icon.webp");
+            form.append("fullBleed", "1");
             const asset = await request<{ id: string; url: string }>(
                 "/api/webapp-icons/upload",
                 { method: "POST", body: form },
@@ -284,21 +452,37 @@ export function useLogoSession(options: LogoSessionOptions) {
         providers,
         selectedId,
         style,
+        styleOptions,
+        count,
         imageProtocol,
         description,
+        referenceIcon,
+        useReferenceIcon,
+        effectiveReference,
+        effectivePrompt,
+        isPromptCustomized,
+        promptExpanded,
         confirmOpen,
         confirmSnapshot,
         candidates,
         selectedCandidateIndex,
         busy,
         hasDraft: Boolean(description.trim()) ||
+            isPromptCustomized ||
             selectedId !== initialModelId.current ||
-            style !== "minimal" || imageProtocol !== "openai" ||
-            candidates.length > 0 || busy,
+            style !== initialStyle.current ||
+            count !== initialCount.current ||
+            imageProtocol !== initialProtocol.current ||
+            candidates.length > 0 ||
+            busy,
         setSelectedId,
         setStyle,
+        setCount,
         setImageProtocol,
         setDescription,
+        setUseReferenceIcon,
+        setCustomPrompt,
+        setPromptExpanded,
         setConfirmOpen,
         setConfirmSnapshot,
         setCandidates,
@@ -310,4 +494,5 @@ export function useLogoSession(options: LogoSessionOptions) {
         onClose,
     };
 }
+
 export type LogoSession = ReturnType<typeof useLogoSession>;

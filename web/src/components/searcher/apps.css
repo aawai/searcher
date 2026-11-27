@@ -136,11 +136,49 @@
     color: var(--muted);
 }
 
+.app-ai-ref-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: calc(var(--radius-sm) * 0.8);
+    object-fit: cover;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-glyph-edge);
+}
+
+.app-ai-settings-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+@media (hover: hover) {
+    .app-ai-settings-link:hover {
+        text-decoration: underline;
+    }
+}
+
+.app-ai-prompt-textarea {
+    width: 100%;
+    min-height: 132px;
+    font-family: var(--font-mono);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-body-line-height);
+}
+
 [data-slot="radio-group"].app-ai-candidates-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-control-gap);
     width: 100%;
+}
+
+[data-slot="radio-group"].app-ai-candidates-grid[data-count="1"] {
+    grid-template-columns: minmax(0, 180px);
+    justify-content: center;
+}
+
+[data-slot="radio-group"].app-ai-candidates-grid[data-count="2"] {
+    grid-template-columns: repeat(2, minmax(0, 180px));
+    justify-content: center;
 }
 
 [data-slot="radio-group-item"].app-ai-candidate-card {

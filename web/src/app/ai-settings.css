@@ -392,6 +392,26 @@
     font-size: var(--font-body-size);
 }
 
+.ai-icon-template-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.ai-icon-template-textarea {
+    width: 100%;
+    min-height: 120px;
+    font-family: var(--font-mono);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-body-line-height);
+}
+
+.ai-icon-template-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .ai-provider-collapse-btn,
     .ai-provider-chevron,

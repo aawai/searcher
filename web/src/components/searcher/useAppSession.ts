@@ -775,6 +775,9 @@ export function useAppSession(options: AppSessionOptions) {
         request,
         siteName: appName.trim() || siteDomain || "",
         siteDomain,
+        currentIconAssetId: appIconAssetId,
+        currentIconPreviewUrl: iconPreviewUrl,
+        currentIconSource: appIconSource,
         onSelect: (asset) => {
             setAppIconAssetId(asset.id);
             setAppIconSource("ai");

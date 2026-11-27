@@ -18,21 +18,14 @@ export {
     type ReasoningOverride,
 } from "./model-capabilities.ts";
 
+import { ICON_STYLE_IDS } from "@shared/icon-prompts.ts";
+
 export type ProviderScope = "system" | "user";
 export const IMAGE_PROTOCOLS = ["openai", "gemini"] as const;
 export type ImageProtocol = typeof IMAGE_PROTOCOLS[number];
-export const LOGO_STYLES = [
-    "minimal",
-    "geometric",
-    "glyph",
-    "monoline",
-    "duotone",
-    "gradient",
-    "soft3d",
-    "mascot",
-] as const;
+export const LOGO_STYLES = ICON_STYLE_IDS;
 
-export type LogoStyle = typeof LOGO_STYLES[number];
+export type LogoStyle = string;
 
 export interface AiProviderDto {
     id: string;

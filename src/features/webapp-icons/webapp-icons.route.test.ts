@@ -113,13 +113,15 @@ Deno.test("WebAppIcons routes: upload, fetch, and serve", async () => {
         // 5. GET uploaded icon -> 200 with Cache-Control and Content-Type
         const getRes = await app.request(`${ORIGIN}${json.data!.url}`);
         assertEquals(getRes.status, STATUS_CODE.OK);
-        assertEquals(getRes.headers.get("content-type"), "image/png");
+        assertEquals(getRes.headers.get("content-type"), "image/webp");
         assertEquals(
             getRes.headers.get("cache-control")?.includes("public"),
             true,
         );
         const resBytes = new Uint8Array(await getRes.arrayBuffer());
-        assertEquals((await sharp(resBytes).metadata()).width, 256);
+        const meta = await sharp(resBytes).metadata();
+        assertEquals(meta.format, "webp");
+        assertEquals(meta.width, 160);
         const boundaryBytes = new Uint8Array(2 * 1024 * 1024);
         boundaryBytes.set(imageBytes);
         const boundary = new FormData();
