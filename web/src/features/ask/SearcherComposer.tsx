@@ -8,8 +8,10 @@ import {
 import {
     AlertCircle,
     ArrowUp,
-    Ellipsis,
+    ChevronDown,
     Paperclip,
+    SlidersHorizontal,
+    Sparkles,
     Square,
     X,
 } from "lucide-react";
@@ -17,6 +19,13 @@ import {
     type ModelOption,
     ModelSelector,
 } from "../../components/searcher/ModelSelector.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu.tsx";
 import {
     Popover,
     PopoverContent,
@@ -30,20 +39,23 @@ import {
 import { Switch } from "../../components/ui/switch.tsx";
 import { Button } from "../../components/ui/button.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
-import type {
-    AiCapabilitiesDto,
-    GenerationConfig,
-    ToolsConfig,
+import {
+    type AiCapabilitiesDto,
+    type GenerationConfig,
+    REASONING_EFFORT_LABELS,
+    type ToolsConfig,
 } from "./types.ts";
 import { ReasoningSelector } from "./ReasoningSelector.tsx";
 import { GenerationSettings } from "./GenerationSettings.tsx";
 import { useAttachmentError } from "./assistant-runtime.tsx";
+import { hasCustomGenerationOverrides } from "./ask-ui-helpers.ts";
 interface SearcherComposerProps {
     models: AiModelDto[];
     modelOptions: ModelOption[];
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
+    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     toolsConfig: ToolsConfig;
     onChangeToolsConfig: (cfg: ToolsConfig) => void;
@@ -108,6 +120,7 @@ export function SearcherComposer({
     selectedModelId,
     onSelectModel,
     generationConfig,
+    baselineGenerationConfig = {},
     onChangeGenerationConfig,
     toolsConfig,
     onChangeToolsConfig,
@@ -119,9 +132,16 @@ export function SearcherComposer({
     const activeModel = models.find((m) => m.id === selectedModelId);
     const supportsVision = activeModel?.supportsVision ?? false;
     const supportsTools = activeModel?.supportsTools ?? false;
+    const availableReasoningLevels = activeModel?.supportsReasoning
+        ? (activeModel.reasoningEfforts ?? [])
+        : [];
 
     const aui = useAui();
     const { attachmentError, clearAttachmentError } = useAttachmentError();
+    const isComposerEmpty = useAuiState((s) =>
+        s.composer.text.trim().length === 0 &&
+        s.composer.attachments.length === 0
+    );
 
     const handleDragOver = (e: React.DragEvent) => {
         if (
@@ -168,12 +188,11 @@ export function SearcherComposer({
     ) {
         activeTools.push({ key: "webSearch", label: "联网搜索" });
     }
-    const hasActiveTools = activeTools.length > 0;
-    const hasCustomGeneration = generationConfig.temperature !== undefined ||
-        generationConfig.topP !== undefined ||
-        generationConfig.maxTokens !== undefined ||
-        generationConfig.reasoningEffort !== undefined;
-    const hasActiveSettings = hasActiveTools || hasCustomGeneration;
+    const hasActiveSettings = hasCustomGenerationOverrides(
+        generationConfig,
+        baselineGenerationConfig,
+        activeModel?.isReasoningStrict,
+    );
     return (
         <div className="ask-composer-container">
             <ComposerPrimitive.Root
@@ -289,41 +308,41 @@ export function SearcherComposer({
                             </TooltipContent>
                         </Tooltip>
 
-                        {/* Model Selector */}
-                        <ModelSelector
-                            models={modelOptions}
-                            selected={selectedModelId}
-                            onChange={onSelectModel}
-                        />
-
                         {/* Low-frequency controls in one shared settings panel */}
                         <Popover>
-                            <PopoverTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="ask-composer__icon-btn"
-                                        aria-label="更多设置（推理、搜索与生成）"
-                                    />
-                                }
-                            >
-                                <Ellipsis
-                                    size="1em"
-                                    className="icon-md"
-                                    aria-hidden="true"
-                                />
-                                {hasActiveSettings && (
-                                    <span
-                                        className="ask-composer__active-dot"
+                            <Tooltip>
+                                <TooltipTrigger
+                                    render={
+                                        <PopoverTrigger
+                                            render={
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="ask-composer__icon-btn"
+                                                    aria-label="更多设置（推理、搜索与生成）"
+                                                />
+                                            }
+                                        />
+                                    }
+                                >
+                                    <SlidersHorizontal
+                                        size="1em"
+                                        className="icon-md"
                                         aria-hidden="true"
                                     />
-                                )}
-                            </PopoverTrigger>
+                                    {hasActiveSettings && (
+                                        <span
+                                            className="ask-composer__active-dot"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+                                </TooltipTrigger>
+                                <TooltipContent>更多设置</TooltipContent>
+                            </Tooltip>
                             <PopoverContent
                                 side="top"
-                                align="end"
+                                align="start"
                                 sideOffset={8}
                                 className="ask-composer__settings-panel"
                                 aria-label="问答设置"
@@ -448,6 +467,87 @@ export function SearcherComposer({
                         </Popover>
                     </div>
                     <div className="ask-composer__tools-right">
+                        {/* Quick reasoning effort switcher (desktop/tablet) */}
+                        {availableReasoningLevels.length > 0 && (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    className="model-pill model-trigger ask-composer__reasoning-trigger"
+                                    aria-label="切换推理强度"
+                                    title="切换推理强度"
+                                >
+                                    <Sparkles
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                    <span className="model-pill-label">
+                                        {generationConfig.reasoningEffort
+                                            ? (REASONING_EFFORT_LABELS[
+                                                generationConfig
+                                                    .reasoningEffort
+                                            ] ??
+                                                generationConfig
+                                                    .reasoningEffort)
+                                            : "默认"}
+                                    </span>
+                                    <ChevronDown
+                                        size="1em"
+                                        className="icon-sm"
+                                        aria-hidden="true"
+                                    />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    side="top"
+                                    align="end"
+                                    sideOffset={8}
+                                    aria-label="推理强度"
+                                >
+                                    <DropdownMenuRadioGroup
+                                        aria-label="推理强度"
+                                        value={generationConfig
+                                            .reasoningEffort ?? "default"}
+                                        onValueChange={(next) =>
+                                            onChangeGenerationConfig({
+                                                ...generationConfig,
+                                                reasoningEffort:
+                                                    availableReasoningLevels
+                                                        .find(
+                                                            (level) =>
+                                                                level === next,
+                                                        ),
+                                            })}
+                                    >
+                                        <DropdownMenuRadioItem
+                                            value="default"
+                                            closeOnClick
+                                        >
+                                            默认
+                                        </DropdownMenuRadioItem>
+                                        {availableReasoningLevels.map(
+                                            (level) => (
+                                                <DropdownMenuRadioItem
+                                                    key={level}
+                                                    value={level}
+                                                    closeOnClick
+                                                >
+                                                    {REASONING_EFFORT_LABELS[
+                                                        level
+                                                    ] ?? level}
+                                                </DropdownMenuRadioItem>
+                                            ),
+                                        )}
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        )}
+
+                        {/* Model Selector */}
+                        <ModelSelector
+                            models={modelOptions}
+                            selected={selectedModelId}
+                            onChange={onSelectModel}
+                            align="end"
+                        />
                         <ThreadPrimitive.If running={false}>
                             <Tooltip>
                                 <ComposerPrimitive.Send asChild>
@@ -457,6 +557,9 @@ export function SearcherComposer({
                                                 variant="default"
                                                 size="icon"
                                                 className="ask-composer__send-btn"
+                                                data-empty={isComposerEmpty
+                                                    ? "true"
+                                                    : undefined}
                                                 aria-label="发送问题（Enter）"
                                             />
                                         }

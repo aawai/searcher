@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+    MoreHorizontal,
+    PanelLeftClose,
+    Pencil,
+    Plus,
+    Trash2,
+    X,
+} from "lucide-react";
 import { Button } from "../../components/ui/button.tsx";
 import { SearchField } from "../../components/searcher/semantic.tsx";
 import {
@@ -16,14 +23,21 @@ import {
     SheetHeader,
     SheetTitle,
 } from "../../components/ui/sheet.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../../components/ui/tooltip.tsx";
 import type { AiConversationDto } from "./types.ts";
 import { RenameConversationDialog } from "./RenameConversationDialog.tsx";
+import { splitHighlightSegments } from "./ask-ui-helpers.ts";
 
 interface ConversationSidebarProps {
     history: AiConversationDto[];
     activeId: string | null;
     drawerOpen: boolean;
     onDrawerOpenChange: (open: boolean) => void;
+    onCollapse?: () => void;
     onSelectConversation: (id: string) => void;
     onNewConversation: () => void;
     onRenameConversation: (id: string, newTitle: string) => Promise<void>;
@@ -54,6 +68,7 @@ export function ConversationSidebar({
     activeId,
     drawerOpen,
     onDrawerOpenChange,
+    onCollapse,
     onSelectConversation,
     onNewConversation,
     onRenameConversation,
@@ -78,21 +93,48 @@ export function ConversationSidebar({
         (item) => bucket(item.updatedAt),
     );
 
-    const content = (
+    const renderContent = (isSheet: boolean) => (
         <div className="ask-sidebar__content">
             <div className="ask-sidebar__top">
-                <Button
-                    className="ask-sidebar__new-btn"
-                    onClick={() => {
-                        onNewConversation();
-                        onDrawerOpenChange(false);
-                    }}
-                >
-                    <Plus size="1em" className="icon-md" />
-                    <span>新建对话</span>
-                </Button>
+                <div className="ask-sidebar__top-row">
+                    <Button
+                        variant="outline"
+                        className="ask-sidebar__new-btn"
+                        onClick={() => {
+                            onNewConversation();
+                            onDrawerOpenChange(false);
+                        }}
+                    >
+                        <Plus size="1em" className="icon-md" />
+                        <span>新建对话</span>
+                    </Button>
+                    {!isSheet && onCollapse && (
+                        <Tooltip>
+                            <TooltipTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="ask-sidebar__collapse-btn"
+                                        onClick={onCollapse}
+                                        aria-label="收起历史侧栏"
+                                    />
+                                }
+                            >
+                                <PanelLeftClose
+                                    size="1em"
+                                    className="icon-md"
+                                    aria-hidden="true"
+                                />
+                            </TooltipTrigger>
+                            <TooltipContent>收起历史侧栏</TooltipContent>
+                        </Tooltip>
+                    )}
+                </div>
 
                 <SearchField
+                    wrapperClassName="ask-sidebar__search"
                     value={filter}
                     onValueChange={setFilter}
                     clearLabel="清空搜索"
@@ -118,6 +160,11 @@ export function ConversationSidebar({
                                 <div className="ask-sidebar__group-items">
                                     {items.map((item) => {
                                         const isSelected = item.id === activeId;
+                                        const titleSegments =
+                                            splitHighlightSegments(
+                                                item.title,
+                                                filter,
+                                            );
                                         return (
                                             <div
                                                 key={item.id}
@@ -145,7 +192,21 @@ export function ConversationSidebar({
                                                     title={item.title}
                                                 >
                                                     <span className="ask-sidebar__item-text">
-                                                        {item.title}
+                                                        {titleSegments.map(
+                                                            (segment, idx) =>
+                                                                segment.match
+                                                                    ? (
+                                                                        <mark
+                                                                            key={idx}
+                                                                            className="ask-sidebar__highlight"
+                                                                        >
+                                                                            {segment
+                                                                                .text}
+                                                                        </mark>
+                                                                    )
+                                                                    : segment
+                                                                        .text,
+                                                        )}
                                                     </span>
                                                 </Button>
 
@@ -215,25 +276,13 @@ export function ConversationSidebar({
                     </div>
                 )}
             </div>
-
-            {renamingTarget && (
-                <RenameConversationDialog
-                    open={Boolean(renamingTarget)}
-                    onOpenChange={(open) => !open && setRenamingTarget(null)}
-                    currentTitle={renamingTarget.title}
-                    onRename={async (newTitle) => {
-                        await onRenameConversation(renamingTarget.id, newTitle);
-                        setRenamingTarget(null);
-                    }}
-                />
-            )}
         </div>
     );
 
     return (
         <>
             <aside className="ask-sidebar" aria-label="对话历史">
-                {content}
+                {renderContent(false)}
             </aside>
 
             <Sheet open={drawerOpen} onOpenChange={onDrawerOpenChange}>
@@ -253,10 +302,22 @@ export function ConversationSidebar({
                         </SheetClose>
                     </SheetHeader>
                     <div className="ask-history-sheet__inner">
-                        {content}
+                        {renderContent(true)}
                     </div>
                 </SheetContent>
             </Sheet>
+
+            {renamingTarget && (
+                <RenameConversationDialog
+                    open={Boolean(renamingTarget)}
+                    onOpenChange={(open) => !open && setRenamingTarget(null)}
+                    currentTitle={renamingTarget.title}
+                    onRename={async (newTitle) => {
+                        await onRenameConversation(renamingTarget.id, newTitle);
+                        setRenamingTarget(null);
+                    }}
+                />
+            )}
         </>
     );
 }

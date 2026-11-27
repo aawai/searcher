@@ -14,10 +14,11 @@ export interface ModelOption {
 }
 
 export function ModelSelector(
-    { models, selected, onChange }: {
+    { models, selected, onChange, align = "start" }: {
         models: ModelOption[];
         selected: string | null;
         onChange: (id: string) => void;
+        align?: "start" | "center" | "end";
     },
 ) {
     const current = models.find((model) => model.id === selected);
@@ -37,6 +38,7 @@ export function ModelSelector(
                 <ChevronDown size="1em" className="icon-sm" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
+                align={align}
                 sideOffset={9}
                 className="model-menu"
                 aria-label="可用模型"

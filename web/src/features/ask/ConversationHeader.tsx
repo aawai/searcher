@@ -6,6 +6,7 @@ import {
     FileCode,
     Menu,
     MoreHorizontal,
+    PanelLeftOpen,
     Pencil,
     Search,
     SlidersHorizontal,
@@ -36,6 +37,8 @@ import {
 interface ConversationHeaderProps {
     conversation: AiConversationDto | null;
     messages: AiMessageDto[];
+    sidebarCollapsed?: boolean;
+    onExpandSidebar?: () => void;
     onOpenDrawer: () => void;
     onRename: (newTitle: string) => Promise<void>;
     onDelete: () => Promise<void>;
@@ -51,6 +54,8 @@ interface ConversationHeaderProps {
 export function ConversationHeader({
     conversation,
     messages,
+    sidebarCollapsed = false,
+    onExpandSidebar,
     onOpenDrawer,
     onRename,
     onDelete,
@@ -68,6 +73,10 @@ export function ConversationHeader({
     const isTemporary = conversation
         ? !conversation.historyEnabled
         : isNewConversationTemporary;
+    const activeInstruction =
+        (conversation
+            ? conversation.systemInstruction
+            : newConversationInstruction)?.trim() || "";
 
     const searchHint = formatShortcut(SHORTCUTS.askFind.binding, platform);
     function handleExport(format: "markdown" | "json") {
@@ -119,39 +128,94 @@ export function ConversationHeader({
                     <Menu size="1em" className="icon-md" />
                 </Button>
 
-                <div className="ask-header__title-row">
-                    <h1 className="ask-header__heading">
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            className="ask-header__title"
-                            onClick={() => conversation && setRenameOpen(true)}
-                            title={conversation ? "重命名对话" : "新对话"}
-                        >
-                            <span className="ask-header__title-text">
-                                {title}
-                            </span>
-                            {conversation && (
-                                <Pencil
-                                    size="1em"
-                                    className="icon-sm ask-header__title-edit-icon"
+                {sidebarCollapsed && onExpandSidebar && (
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="ask-header__icon-btn ask-header__sidebar-expand"
+                                    onClick={onExpandSidebar}
+                                    aria-label="展开历史侧栏"
                                 />
-                            )}
-                        </Button>
-                    </h1>
+                            }
+                        >
+                            <PanelLeftOpen
+                                size="1em"
+                                className="icon-md"
+                                aria-hidden="true"
+                            />
+                        </TooltipTrigger>
+                        <TooltipContent>展开历史侧栏</TooltipContent>
+                    </Tooltip>
+                )}
+
+                <div className="ask-header__title-row">
+                    {conversation
+                        ? (
+                            <h1 className="ask-header__heading">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="ask-header__title"
+                                    onClick={() => setRenameOpen(true)}
+                                    title="重命名对话"
+                                >
+                                    <span className="ask-header__title-text">
+                                        {title}
+                                    </span>
+                                    <Pencil
+                                        size="1em"
+                                        className="icon-sm ask-header__title-edit-icon"
+                                    />
+                                </Button>
+                            </h1>
+                        )
+                        : <h1 className="sr-only">新对话</h1>}
 
                     {isTemporary && (
                         <span
-                            className="ask-header__temp-note"
+                            className="ask-header__temp-badge"
                             title="临时对话：切换或离开后不会保存"
                         >
-                            · 临时对话
+                            临时对话
                         </span>
                     )}
                 </div>
             </div>
 
             <div className="ask-header__right">
+                {activeInstruction && (
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="ask-header__instruction-chip"
+                                    onClick={() => setInstructionOpen(true)}
+                                    aria-label="编辑系统指令"
+                                />
+                            }
+                        >
+                            <SlidersHorizontal
+                                size="1em"
+                                className="icon-sm"
+                                aria-hidden="true"
+                            />
+                            <span>系统指令</span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            {activeInstruction.length > 80
+                                ? `${activeInstruction.slice(0, 80)}…`
+                                : activeInstruction}
+                        </TooltipContent>
+                    </Tooltip>
+                )}
+
                 {/* Search button (enabled when messages exist) */}
                 {messages.length > 0 && (
                     <Tooltip>

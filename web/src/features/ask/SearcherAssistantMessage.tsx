@@ -78,12 +78,20 @@ export function SearcherAssistantMessage() {
     );
 
     const hasTools = toolCallParts.length > 0 || toolResultParts.length > 0;
+    const isStreamingMessage = rawMessage?.status === "streaming";
+    const hasPendingTool = toolCallParts.some((call) =>
+        call.type === "tool-call" &&
+        !toolResultParts.some((res) =>
+            res.type === "tool-result" && res.callId === call.callId
+        )
+    );
     const isInterrupted = rawMessage?.status === "interrupted";
     const isFailed = rawMessage?.status === "failed";
 
     return (
         <MessagePrimitive.Root
             className="ask-assistant-msg-container"
+            data-message-id={rawMessage?.id}
             aria-label="AI 回复"
         >
             {/* Sources / Citations list */}
@@ -276,7 +284,20 @@ export function SearcherAssistantMessage() {
                 </div>
             )}
 
-            <AssistantMarkdown text={contentText} />
+            {isStreamingMessage && contentText.trim().length === 0
+                ? (
+                    <div className="ask-thinking-indicator" aria-hidden="true">
+                        <span className="ask-thinking-indicator__dots">
+                            <span />
+                            <span />
+                            <span />
+                        </span>
+                        <span>
+                            {hasPendingTool ? "正在调用工具…" : "正在思考…"}
+                        </span>
+                    </div>
+                )
+                : <AssistantMarkdown text={contentText} />}
 
             {(isInterrupted || isFailed) && (
                 <div

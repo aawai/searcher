@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePageHost } from "../../app/page-host.tsx";
 import type { AiModelDto } from "../../../../src/features/ai/types.ts";
 import type { ModelOption } from "../../components/searcher/ModelSelector.tsx";
@@ -34,6 +34,7 @@ interface ConversationWorkspaceProps {
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
+    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     onSaveDefaultGenerationConfig: (cfg: GenerationConfig) => Promise<void>;
     onResetDefaultGenerationConfig: () => Promise<void>;
@@ -48,6 +49,8 @@ interface ConversationWorkspaceProps {
     onStop: () => void;
     onRegenerate: (messageId: string) => Promise<void>;
     onEditAndResend: (messageId: string, newContent: string) => Promise<void>;
+    sidebarCollapsed?: boolean;
+    onExpandSidebar?: () => void;
     onOpenDrawer: () => void;
     onRenameConversation: (newTitle: string) => Promise<void>;
     onDeleteConversation: () => Promise<void>;
@@ -70,6 +73,7 @@ export function ConversationWorkspace({
     selectedModelId,
     onSelectModel,
     generationConfig,
+    baselineGenerationConfig,
     onChangeGenerationConfig,
     onSaveDefaultGenerationConfig,
     onResetDefaultGenerationConfig,
@@ -84,6 +88,8 @@ export function ConversationWorkspace({
     onStop,
     onRegenerate,
     onEditAndResend,
+    sidebarCollapsed = false,
+    onExpandSidebar,
     onOpenDrawer,
     onRenameConversation,
     onDeleteConversation,
@@ -97,6 +103,16 @@ export function ConversationWorkspace({
 }: ConversationWorkspaceProps) {
     const { active } = usePageHost();
     const [searchOpen, setSearchOpen] = useState(false);
+    const scrollTimersRef = useRef<number[]>([]);
+
+    useEffect(() => {
+        return () => {
+            for (const timer of scrollTimersRef.current) {
+                globalThis.clearTimeout(timer);
+            }
+            scrollTimersRef.current = [];
+        };
+    }, []);
 
     // Compute the active branch from the active leaf ID or latest messages
     const branchMessages = useMemo(() => {
@@ -163,6 +179,8 @@ export function ConversationWorkspace({
                 <ConversationHeader
                     conversation={conversation}
                     messages={branchMessages}
+                    sidebarCollapsed={sidebarCollapsed}
+                    onExpandSidebar={onExpandSidebar}
                     onOpenDrawer={onOpenDrawer}
                     onRename={onRenameConversation}
                     onDelete={onDeleteConversation}
@@ -176,6 +194,8 @@ export function ConversationWorkspace({
 
                 <SearcherThread
                     isStreaming={isStreaming}
+                    isAwaitingMeta={isStreaming &&
+                        latestAssistantMessage?.status !== "streaming"}
                     streamingTextLength={isStreaming &&
                             latestAssistantMessage?.status === "streaming"
                         ? latestAssistantMessage.content.length
@@ -187,6 +207,7 @@ export function ConversationWorkspace({
                     selectedModelId={selectedModelId}
                     onSelectModel={onSelectModel}
                     generationConfig={generationConfig}
+                    baselineGenerationConfig={baselineGenerationConfig}
                     onChangeGenerationConfig={onChangeGenerationConfig}
                     onSaveDefaultGenerationConfig={onSaveDefaultGenerationConfig}
                     onResetDefaultGenerationConfig={onResetDefaultGenerationConfig}
@@ -207,18 +228,49 @@ export function ConversationWorkspace({
                             msgId,
                         );
                         void onSelectLeafMessage(targetLeaf);
-                        // Also scroll target message element into view
-                        setTimeout(() => {
-                            const el = document.querySelector(
-                                `[data-message-id="${msgId}"]`,
+                        for (const timer of scrollTimersRef.current) {
+                            globalThis.clearTimeout(timer);
+                        }
+                        scrollTimersRef.current = [];
+
+                        const escapedId = typeof CSS !== "undefined" &&
+                                typeof CSS.escape === "function"
+                            ? CSS.escape(msgId)
+                            : msgId.replace(/"/g, '\\"');
+                        const scrollToTarget = (attempt: number) => {
+                            const el = document.querySelector<HTMLElement>(
+                                `[data-message-id="${escapedId}"]`,
                             );
                             if (el) {
+                                const reducedMotion = globalThis.matchMedia?.(
+                                    "(prefers-reduced-motion: reduce)",
+                                ).matches;
                                 el.scrollIntoView({
-                                    behavior: "smooth",
+                                    behavior: reducedMotion ? "auto" : "smooth",
                                     block: "center",
                                 });
+                                el.classList.remove("is-search-target");
+                                void el.offsetWidth;
+                                el.classList.add("is-search-target");
+                                const clearTimer = globalThis.setTimeout(() => {
+                                    el.classList.remove("is-search-target");
+                                }, 1800);
+                                scrollTimersRef.current.push(clearTimer);
+                                return;
                             }
-                        }, 100);
+                            if (attempt < 6) {
+                                const retryTimer = globalThis.setTimeout(
+                                    () => scrollToTarget(attempt + 1),
+                                    80,
+                                );
+                                scrollTimersRef.current.push(retryTimer);
+                            }
+                        };
+                        const initialTimer = globalThis.setTimeout(
+                            () => scrollToTarget(0),
+                            80,
+                        );
+                        scrollTimersRef.current.push(initialTimer);
                     }}
                 />
             </section>

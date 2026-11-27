@@ -18,9 +18,11 @@ import { SearcherAssistantMessage } from "./SearcherAssistantMessage.tsx";
 import { SearcherComposer } from "./SearcherComposer.tsx";
 import type { ModelOption } from "../../components/searcher/ModelSelector.tsx";
 import { routes } from "../../app/routes.ts";
+import { shouldUseVisualViewportHeight } from "./ask-ui-helpers.ts";
 
 interface SearcherThreadProps {
     isStreaming: boolean;
+    isAwaitingMeta?: boolean;
     streamingTextLength: number;
     terminalMessageStatus: AiMessageDto["status"] | null;
     models: AiModelDto[];
@@ -28,6 +30,7 @@ interface SearcherThreadProps {
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
+    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     toolsConfig: ToolsConfig;
     onChangeToolsConfig: (cfg: ToolsConfig) => void;
@@ -41,6 +44,7 @@ interface SearcherThreadProps {
 
 export function SearcherThread({
     isStreaming,
+    isAwaitingMeta = false,
     streamingTextLength,
     terminalMessageStatus,
     models,
@@ -48,6 +52,7 @@ export function SearcherThread({
     selectedModelId,
     onSelectModel,
     generationConfig,
+    baselineGenerationConfig,
     onChangeGenerationConfig,
     toolsConfig,
     onChangeToolsConfig,
@@ -56,7 +61,7 @@ export function SearcherThread({
     onResetDefaultGenerationConfig,
     isDefaultGenerationConfig,
 }: SearcherThreadProps) {
-    const { Link } = usePageHost();
+    const { Link, inWindow } = usePageHost();
     const threadRef = useRef<HTMLDivElement>(null);
     const [liveAnnouncement, setLiveAnnouncement] = useState("");
     const streamingTextLengthRef = useRef(streamingTextLength);
@@ -71,6 +76,16 @@ export function SearcherThread({
         const update = () => {
             cancelAnimationFrame(frame);
             frame = requestAnimationFrame(() => {
+                if (
+                    !shouldUseVisualViewportHeight({
+                        inWindow,
+                        viewportHeight: viewport.height,
+                        innerHeight: globalThis.innerHeight,
+                    })
+                ) {
+                    thread.style.maxHeight = "";
+                    return;
+                }
                 const available = viewport.height + viewport.offsetTop -
                     thread.getBoundingClientRect().top;
                 thread.style.maxHeight = Math.max(0, available) + "px";
@@ -82,11 +97,12 @@ export function SearcherThread({
         update();
         return () => {
             cancelAnimationFrame(frame);
+            thread.style.maxHeight = "";
             viewport.removeEventListener("resize", update);
             viewport.removeEventListener("scroll", update);
             globalThis.removeEventListener("resize", update);
         };
-    }, []);
+    }, [inWindow]);
     useEffect(() => {
         if (!isStreaming) return;
         wasStreamingRef.current = true;
@@ -152,12 +168,26 @@ export function SearcherThread({
 
                         {selectedModelId && (
                             <div className="ask-empty-composer-wrap">
+                                {isAwaitingMeta && (
+                                    <div
+                                        className="ask-thinking-indicator ask-thinking-indicator--empty"
+                                        aria-hidden="true"
+                                    >
+                                        <span className="ask-thinking-indicator__dots">
+                                            <span />
+                                            <span />
+                                            <span />
+                                        </span>
+                                        <span>正在连接模型…</span>
+                                    </div>
+                                )}
                                 <SearcherComposer
                                     models={models}
                                     modelOptions={modelOptions}
                                     selectedModelId={selectedModelId}
                                     onSelectModel={onSelectModel}
                                     generationConfig={generationConfig}
+                                    baselineGenerationConfig={baselineGenerationConfig}
                                     onChangeGenerationConfig={onChangeGenerationConfig}
                                     toolsConfig={toolsConfig}
                                     onChangeToolsConfig={onChangeToolsConfig}
@@ -182,6 +212,21 @@ export function SearcherThread({
                                 AssistantMessage: SearcherAssistantMessage,
                             }}
                         />
+                        {isAwaitingMeta && (
+                            <div
+                                className="ask-assistant-msg-container"
+                                aria-hidden="true"
+                            >
+                                <div className="ask-thinking-indicator">
+                                    <span className="ask-thinking-indicator__dots">
+                                        <span />
+                                        <span />
+                                        <span />
+                                    </span>
+                                    <span>正在连接模型…</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </ThreadPrimitive.Viewport>
 
@@ -206,6 +251,7 @@ export function SearcherThread({
                             selectedModelId={selectedModelId}
                             onSelectModel={onSelectModel}
                             generationConfig={generationConfig}
+                            baselineGenerationConfig={baselineGenerationConfig}
                             onChangeGenerationConfig={onChangeGenerationConfig}
                             toolsConfig={toolsConfig}
                             onChangeToolsConfig={onChangeToolsConfig}
