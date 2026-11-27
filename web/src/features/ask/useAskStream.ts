@@ -48,8 +48,7 @@ export interface UseAskStreamOptions {
     >;
     setHistory: React.Dispatch<React.SetStateAction<AiConversationDto[]>>;
     setError: (error: string | null) => void;
-    input: string;
-    setInput: (text: string) => void;
+    setInput?: (text: string) => void;
     newConvHistoryEnabled: boolean;
     newConvSystemInstruction: string | null;
     toolsConfig: ToolsConfig;
@@ -389,7 +388,6 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
         setConversation,
         setHistory,
         setError,
-        input: _input,
         setInput,
         newConvHistoryEnabled,
         newConvSystemInstruction,
@@ -486,7 +484,7 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
 
             const submittedText = text;
             if (!sendOptions?.regenerateMessageId) {
-                setInputRef.current("");
+                setInputRef.current?.("");
             }
 
             const acc: StreamAccumulator = {
@@ -644,7 +642,7 @@ export function useAskStream(options: UseAskStreamOptions): UseAskStreamResult {
                     acc.streamFailed && currentEpoch === epochRef.current &&
                     !sendOptions?.regenerateMessageId
                 ) {
-                    setInputRef.current(submittedText);
+                    setInputRef.current?.(submittedText);
                 }
 
                 // Only update conversation state if epoch matches (prevents hijacking on conversation switch)

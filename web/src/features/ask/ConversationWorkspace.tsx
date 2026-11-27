@@ -13,7 +13,10 @@ import type {
 import { ConversationHeader } from "./ConversationHeader.tsx";
 import { ASK_SHARED_TARGET } from "./shared-target.ts";
 import { SearcherThread } from "./SearcherThread.tsx";
-import { SearcherAssistantRuntimeProvider } from "./assistant-runtime.tsx";
+import {
+    type ComposerDraftCommand,
+    SearcherAssistantRuntimeProvider,
+} from "./assistant-runtime.tsx";
 import {
     getActiveBranchMessages,
     resolveLeafForSibling,
@@ -34,7 +37,6 @@ interface ConversationWorkspaceProps {
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
-    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     onSaveDefaultGenerationConfig: (cfg: GenerationConfig) => Promise<void>;
     onResetDefaultGenerationConfig: () => Promise<void>;
@@ -42,7 +44,7 @@ interface ConversationWorkspaceProps {
     toolsConfig: ToolsConfig;
     onChangeToolsConfig: (cfg: ToolsConfig) => void;
     capabilities: AiCapabilitiesDto | null;
-    draft: string;
+    draftCommand: ComposerDraftCommand;
     draftKey: number;
     onDraftChange: (text: string) => void;
     onSend: (text: string, attachments?: AttachmentInput[]) => Promise<boolean>;
@@ -73,7 +75,6 @@ export function ConversationWorkspace({
     selectedModelId,
     onSelectModel,
     generationConfig,
-    baselineGenerationConfig,
     onChangeGenerationConfig,
     onSaveDefaultGenerationConfig,
     onResetDefaultGenerationConfig,
@@ -82,7 +83,7 @@ export function ConversationWorkspace({
     onChangeToolsConfig,
     capabilities,
     onSend,
-    draft,
+    draftCommand,
     draftKey,
     onDraftChange,
     onStop,
@@ -149,7 +150,7 @@ export function ConversationWorkspace({
     return (
         <SearcherAssistantRuntimeProvider
             isRunning={isStreaming}
-            draft={draft}
+            draftCommand={draftCommand}
             draftKey={draftKey}
             onDraftChange={onDraftChange}
             onAttachmentCountChange={onAttachmentCountChange}
@@ -207,7 +208,6 @@ export function ConversationWorkspace({
                     selectedModelId={selectedModelId}
                     onSelectModel={onSelectModel}
                     generationConfig={generationConfig}
-                    baselineGenerationConfig={baselineGenerationConfig}
                     onChangeGenerationConfig={onChangeGenerationConfig}
                     onSaveDefaultGenerationConfig={onSaveDefaultGenerationConfig}
                     onResetDefaultGenerationConfig={onResetDefaultGenerationConfig}

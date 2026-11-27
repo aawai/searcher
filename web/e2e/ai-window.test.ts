@@ -4,6 +4,7 @@ import type {
     Browser,
     BrowserContext,
     BrowserContextOptions,
+    CDPSession,
     Page,
 } from "playwright";
 import { aiModels } from "../../src/db/ai-schema.ts";
@@ -837,6 +838,215 @@ Deno.test("窄屏生成参数弹层可滚动，操作不会被视口裁切", asy
             await save.scrollIntoViewIfNeeded();
             const saveBox = (await save.boundingBox())!;
             assert(saveBox.y >= 0 && saveBox.y + saveBox.height <= 844);
+        } finally {
+            await context.close();
+        }
+    } finally {
+        await browser.close();
+        await app.close();
+    }
+});
+
+Deno.test("AI 输入框快速中文 IME 组合输入不中断且保留草稿保护与切换恢复", async () => {
+    interface ImeSegment {
+        compositions: string[];
+        commit: string;
+    }
+    interface SetValueCall {
+        prev: string;
+        next: string;
+    }
+    interface ImeWindow extends Window {
+        __imeSetValueCalls?: SetValueCall[];
+    }
+
+    async function assertRapidChineseIme(
+        page: Page,
+        cdp: CDPSession,
+        segments: ImeSegment[],
+        expectedFinalValue: string,
+    ) {
+        const textarea = composer(page);
+        await textarea.waitFor({ state: "visible" });
+        await textarea.click();
+        await textarea.evaluate((el) => {
+            const ta = el as HTMLTextAreaElement;
+            ta.setSelectionRange(ta.value.length, ta.value.length);
+            const desc = Object.getOwnPropertyDescriptor(
+                HTMLTextAreaElement.prototype,
+                "value",
+            );
+            if (!desc?.get || !desc.set) {
+                throw new Error("Missing HTMLTextAreaElement value descriptor");
+            }
+            const win = globalThis as unknown as ImeWindow;
+            win.__imeSetValueCalls = [];
+            Object.defineProperty(ta, "value", {
+                configurable: true,
+                get() {
+                    return desc.get!.call(this);
+                },
+                set(next: string) {
+                    const prev = desc.get!.call(this);
+                    win.__imeSetValueCalls!.push({ prev, next });
+                    return desc.set!.call(this, next);
+                },
+            });
+        });
+
+        try {
+            for (const segment of segments) {
+                for (const text of segment.compositions) {
+                    await cdp.send("Input.imeSetComposition", {
+                        text,
+                        selectionStart: text.length,
+                        selectionEnd: text.length,
+                    });
+                    await new Promise((r) => setTimeout(r, 10));
+                }
+                await cdp.send("Input.insertText", { text: segment.commit });
+                await new Promise((r) => setTimeout(r, 20));
+            }
+            await new Promise((r) => setTimeout(r, 50));
+
+            const result = await textarea.evaluate((el) => {
+                const ta = el as HTMLTextAreaElement;
+                const desc = Object.getOwnPropertyDescriptor(
+                    HTMLTextAreaElement.prototype,
+                    "value",
+                );
+                const win = globalThis as unknown as ImeWindow;
+                return {
+                    finalValue: desc?.get ? desc.get.call(ta) : ta.value,
+                    setValueCalls: win.__imeSetValueCalls ?? [],
+                };
+            });
+
+            assertEquals(result.finalValue, expectedFinalValue);
+            assertEquals(result.setValueCalls, []);
+        } finally {
+            await textarea.evaluate((el) => {
+                Reflect.deleteProperty(el, "value");
+            });
+        }
+    }
+
+    const app = await startProductionApp();
+    const user = await app.seedAskFixtureUser();
+    const browser = await chromium.launch({ args: ["--no-sandbox"] });
+    try {
+        const context = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+            reducedMotion: "reduce",
+        });
+        context.setDefaultTimeout(8_000);
+        try {
+            const page = await context.newPage();
+            const cdp = await context.newCDPSession(page);
+
+            // 1. Populated conversation: rapid Chinese IME produces exact text with zero value overwrites.
+            await loginAndVisit(
+                page,
+                app.origin,
+                `/ask/${user.conversationId}`,
+                user,
+            );
+            await assertRapidChineseIme(
+                page,
+                cdp,
+                [
+                    {
+                        compositions: ["n", "ni", "nih", "niha", "nihao"],
+                        commit: "你好",
+                    },
+                    {
+                        compositions: [
+                            "s",
+                            "sh",
+                            "shi",
+                            "shij",
+                            "shiji",
+                            "shijie",
+                        ],
+                        commit: "世界",
+                    },
+                ],
+                "你好世界",
+            );
+
+            // 2. Unsaved-draft close guard still triggers for the composed draft.
+            await page.getByRole("button", { name: "关闭AI 问答" }).click();
+            await dialog(page).waitFor({ state: "visible" });
+            assert(
+                (await dialog(page).textContent())?.includes("未发送的输入"),
+            );
+            await dialog(page).getByRole("button", { name: "取消" }).click();
+            await dialog(page).waitFor({ state: "hidden" });
+
+            // 3. Switch to empty conversation, verify rapid IME there, then switch back and restore draft.
+            await page.getByRole("button", { name: /新建对话/ }).click();
+            await page.waitForURL(app.origin + "/ask");
+            await page.waitForFunction(() => {
+                const ta = document.querySelector<HTMLTextAreaElement>(
+                    ".ask-composer__textarea",
+                );
+                return ta !== null && ta.value === "";
+            });
+
+            await assertRapidChineseIme(
+                page,
+                cdp,
+                [{
+                    compositions: ["c", "ce", "ces", "cesh", "ceshi"],
+                    commit: "测试",
+                }],
+                "测试",
+            );
+
+            await aiWindow(page).locator(".ask-sidebar").getByRole("button", {
+                name: "排版与代码块几何测试",
+                exact: true,
+            }).click();
+            await page.waitForURL(`${app.origin}/ask/${user.conversationId}`);
+            await page.waitForFunction(() => {
+                const ta = document.querySelector<HTMLTextAreaElement>(
+                    ".ask-composer__textarea",
+                );
+                return ta?.value === "你好世界";
+            });
+
+            // 4. Send failure restores the submitted draft; clearing it removes the close guard.
+            await page.route("**/api/ai/chat/stream", async (route) => {
+                await route.fulfill({
+                    status: 500,
+                    contentType: "application/json",
+                    body: JSON.stringify({ message: "模拟失败" }),
+                });
+            });
+            await composer(page).fill("失败后应恢复");
+            await composer(page).press("Enter");
+            await windowText(page, "模拟失败");
+            await page.waitForFunction(() => {
+                const ta = document.querySelector<HTMLTextAreaElement>(
+                    ".ask-composer__textarea",
+                );
+                return ta?.value === "失败后应恢复";
+            });
+            await page.unroute("**/api/ai/chat/stream");
+
+            await composer(page).fill("");
+            await page.getByRole("button", { name: /新建对话/ }).click();
+            await page.waitForURL(app.origin + "/ask");
+            await page.waitForFunction(() => {
+                const ta = document.querySelector<HTMLTextAreaElement>(
+                    ".ask-composer__textarea",
+                );
+                return ta?.value === "测试";
+            });
+            await composer(page).fill("");
+            await page.getByRole("button", { name: "关闭AI 问答" }).click();
+            await aiWindow(page).waitFor({ state: "hidden" });
+            assertEquals(await dialog(page).count(), 0);
         } finally {
             await context.close();
         }
