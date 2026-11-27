@@ -387,6 +387,7 @@
         0 12px 32px -12px rgb(0 0 0 / 0.26);
     --topbar-adaptive-hover-filter: blur(12px) saturate(1.4);
     --wallpaper-grain-opacity: 0;
+    --wallpaper-scene-light-grain-opacity: 0.024;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --surface-code-well: var(--surface-soft);
@@ -822,6 +823,7 @@
     --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
     --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
+    --wallpaper-scene-light-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --dock-light-shadow: var(--shadow-elevation-material);
@@ -913,6 +915,7 @@
     --launcher-plate-obsidian-shadow: var(--shadow-elevation-material);
     --topbar-adaptive-hover-filter: none;
     --wallpaper-grain-opacity: 0;
+    --wallpaper-scene-light-grain-opacity: 0;
     --wallpaper-focus-scrim: 0;
     --dock-active-glow: none;
     --dock-light-shadow: var(--shadow-elevation-material);
@@ -1122,8 +1125,10 @@
     --glass-pearl-filter: blur(10px) saturate(1.65);
 }
 
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    @media (prefers-reduced-transparency: no-preference) and (forced-colors: none) {
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter:
+    blur(1px))) {
+    @media (prefers-reduced-transparency: no-preference) and (forced-colors:
+        none) {
         :root:not([data-theme="dark"]):not([data-contrast="more"])[data-glass="clear"],
         :root:not([data-theme="dark"]):not([data-contrast="more"]) [data-glass="clear"] {
             --glass-edge-top: rgb(255 255 255 / 1);
@@ -1306,6 +1311,48 @@
         ),
         radial-gradient(
             ellipse 42% 38% at 82% 72%,
+            color-mix(in oklab, var(--accent) 6%, transparent) 0%,
+            color-mix(in oklab, var(--accent) 2%, transparent) 46%,
+            transparent 72%
+        ),
+        radial-gradient(
+            ellipse 56% 52% at 50% 40%,
+            rgb(236 232 224 / 0.024) 0%,
+            rgb(236 232 224 / 0.008) 46%,
+            transparent 72%
+        ),
+        radial-gradient(
+            ellipse 90% 86% at 50% 48%,
+            transparent 46%,
+            rgb(3 4 7 / 0.32) 76%,
+            rgb(3 4 7 / 0.64) 100%
+        );
+}
+
+:root:not([data-theme="dark"]):not([data-contrast="more"]) .wallpaper-surface[data-scene-side="left"] {
+    --wallpaper-canvas-ambient: radial-gradient(
+            ellipse 72% 60% at 16% 10%,
+            rgb(255 255 255 / 0.82) 0%,
+            rgb(255 254 250 / 0.36) 42%,
+            transparent 76%
+        ),
+        radial-gradient(
+            ellipse 42% 38% at 18% 76%,
+            color-mix(in oklab, var(--accent) 3.5%, transparent) 0%,
+            transparent 70%
+        );
+}
+
+[data-theme="dark"]:not([data-contrast="more"]) .wallpaper-surface[data-scene-side="left"] {
+    --wallpaper-canvas-ambient: radial-gradient(
+            ellipse 76% 66% at 16% 12%,
+            rgb(224 228 242 / 0.095) 0%,
+            rgb(196 202 224 / 0.044) 36%,
+            rgb(164 172 204 / 0.014) 62%,
+            transparent 82%
+        ),
+        radial-gradient(
+            ellipse 42% 38% at 18% 72%,
             color-mix(in oklab, var(--accent) 6%, transparent) 0%,
             color-mix(in oklab, var(--accent) 2%, transparent) 46%,
             transparent 72%

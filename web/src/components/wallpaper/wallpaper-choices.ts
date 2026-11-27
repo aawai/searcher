@@ -83,12 +83,12 @@ export const BOTANICAL_SPECIES_NOTES: Readonly<
     Record<BotanicalSpecies, string>
 > = {
     auto: "依二十四节气择枝轮换，每日一景。",
-    orchid: "坡石幽兰，春风拂叶，偶有粉蝶停驻。",
-    bamboo: "分节立竿，墨竹生风，枝尖偶立红衣豆娘。",
-    ginkgo: "金扇没骨，叶缘偶栖七星草虫。",
-    maple: "悬崖斜垂，霜枝红叶，偶有寒雀驻足。",
+    orchid: "坡石幽兰，长锋破凤眼，粉蝶停驻。",
+    bamboo: "分节立竿，贯顶破边，偶立红衣豆娘。",
+    ginkgo: "金扇没骨，水渍凝边，偶栖七星草虫。",
+    maple: "高崖垂挂，霜枝红叶，偶有寒雀驻足。",
     eucalyptus: "青灰圆叶，昼凝晨露，夜起微萤。",
-    plum: "铁干疏影，冬日覆雪，寒枝偶有山雀驻足。",
+    plum: "铁干鹤膝，五态疏影，冬日覆雪栖雀。",
     fern: "兰竹飞白，叶尖凝露，待办清零抽新卷。",
 };
 
