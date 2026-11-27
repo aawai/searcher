@@ -303,3 +303,62 @@ Deno.test("renderBotanicalFrame: renders all species across progress and embedde
         }
     }
 });
+
+Deno.test("generateBotanicalScene (fern): uses minimalist 3-frond orchid-brush composition with folded leaves and feibai", () => {
+    const desktop = generateBotanicalScene(
+        "fern",
+        1440,
+        900,
+        "2026-11-27",
+        false,
+    );
+    const lowerBranches = desktop.branches.filter(
+        (b) => b.points[0].y > 500,
+    );
+    assertEquals(
+        lowerBranches.length,
+        3,
+        "Expected ghost, companion, and hero fronds in minimalist desktop fern scene",
+    );
+
+    for (let i = 1; i < lowerBranches.length; i++) {
+        assert(
+            lowerBranches[i].points[0].x < lowerBranches[i - 1].points[0].x,
+            `Expected branch ${i} base to sit left of branch ${i - 1} base`,
+        );
+    }
+
+    const fgTall = lowerBranches.filter((b) =>
+        !b.ghost && b.points.length >= 40
+    );
+    assertEquals(fgTall.length, 2);
+    const [companion, hero] = fgTall;
+    assert(
+        hero.points[hero.points.length - 1].x <
+            companion.points[companion.points.length - 1].x - 180,
+        "Expected wide breathing gap between companion and hero frond tips",
+    );
+
+    const fernPinnae = desktop.ornaments.filter(
+        (o): o is Extract<typeof o, { kind: "fernPinna" }> =>
+            o.kind === "fernPinna",
+    );
+    assert(
+        fernPinnae.length >= 30 && fernPinnae.length <= 50,
+        `Expected restrained pinna count (30..50), got ${fernPinnae.length}`,
+    );
+    for (const p of fernPinnae) {
+        assert(
+            p.width / p.len <= 0.14,
+            `Expected slender orchid-brush pinna ratio, got ${p.width / p.len}`,
+        );
+    }
+    assert(
+        fernPinnae.some((p) => p.profile),
+        "Expected 3D folded (profile) fern pinnae",
+    );
+    assert(
+        fernPinnae.some((p) => p.feibai),
+        "Expected dry-brush feibai fern pinnae",
+    );
+});
