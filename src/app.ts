@@ -96,6 +96,9 @@ export function createApp(
         icons: deps.icons ?? new WebAppIconService(),
         settings: settingsStore,
     };
+    if (deps.ai && !deps.ai.icons && sharedDeps.icons) {
+        deps.ai.setIcons(sharedDeps.icons);
+    }
     const systemService = new SystemService({
         store: sharedDeps.store,
         settingsStore,
@@ -166,7 +169,7 @@ export function createApp(
     registerPreferencesRoutes(routes, sharedDeps);
     registerHomeRoutes(routes, sharedDeps);
     registerWallpaperRoutes(routes, sharedDeps);
-    registerAiRoutes(routes, deps);
+    registerAiRoutes(routes, sharedDeps);
     registerAuditRoutes(routes, deps);
     registerSearchRoutes(routes, sharedDeps);
     registerWebAppIconsRoutes(routes, sharedDeps);

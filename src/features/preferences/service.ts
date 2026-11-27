@@ -10,13 +10,16 @@ import {
 } from "@shared/dock.ts";
 import {
     type AiGenerationDefaultsDto,
+    type CustomIconStylePreset,
     DEFAULT_ACCENT,
     DEFAULT_DARK_WALLPAPER_MODE,
     DEFAULT_GLASS_INTENSITY,
     DEFAULT_TAB_ICON,
+    type IconGenerationPreferences,
     normalizeBotanicalSpecies,
     normalizeDarkWallpaperMode,
     normalizeGlassIntensity,
+    normalizeIconGenerationPreferences,
     normalizeTabIcon,
     normalizeWallpaperCompositions,
     type PreferencesDto,
@@ -40,6 +43,15 @@ export class PreferencesValidationError extends Error {
     }
 }
 
+export type UpdateIconGenerationInput = {
+    defaultStyle?: string | null;
+    defaultCount?: number | null;
+    defaultProtocol?: "openai" | "gemini" | null;
+    referenceTemplate?: string | null;
+    textTemplate?: string | null;
+    customStyles?: CustomIconStylePreset[] | null;
+};
+
 export type UpdateAiGenerationDefaultsInput = {
     default?:
         | Partial<
@@ -62,6 +74,7 @@ export type UpdateAiGenerationDefaultsInput = {
             > | null
         >
         | null;
+    iconGeneration?: UpdateIconGenerationInput | null;
 } | null;
 import type { SystemSettingsStore } from "../system/settings-store.ts";
 const defaults: PreferencesDto = {
@@ -137,9 +150,13 @@ function parseAiGenerationDefaults(
                     }
                 }
             }
+            const iconGeneration = normalizeIconGenerationPreferences(
+                p.iconGeneration,
+            );
             return {
                 default: cleanConfig(p.default),
                 models: modelsRecord,
+                ...(iconGeneration ? { iconGeneration } : {}),
             };
         }
     } catch {
@@ -347,9 +364,58 @@ export class PreferencesService {
                     }
                 }
 
+                let mergedIconGeneration:
+                    | IconGenerationPreferences
+                    | undefined = current.iconGeneration;
+                if (aiGenerationDefaults.iconGeneration === null) {
+                    mergedIconGeneration = undefined;
+                } else if (aiGenerationDefaults.iconGeneration !== undefined) {
+                    const patch = aiGenerationDefaults.iconGeneration;
+                    const nextRaw: Record<string, unknown> = {
+                        ...current.iconGeneration,
+                    };
+                    if (patch.defaultStyle !== undefined) {
+                        nextRaw.defaultStyle = patch.defaultStyle === null
+                            ? undefined
+                            : patch.defaultStyle;
+                    }
+                    if (patch.defaultCount !== undefined) {
+                        nextRaw.defaultCount = patch.defaultCount === null
+                            ? undefined
+                            : patch.defaultCount;
+                    }
+                    if (patch.defaultProtocol !== undefined) {
+                        nextRaw.defaultProtocol = patch.defaultProtocol === null
+                            ? undefined
+                            : patch.defaultProtocol;
+                    }
+                    if (patch.referenceTemplate !== undefined) {
+                        nextRaw.referenceTemplate =
+                            patch.referenceTemplate === null
+                                ? undefined
+                                : patch.referenceTemplate;
+                    }
+                    if (patch.textTemplate !== undefined) {
+                        nextRaw.textTemplate = patch.textTemplate === null
+                            ? undefined
+                            : patch.textTemplate;
+                    }
+                    if (patch.customStyles !== undefined) {
+                        nextRaw.customStyles = patch.customStyles === null
+                            ? undefined
+                            : patch.customStyles;
+                    }
+                    mergedIconGeneration = normalizeIconGenerationPreferences(
+                        nextRaw,
+                    );
+                }
+
                 const merged: AiGenerationDefaultsDto = {
                     ...(mergedDefault ? { default: mergedDefault } : {}),
                     models: mergedModels,
+                    ...(mergedIconGeneration
+                        ? { iconGeneration: mergedIconGeneration }
+                        : {}),
                 };
                 serializedAiDefaults = JSON.stringify(merged);
             }

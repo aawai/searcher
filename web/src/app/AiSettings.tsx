@@ -67,6 +67,7 @@ import {
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
 import { sortProviderModels } from "./ai-settings-models.ts";
+import { AiIconPromptSettings } from "./AiIconPromptSettings.tsx";
 import { authPath } from "./routes.ts";
 import "./settings.css";
 import "./ai-settings.css";
@@ -1166,6 +1167,11 @@ export function AiSettings({ host }: { host: PageHost }) {
                     </section>
                 );
             })}
+
+            <AiIconPromptSettings
+                onStatus={setStatus}
+                onError={setError}
+            />
 
             <Dialog
                 open={host.active && isModalOpen}

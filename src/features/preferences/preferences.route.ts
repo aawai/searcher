@@ -11,6 +11,10 @@ import {
     CANONICAL_REASONING_EFFORTS,
     DARK_WALLPAPER_MODES,
     GLASS_INTENSITIES,
+    ICON_CUSTOM_STYLES_MAX_COUNT,
+    ICON_PROMPT_MAX_LENGTH,
+    ICON_STYLE_NAME_MAX_LENGTH,
+    ICON_STYLE_PROMPT_MAX_LENGTH,
     TAB_ICONS,
     THEME_IDS,
 } from "../../shared/contracts.ts";
@@ -170,12 +174,88 @@ const GenerationConfig = v.object({
     ),
 });
 
+const CustomIconStyleSchema = v.object({
+    id: v.pipe(
+        v.string("风格 ID 必须为字符串"),
+        v.trim(),
+        v.minLength(1, "风格 ID 不能为空"),
+        v.maxLength(64, "风格 ID 过长"),
+    ),
+    name: v.pipe(
+        v.string("风格名称必须为字符串"),
+        v.trim(),
+        v.minLength(1, "风格名称不能为空"),
+        v.maxLength(ICON_STYLE_NAME_MAX_LENGTH, "风格名称过长"),
+    ),
+    prompt: v.pipe(
+        v.string("风格提示词必须为字符串"),
+        v.trim(),
+        v.minLength(1, "风格提示词不能为空"),
+        v.maxLength(ICON_STYLE_PROMPT_MAX_LENGTH, "风格提示词过长"),
+    ),
+});
+
+const IconGenerationDefaultsSchema = v.object({
+    defaultStyle: v.optional(
+        v.nullable(
+            v.pipe(
+                v.string("默认风格必须为字符串"),
+                v.trim(),
+                v.maxLength(64, "默认风格 ID 过长"),
+            ),
+        ),
+    ),
+    defaultCount: v.optional(
+        v.nullable(
+            v.pipe(
+                v.number("默认生成数量必须为数值"),
+                v.integer("默认生成数量必须为整数"),
+                v.minValue(1, "默认生成数量至少为 1"),
+                v.maxValue(3, "默认生成数量最多为 3"),
+            ),
+        ),
+    ),
+    defaultProtocol: v.optional(
+        v.nullable(v.picklist(["openai", "gemini"], "图片协议无效")),
+    ),
+    referenceTemplate: v.optional(
+        v.nullable(
+            v.pipe(
+                v.string("有参考图模板必须为字符串"),
+                v.maxLength(ICON_PROMPT_MAX_LENGTH, "有参考图模板过长"),
+            ),
+        ),
+    ),
+    textTemplate: v.optional(
+        v.nullable(
+            v.pipe(
+                v.string("无参考图模板必须为字符串"),
+                v.maxLength(ICON_PROMPT_MAX_LENGTH, "无参考图模板过长"),
+            ),
+        ),
+    ),
+    customStyles: v.optional(
+        v.nullable(
+            v.pipe(
+                v.array(CustomIconStyleSchema),
+                v.maxLength(
+                    ICON_CUSTOM_STYLES_MAX_COUNT,
+                    `自定义风格最多 ${ICON_CUSTOM_STYLES_MAX_COUNT} 个`,
+                ),
+            ),
+        ),
+    ),
+});
+
 const AiGenerationDefaults = v.optional(
     v.nullable(
         v.object({
             default: v.optional(v.nullable(GenerationConfig)),
             models: v.optional(
                 v.nullable(v.record(v.string(), v.nullable(GenerationConfig))),
+            ),
+            iconGeneration: v.optional(
+                v.nullable(IconGenerationDefaultsSchema),
             ),
         }),
     ),

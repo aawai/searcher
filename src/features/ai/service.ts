@@ -8,10 +8,22 @@ import {
     aiProviders,
     aiTemporaryLeases,
 } from "../../db/ai-schema.ts";
-import { auditLogs, preferences } from "../../db/schema.ts";
+import { auditLogs, preferences, webapps } from "../../db/schema.ts";
 import { decryptApiKey, encryptApiKey, maskApiKey } from "./crypto.ts";
 import { type OpenAIChatMessage, streamOpenAIChat } from "./client.ts";
-import { generateLogoCandidates } from "./images.ts";
+import {
+    generateLogoCandidates,
+    type GenerateLogoResult,
+    prepareReferenceImageForAi,
+    type ReferenceImageInput,
+} from "./images.ts";
+import {
+    DEFAULT_ICON_STYLE_ID,
+    type IconGenerationPreferences,
+    normalizeIconGenerationPreferences,
+    resolveIconStyle,
+} from "@shared/icon-prompts.ts";
+import type { WebAppIconService } from "../webapp-icons/service.ts";
 import {
     buildProviderGenerationParams,
     resolveEffectiveGenerationConfig,
@@ -88,6 +100,7 @@ export interface AiServiceDeps {
     now?: () => number;
     encryptionKey?: string;
     fetchFn?: typeof fetch;
+    icons?: WebAppIconService;
 }
 
 export class AiService {
@@ -95,6 +108,7 @@ export class AiService {
     readonly #now: () => number;
     readonly #encryptionKey?: string;
     readonly #fetchFn: typeof fetch;
+    #icons?: WebAppIconService;
     readonly #activeStreams = new Map<string, number>();
     #cleanupTimer?: ReturnType<typeof setInterval>;
     #cleanupInFlight?: Promise<void>;
@@ -146,6 +160,15 @@ export class AiService {
         this.#now = deps.now ?? (() => Date.now());
         this.#encryptionKey = deps.encryptionKey;
         this.#fetchFn = deps.fetchFn ?? fetch;
+        this.#icons = deps.icons;
+    }
+
+    get icons(): WebAppIconService | undefined {
+        return this.#icons;
+    }
+
+    setIcons(icons: WebAppIconService): void {
+        this.#icons = icons;
     }
     async #audit(
         db: SearchDatabase,
@@ -1595,34 +1618,128 @@ export class AiService {
 
     async generateLogo(
         userId: string,
-        providerId: string,
-        modelId: string,
-        siteName: string,
-        siteDomain: string | undefined,
-        description: string | undefined,
-        style: LogoStyle,
-        imageProtocol: ImageProtocol,
-    ) {
+        request: {
+            providerId: string;
+            modelId: string;
+            siteName: string;
+            siteDomain?: string;
+            description?: string;
+            style?: LogoStyle;
+            imageProtocol: ImageProtocol;
+            count?: number;
+            referenceIconAssetId?: string;
+            customPrompt?: string;
+            icons?: WebAppIconService;
+        },
+    ): Promise<GenerateLogoResult> {
         const { provider, model } = await this.resolveTargetModel(
             userId,
-            providerId,
-            modelId,
+            request.providerId,
+            request.modelId,
         );
+
+        let iconPrefs: IconGenerationPreferences | undefined;
+        try {
+            const userPrefs = await this.#store.run(
+                async (db: SearchDatabase) => {
+                    const [row] = await db
+                        .select()
+                        .from(preferences)
+                        .where(eq(preferences.userId, userId))
+                        .limit(1)
+                        .all();
+                    return row;
+                },
+            );
+            if (userPrefs?.aiGenerationDefaults) {
+                const parsed = JSON.parse(userPrefs.aiGenerationDefaults);
+                if (parsed && typeof parsed === "object") {
+                    iconPrefs = normalizeIconGenerationPreferences(
+                        (parsed as Record<string, unknown>).iconGeneration,
+                    );
+                }
+            }
+        } catch {
+            // Ignore if preferences table is absent in isolated stores.
+        }
+
+        const styleId = request.style?.trim() ||
+            iconPrefs?.defaultStyle ||
+            DEFAULT_ICON_STYLE_ID;
+        const trimmedCustomPrompt = request.customPrompt?.trim();
+        const resolvedStyle = resolveIconStyle(
+            styleId,
+            iconPrefs?.customStyles,
+        );
+        if (!trimmedCustomPrompt && !resolvedStyle) {
+            throw new AiServiceError("无效的图标风格", 400);
+        }
+
+        let referenceImage: ReferenceImageInput | undefined;
+        if (request.referenceIconAssetId) {
+            const iconService = request.icons ?? this.#icons;
+            if (!iconService) {
+                throw new AiServiceError("参考图标不存在", 404);
+            }
+            const icon = await iconService.getIcon(
+                request.referenceIconAssetId,
+            );
+            if (!icon) {
+                throw new AiServiceError("参考图标不存在", 404);
+            }
+            if (
+                icon.record.ownerUserId !== null &&
+                icon.record.ownerUserId !== userId
+            ) {
+                const referencedByUser = await this.#store.run(async (db) => {
+                    const [row] = await db
+                        .select({ id: webapps.id })
+                        .from(webapps)
+                        .where(
+                            and(
+                                eq(webapps.userId, userId),
+                                eq(
+                                    webapps.iconAssetId,
+                                    request.referenceIconAssetId!,
+                                ),
+                                isNull(webapps.deletedAt),
+                            ),
+                        )
+                        .limit(1)
+                        .all();
+                    return Boolean(row);
+                });
+                if (!referencedByUser) {
+                    throw new AiServiceError("参考图标不存在", 404);
+                }
+            }
+            referenceImage = await prepareReferenceImageForAi(icon.bytes);
+        }
+
         const apiKey = await decryptApiKey(
             provider.encryptedApiKey,
             this.#encryptionKey,
         );
-        return await generateLogoCandidates(
-            provider.baseUrl,
+        const template = referenceImage
+            ? iconPrefs?.referenceTemplate
+            : iconPrefs?.textTemplate;
+
+        return await generateLogoCandidates({
+            baseUrl: provider.baseUrl,
             apiKey,
-            model.modelId,
-            siteName,
-            siteDomain,
-            description,
-            style,
-            imageProtocol,
-            this.#fetchFn,
-        );
+            modelId: model.modelId,
+            siteName: request.siteName,
+            siteDomain: request.siteDomain,
+            description: request.description,
+            style: resolvedStyle?.id ?? styleId,
+            stylePrompt: resolvedStyle?.prompt,
+            template,
+            customPrompt: trimmedCustomPrompt,
+            referenceImage,
+            count: request.count ?? 1,
+            imageProtocol: request.imageProtocol,
+            fetchFn: this.#fetchFn,
+        });
     }
 
     async *streamChat(

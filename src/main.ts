@@ -4,6 +4,7 @@ import { openDatabase } from "./db/database.ts";
 import { migrateDatabase } from "./db/migrate.ts";
 import { AuthService } from "./features/auth/service.ts";
 import { AiService } from "./features/ai/service.ts";
+import { WebAppIconService } from "./features/webapp-icons/service.ts";
 
 export function isLoopbackOriginHost(hostname: string): boolean {
     return ["localhost", "127.0.0.1", "[::1]"].includes(hostname);
@@ -96,9 +97,10 @@ if (import.meta.main) {
         await migrateDatabase(store);
         const auth = new AuthService({ store, origin });
         await auth.getDummyHash();
-        ai = new AiService({ store });
+        const icons = new WebAppIconService();
+        ai = new AiService({ store, icons });
         ai.startTemporaryCleanup();
-        const app = createApp({ store, auth, origin, ai });
+        const app = createApp({ store, auth, origin, ai, icons });
         server = Deno.serve({ port }, app.fetch);
         logger.info({ port }, "Searcher started");
     } catch (error) {

@@ -10,6 +10,7 @@ import type { AppDeps, AppEnv } from "../../serve/env.ts";
 import type { UserDto } from "@shared/contracts.ts";
 import { eq } from "drizzle-orm";
 import { aiBlobs, aiConversations } from "../../db/ai-schema.ts";
+import { WebAppIconService } from "../webapp-icons/service.ts";
 
 function createInMemoryStore(): DatabaseStore {
     const native = new DatabaseSync(":memory:");
@@ -108,6 +109,47 @@ function createInMemoryStore(): DatabaseStore {
             size INTEGER NOT NULL,
             created_at INTEGER NOT NULL
         );`,
+        `CREATE TABLE preferences (
+            user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            default_engine TEXT NOT NULL DEFAULT 'bing',
+            theme TEXT NOT NULL DEFAULT 'system',
+            accent TEXT NOT NULL DEFAULT 'wallpaper',
+            search_shape TEXT DEFAULT 'rounded',
+            glass_intensity TEXT NOT NULL DEFAULT 'regular',
+            tab_icon TEXT NOT NULL DEFAULT 'editorial',
+            background_image TEXT,
+            dark_wallpaper_mode TEXT NOT NULL DEFAULT 'follow',
+            dark_background_image TEXT,
+            botanical_scene TEXT,
+            search_target TEXT NOT NULL DEFAULT 'same',
+            search_history_enabled INTEGER NOT NULL DEFAULT 0,
+            show_home_apps INTEGER NOT NULL DEFAULT 0,
+            show_home_app_plate INTEGER NOT NULL DEFAULT 1,
+            show_home_date INTEGER NOT NULL DEFAULT 1,
+            show_home_time INTEGER NOT NULL DEFAULT 0,
+            show_home_continue INTEGER NOT NULL DEFAULT 1,
+            home_masthead_collapsed INTEGER NOT NULL DEFAULT 1,
+            show_app_labels INTEGER NOT NULL DEFAULT 1,
+            ai_generation_defaults TEXT,
+            wallpaper_compositions TEXT,
+            wallpaper_presentations TEXT,
+            dock TEXT
+        );`,
+        `CREATE TABLE webapps (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            group_id TEXT,
+            name TEXT NOT NULL,
+            url TEXT NOT NULL,
+            icon_asset_id TEXT,
+            icon_source TEXT NOT NULL DEFAULT 'default',
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            is_home_fixed INTEGER NOT NULL DEFAULT 0,
+            open_mode TEXT NOT NULL DEFAULT 'global',
+            deleted_at INTEGER,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        );`,
     ]);
 
     native.exec(`
@@ -126,12 +168,14 @@ function setupTestApp(
     currentUser?: UserDto | null,
     mockFetch?: typeof fetch,
     existingStore?: DatabaseStore,
+    icons?: WebAppIconService,
 ) {
     const store = existingStore ?? createInMemoryStore();
     const service = new AiService({
         store,
         encryptionKey: TEST_KEY,
         fetchFn: mockFetch,
+        icons,
     });
 
     const app = new Hono<AppEnv>();
@@ -141,6 +185,7 @@ function setupTestApp(
         store,
         auth: {} as unknown as AppDeps["auth"],
         origin: "http://localhost:8000",
+        icons,
     };
 
     registerAiRoutes(routes, deps, service);
@@ -1019,20 +1064,9 @@ Deno.test("AI Logo candidates use the requested visible model and return three v
         displayName: "Test User",
         role: "user",
     };
-    const png = new Uint8Array([
-        0x89,
-        0x50,
-        0x4e,
-        0x47,
-        0x0d,
-        0x0a,
-        0x1a,
-        0x0a,
-        0,
-        0,
-        0,
-        0x0d,
-    ]);
+    const png = Uint8Array.fromBase64(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuIAAAAASUVORK5CYII=",
+    );
     const mockFetch: typeof fetch = (input) => {
         if (String(input).endsWith("/models")) {
             return Promise.resolve(
@@ -1065,17 +1099,17 @@ Deno.test("AI Logo candidates use the requested visible model and return three v
             providerId: provider.id,
             modelId: "image-model",
             siteName: "Search",
-            style: "geometric",
+            style: "crisp_flat",
         }),
     });
     assertEquals(response.status, 200);
     const result = await response.json();
-    assertEquals(result.data.images.length, 3);
+    assertEquals(result.data.images.length, 1);
     assertEquals(
-        result.data.images[0].dataUrl,
-        `data:image/png;base64,${png.toBase64()}`,
+        result.data.images[0].dataUrl.startsWith("data:image/webp;base64,"),
+        true,
     );
-    assertEquals(result.data.images[0].style, "geometric");
+    assertEquals(result.data.images[0].style, "crisp_flat");
     const denied = await app.request("/api/ai/logo-candidates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1083,26 +1117,15 @@ Deno.test("AI Logo candidates use the requested visible model and return three v
             providerId: provider.id,
             modelId: "not-discovered",
             siteName: "Search",
-            style: "minimal",
+            style: "brand_soft3d",
         }),
     });
     assertEquals(denied.status, 404);
 });
 
-const VALID_PNG_BYTES = new Uint8Array([
-    0x89,
-    0x50,
-    0x4e,
-    0x47,
-    0x0d,
-    0x0a,
-    0x1a,
-    0x0a,
-    0,
-    0,
-    0,
-    0x0d,
-]);
+const VALID_PNG_BYTES = Uint8Array.fromBase64(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuIAAAAASUVORK5CYII=",
+);
 
 function createMockImageFetch(options?: {
     onImageRequest?: (body: {
@@ -1256,7 +1279,7 @@ Deno.test("AI Logo candidates route rejects siteDomain > 253 and description > 3
             providerId: provider.id,
             modelId: "image-model",
             siteName: "Searcher",
-            style: "minimal",
+            style: "brand_soft3d",
             siteDomain: "d".repeat(253),
             description: "c".repeat(300),
         }),
@@ -1505,18 +1528,15 @@ Deno.test("AI image protocol selection preserves model aliases and text chat", a
                     modelId,
                     imageProtocol,
                     siteName: "Searcher",
-                    style: "minimal",
+                    style: "brand_soft3d",
                 }),
             });
             assertEquals(imageResponse.status, 200);
             const images = (await imageResponse.json()).data.images;
+            assertEquals(images.length, 1);
             assertEquals(
-                images.map((image: { dataUrl: string; style: string }) =>
-                    image.dataUrl
-                ),
-                Array(3).fill(
-                    "data:image/png;base64," + VALID_PNG_BYTES.toBase64(),
-                ),
+                images[0].dataUrl.startsWith("data:image/webp;base64,"),
+                true,
             );
             const chat = await app.request("/api/ai/chat/stream", {
                 method: "POST",
@@ -1710,5 +1730,276 @@ Deno.test("AI Route: PUT /api/ai/providers/:id toggles enabled and PATCH /api/ai
         assertEquals(badDefaultRes.status, 400);
     } finally {
         await store.close();
+    }
+});
+
+Deno.test("AI Logo candidates route supports referenceIconAssetId, customPrompt, custom styles, count, and ownership isolation", async () => {
+    const iconDir = await Deno.makeTempDir({ prefix: "ai_logo_ref_test_" });
+    const icons = new WebAppIconService(iconDir);
+    const png1x1 = Uint8Array.fromBase64(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuIAAAAASUVORK5CYII=",
+    );
+    const user1Asset = await icons.saveIcon(TEST_USER.id, png1x1);
+
+    const capturedUrls: string[] = [];
+    const capturedPrompts: string[] = [];
+    const mockFetch: typeof fetch = (input, init) => {
+        const urlStr = String(input);
+        if (urlStr.endsWith("/models")) {
+            return Promise.resolve(Response.json({
+                data: [
+                    { id: "gpt-image-1" },
+                    { id: "gemini-3.1-flash-image" },
+                ],
+            }));
+        }
+        if (urlStr.endsWith("/images/edits")) {
+            capturedUrls.push(urlStr);
+            const form = init?.body as FormData;
+            capturedPrompts.push(String(form.get("prompt")));
+            return Promise.resolve(
+                Response.json({ data: [{ b64_json: png1x1.toBase64() }] }),
+            );
+        }
+        if (urlStr.includes(":generateContent")) {
+            capturedUrls.push(urlStr);
+            const body = JSON.parse(String(init?.body));
+            capturedPrompts.push(String(body.contents[0].parts[1].text));
+            return Promise.resolve(Response.json({
+                candidates: [{
+                    content: {
+                        parts: [{
+                            inlineData: {
+                                mimeType: "image/png",
+                                data: png1x1.toBase64(),
+                            },
+                        }],
+                    },
+                }],
+            }));
+        }
+        if (urlStr.endsWith("/images/generations")) {
+            capturedUrls.push(urlStr);
+            const body = JSON.parse(String(init?.body));
+            capturedPrompts.push(String(body.prompt));
+            return Promise.resolve(
+                Response.json({ data: [{ b64_json: png1x1.toBase64() }] }),
+            );
+        }
+        return Promise.resolve(new Response(null, { status: 404 }));
+    };
+
+    const { app, service, store } = setupTestApp(
+        TEST_USER,
+        mockFetch,
+        undefined,
+        icons,
+    );
+    try {
+        const provider = await service.createProvider(TEST_USER.id, {
+            name: "Images",
+            baseUrl: "https://images.example/v1",
+            apiKey: "secret-key",
+            scope: "user",
+        });
+
+        // Save a custom style into user preferences
+        await store.run(async (db) => {
+            const { preferences } = await import("../../db/schema.ts");
+            await db.insert(preferences).values({
+                userId: TEST_USER.id,
+                aiGenerationDefaults: JSON.stringify({
+                    models: {},
+                    iconGeneration: {
+                        customStyles: [{
+                            id: "my-custom",
+                            name: "我的玻璃风",
+                            prompt: "Frosted glass custom icon style",
+                        }],
+                    },
+                }),
+            }).run();
+        });
+
+        // 1. Gemini + referenceIconAssetId + custom style
+        const geminiRes = await app.request("/api/ai/logo-candidates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                providerId: provider.id,
+                modelId: "gemini-3.1-flash-image",
+                imageProtocol: "gemini",
+                siteName: "Notion",
+                style: "my-custom",
+                referenceIconAssetId: user1Asset.id,
+            }),
+        });
+        assertEquals(geminiRes.status, 200);
+        const geminiData = (await geminiRes.json()).data;
+        assertEquals(geminiData.usedReference, true);
+        assertEquals(geminiData.images.length, 1);
+        assertEquals(
+            geminiData.promptUsed.includes("Frosted glass custom icon style"),
+            true,
+        );
+
+        // 2. OpenAI + referenceIconAssetId + customPrompt + count=2
+        const openaiRes = await app.request("/api/ai/logo-candidates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                providerId: provider.id,
+                modelId: "gpt-image-1",
+                imageProtocol: "openai",
+                siteName: "Notion",
+                style: "brand_soft3d",
+                count: 2,
+                referenceIconAssetId: user1Asset.id,
+                customPrompt: "Verbatim custom prompt",
+            }),
+        });
+        assertEquals(openaiRes.status, 200);
+        const openaiData = (await openaiRes.json()).data;
+        assertEquals(openaiData.usedReference, true);
+        assertEquals(openaiData.images.length, 2);
+        assertEquals(openaiData.promptUsed, "Verbatim custom prompt");
+        assertEquals(
+            capturedUrls.some((u) => u.endsWith("/images/edits")),
+            true,
+        );
+        assertEquals(capturedPrompts.includes("Verbatim custom prompt"), true);
+
+        // 3. Another user cannot use user1's private referenceIconAssetId -> 404
+        const { app: app2 } = setupTestApp(
+            SECOND_USER,
+            mockFetch,
+            store,
+            icons,
+        );
+        const provider2 = await service.createProvider(SECOND_USER.id, {
+            name: "User2 Images",
+            baseUrl: "https://images.example/v1",
+            apiKey: "secret-key-2",
+            scope: "user",
+        });
+        const unownedRefRes = await app2.request("/api/ai/logo-candidates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                providerId: provider2.id,
+                modelId: "gpt-image-1",
+                siteName: "Notion",
+                style: "brand_soft3d",
+                referenceIconAssetId: user1Asset.id,
+            }),
+        });
+        assertEquals(unownedRefRes.status, 404);
+
+        // 4. Invalid count (0 or 4) -> 400
+        const badCountRes = await app.request("/api/ai/logo-candidates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                providerId: provider.id,
+                modelId: "gpt-image-1",
+                siteName: "Notion",
+                count: 4,
+            }),
+        });
+        assertEquals(badCountRes.status, 400);
+    } finally {
+        await store.close();
+        await Deno.remove(iconDir, { recursive: true });
+    }
+});
+
+Deno.test("createApp wires shared icons into pre-created AiService when icons was omitted", async () => {
+    const { openDatabase } = await import("../../db/database.ts");
+    const { migrateDatabase } = await import("../../db/migrate.ts");
+    const { AuthService, SESSION_COOKIE_NAME } = await import(
+        "../auth/service.ts"
+    );
+    const { createApp } = await import("../../app.ts");
+
+    const store = openDatabase(":memory:");
+    const iconDir = await Deno.makeTempDir({ prefix: "ai_wire_icons_" });
+    const icons = new WebAppIconService(iconDir);
+    const png1x1 = Uint8Array.fromBase64(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jPuIAAAAASUVORK5CYII=",
+    );
+    const mockFetch: typeof fetch = (input) => {
+        const urlStr = String(input);
+        if (urlStr.endsWith("/models")) {
+            return Promise.resolve(
+                Response.json({ data: [{ id: "gpt-image-1" }] }),
+            );
+        }
+        if (urlStr.endsWith("/images/edits")) {
+            return Promise.resolve(
+                Response.json({ data: [{ b64_json: png1x1.toBase64() }] }),
+            );
+        }
+        return Promise.resolve(new Response(null, { status: 404 }));
+    };
+
+    try {
+        await migrateDatabase(store);
+        const appOrigin = "http://localhost:8000";
+        const auth = new AuthService({ store, origin: appOrigin });
+        const ai = new AiService({
+            store,
+            encryptionKey: TEST_KEY,
+            fetchFn: mockFetch,
+        });
+        const app = createApp({ store, auth, origin: appOrigin, ai, icons });
+
+        const regRes = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: {
+                origin: appOrigin,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                username: "wire_test_user",
+                displayName: "Wire Test",
+                password: "Password123456!",
+            }),
+        });
+        assertEquals(regRes.status, 200);
+        const cookie = regRes.headers.get("set-cookie")?.split(";")[0]!;
+        if (!cookie.startsWith(`${SESSION_COOKIE_NAME}=`)) {
+            throw new Error("Missing session cookie");
+        }
+        const userId = (await regRes.json()).data.user.id as string;
+        const provider = await ai.createProvider(userId, {
+            name: "Images",
+            baseUrl: "https://images.example/v1",
+            apiKey: "secret-key",
+            scope: "user",
+        });
+        const asset = await icons.saveIcon(userId, png1x1);
+
+        const res = await app.request("/api/ai/logo-candidates", {
+            method: "POST",
+            headers: {
+                origin: appOrigin,
+                cookie,
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                providerId: provider.id,
+                modelId: "gpt-image-1",
+                siteName: "Example",
+                style: "brand_soft3d",
+                referenceIconAssetId: asset.id,
+            }),
+        });
+        assertEquals(res.status, 200);
+        const payload = (await res.json()).data;
+        assertEquals(payload.usedReference, true);
+        assertEquals(payload.images.length, 1);
+    } finally {
+        await store.close();
+        await Deno.remove(iconDir, { recursive: true });
     }
 });

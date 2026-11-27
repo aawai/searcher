@@ -1,7 +1,9 @@
 export * from "./wallpaper.ts";
 export * from "./dock.ts";
 export * from "./avatar.ts";
+export * from "./icon-prompts.ts";
 import type { DockPreferences } from "./dock.ts";
+import type { IconGenerationPreferences } from "./icon-prompts.ts";
 import type { WallpaperPresentation } from "./wallpaper-presentation.ts";
 export type { WallpaperPresentation };
 import type { EngineId } from "./engines.ts";
@@ -272,6 +274,8 @@ export interface AiGenerationDefaultsDto {
     default?: UserGenerationConfig;
     /** Per-model generation defaults keyed by modelId (e.g. "gpt-4o", "o1", or model DB ID) */
     models?: Record<string, UserGenerationConfig>;
+    /** Global app icon generation defaults, custom prompt templates and style presets */
+    iconGeneration?: IconGenerationPreferences;
 }
 
 export interface PreferencesDto {

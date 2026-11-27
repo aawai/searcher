@@ -372,3 +372,166 @@ Deno.test("Preferences: user generation defaults applied in chatStream when requ
         await store.close();
     }
 });
+
+Deno.test("Preferences: iconGeneration defaults, partial merge, clear and validation", async () => {
+    const store = openDatabase(":memory:");
+    try {
+        await migrateDatabase(store);
+        const auth = new AuthService({ store, origin });
+        const app = createApp({ store, auth, origin });
+
+        const regRes = await app.request("/api/auth/register", {
+            method: "POST",
+            headers: { origin, "content-type": "application/json" },
+            body: JSON.stringify({
+                username: "icon_prefs_user",
+                displayName: "Icon Prefs User",
+                password: "Password123456!",
+            }),
+        });
+        assertEquals(regRes.status, 200);
+        const cookie = regRes.headers.get("set-cookie")?.split(";")[0]!;
+
+        // Save model defaults first
+        await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    models: { "gpt-4o": { temperature: 0.6 } },
+                },
+            }),
+        });
+
+        // Save iconGeneration without clobbering models
+        const patchIcon = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    iconGeneration: {
+                        defaultStyle: "dark_matte",
+                        defaultCount: 2,
+                        defaultProtocol: "gemini",
+                        referenceTemplate:
+                            "Custom ref {{siteName}} {{stylePrompt}}",
+                        customStyles: [
+                            {
+                                id: "neon-dark",
+                                name: "暗夜霓虹",
+                                prompt:
+                                    "Dark slate background with crisp neon cyan edges",
+                            },
+                        ],
+                    },
+                },
+            }),
+        });
+        assertEquals(patchIcon.status, 200);
+        const iconBody = await patchIcon.json() as Envelope<PreferencesDto>;
+        assertEquals(iconBody.data?.aiGenerationDefaults?.models?.["gpt-4o"], {
+            temperature: 0.6,
+        });
+        assertEquals(iconBody.data?.aiGenerationDefaults?.iconGeneration, {
+            defaultStyle: "dark_matte",
+            defaultCount: 2,
+            defaultProtocol: "gemini",
+            referenceTemplate: "Custom ref {{siteName}} {{stylePrompt}}",
+            customStyles: [
+                {
+                    id: "neon-dark",
+                    name: "暗夜霓虹",
+                    prompt: "Dark slate background with crisp neon cyan edges",
+                },
+            ],
+        });
+
+        // Partial update preserves existing iconGeneration fields
+        const partialIcon = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    iconGeneration: {
+                        defaultCount: 1,
+                        referenceTemplate: null,
+                    },
+                },
+            }),
+        });
+        assertEquals(partialIcon.status, 200);
+        const partialBody = await partialIcon.json() as Envelope<
+            PreferencesDto
+        >;
+        assertEquals(partialBody.data?.aiGenerationDefaults?.iconGeneration, {
+            defaultStyle: "dark_matte",
+            defaultCount: 1,
+            defaultProtocol: "gemini",
+            customStyles: [
+                {
+                    id: "neon-dark",
+                    name: "暗夜霓虹",
+                    prompt: "Dark slate background with crisp neon cyan edges",
+                },
+            ],
+        });
+
+        // Validation: invalid defaultCount
+        const badCount = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    iconGeneration: { defaultCount: 4 },
+                },
+            }),
+        });
+        assertEquals(badCount.status, 400);
+
+        // Validation: template > 4000 chars
+        const badTemplate = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    iconGeneration: { textTemplate: "x".repeat(4001) },
+                },
+            }),
+        });
+        assertEquals(badTemplate.status, 400);
+
+        // Validation: > 20 customStyles
+        const tooManyStyles = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: {
+                    iconGeneration: {
+                        customStyles: Array.from({ length: 21 }, (_, i) => ({
+                            id: `style-${i}`,
+                            name: `Style ${i}`,
+                            prompt: "Clean icon",
+                        })),
+                    },
+                },
+            }),
+        });
+        assertEquals(tooManyStyles.status, 400);
+
+        // Clear iconGeneration with null
+        const cleared = await app.request("/api/preferences", {
+            method: "PATCH",
+            headers: { origin, cookie, "content-type": "application/json" },
+            body: JSON.stringify({
+                aiGenerationDefaults: { iconGeneration: null },
+            }),
+        });
+        assertEquals(cleared.status, 200);
+        const clearedBody = await cleared.json() as Envelope<PreferencesDto>;
+        assertEquals(clearedBody.data?.aiGenerationDefaults, {
+            models: { "gpt-4o": { temperature: 0.6 } },
+        });
+    } finally {
+        await store.close();
+    }
+});

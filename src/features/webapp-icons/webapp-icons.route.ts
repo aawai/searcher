@@ -78,9 +78,12 @@ export function registerWebAppIconsRoutes(
 
         const buffer = await file.arrayBuffer();
         const bytes = new Uint8Array(buffer);
+        const fullBleed = formData.get("fullBleed") === "1";
 
         try {
-            const saved = await service.saveIcon(user.id, bytes);
+            const saved = await service.saveIcon(user.id, bytes, {
+                forceFullBleed: fullBleed,
+            });
             return c.success(saved);
         } catch (e) {
             return failResponse(
