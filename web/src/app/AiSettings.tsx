@@ -66,6 +66,7 @@ import {
 } from "../components/ui/select.tsx";
 import { api, json } from "../lib/api.ts";
 import { errorMessage, useAppState } from "./state.tsx";
+import { sortProviderModels } from "./ai-settings-models.ts";
 import { authPath } from "./routes.ts";
 import "./settings.css";
 import "./ai-settings.css";
@@ -708,8 +709,9 @@ export function AiSettings({ host }: { host: PageHost }) {
             {providers.map((provider) => {
                 const manageable = provider.ownerUserId === user.id ||
                     user.role === "admin";
-                const providerModels = models.filter((model) =>
-                    model.providerId === provider.id
+                const providerModels = sortProviderModels(
+                    models.filter((model) => model.providerId === provider.id),
+                    provider.scope,
                 );
                 const usableCount = providerModels.filter(isModelUsable).length;
                 const collapsed = collapsedProviders.has(provider.id);

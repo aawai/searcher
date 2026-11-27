@@ -4,6 +4,7 @@ import {
     DEFAULT_ACCENT,
     DEFAULT_DARK_WALLPAPER_MODE,
     DEFAULT_GLASS_INTENSITY,
+    DEFAULT_GUEST_ACCENT,
     DEFAULT_TAB_ICON,
     DEFAULT_THEME,
     type GlassIntensity,
@@ -149,12 +150,32 @@ function normalizeImageDataOrUrl(raw: unknown): string {
     return parseWallpaperSource(source)?.value ?? "";
 }
 
+export const DEFAULT_GUEST_BOTANICAL_SCENE: BotanicalSpecies = "plum";
+
+function defaultAppearanceFor(userId: string | null): Appearance {
+    if (userId === null) {
+        return {
+            ...initial,
+            accent: DEFAULT_GUEST_ACCENT,
+            botanicalScene: DEFAULT_GUEST_BOTANICAL_SCENE,
+        };
+    }
+    return initial;
+}
+
 /** 旧设备缓存和旧 API 响应缺少字段时，仍生成有效的背景参数。 */
-export function normalizeAppearance(raw: unknown): Appearance {
+export function normalizeAppearance(
+    raw: unknown,
+    options?: { guest?: boolean },
+): Appearance {
     const saved = raw && typeof raw === "object" && !Array.isArray(raw)
         ? raw as Record<string, unknown>
         : {};
-    const result = { ...initial, ...normalizeFirstFrame(saved) };
+    const defaults = defaultAppearanceFor(options?.guest ? null : "account");
+    const result = {
+        ...defaults,
+        ...normalizeFirstFrame(saved, defaults.accent),
+    };
     if (
         saved.engine === "bing" || saved.engine === "google" ||
         saved.engine === "baidu" || saved.engine === "duckduckgo"
@@ -162,13 +183,20 @@ export function normalizeAppearance(raw: unknown): Appearance {
     if (saved.target === "current" || saved.target === "new_tab") {
         result.target = saved.target;
     }
-    result.botanicalScene = normalizeBotanicalSpecies(saved.botanicalScene);
+    result.botanicalScene = saved.botanicalScene === null
+        ? null
+        : (normalizeBotanicalSpecies(saved.botanicalScene) ??
+            defaults.botanicalScene);
     const source = typeof saved.wallpaper === "string" ? saved.wallpaper : "";
     const legacyScene = !source.startsWith("data:")
         ? parseBotanicalSceneSource(source)
         : null;
     if (legacyScene) {
-        result.botanicalScene ??= legacyScene;
+        if (saved.botanicalScene === undefined) {
+            result.botanicalScene = legacyScene;
+        } else {
+            result.botanicalScene ??= legacyScene;
+        }
     } else {
         result.wallpaper = normalizeImageDataOrUrl(source);
     }
@@ -260,10 +288,13 @@ export function AppState({ children }: { children: ReactNode }) {
     const [authReady, setAuthReady] = useState(false);
     const [ready, setReady] = useState(false);
     // Same snapshot the <head> boot script painted, so React does not repaint.
-    const [appearance, setValue] = useState<Appearance>(() => ({
-        ...initial,
-        ...readFirstFrame(firstFrame, readFirstFrameOwner(firstFrame)),
-    }));
+    const [appearance, setValue] = useState<Appearance>(() => {
+        const owner = readFirstFrameOwner(firstFrame);
+        return {
+            ...defaultAppearanceFor(owner),
+            ...readFirstFrame(firstFrame, owner),
+        };
+    });
     const [syncFailed, setSyncFailed] = useState(false);
     const [authConnectionError, setAuthConnectionError] = useState(false);
     const userRef = useRef<UserDto | null>(null);
@@ -280,8 +311,12 @@ export function AppState({ children }: { children: ReactNode }) {
         storeRef.current?.dispose();
         const store = createAppearanceOwnerStore<Appearance>({
             userId,
-            initial: { ...initial, ...readFirstFrame(firstFrame, userId) },
-            normalize: normalizeAppearance,
+            initial: {
+                ...defaultAppearanceFor(userId),
+                ...readFirstFrame(firstFrame, userId),
+            },
+            normalize: (raw) =>
+                normalizeAppearance(raw, { guest: userId === null }),
             readLocal: getLocal,
             writeLocal: setLocal,
             onChange: (value) => {

@@ -58,6 +58,30 @@ Deno.test("production bundle loading and route isolation contracts", async (t) =
         }
     }
 
+    // Guests enable the plum botanical illustration by default, so its lazy
+    // canvas chunk and static imports may load on the initial home visit.
+    const botanicalKey = Object.keys(manifest).find((k) =>
+        manifest[k].src?.includes("BotanicalSceneCanvas")
+    );
+    if (botanicalKey) {
+        const bQueue = [botanicalKey];
+        const bSeen = new Set<string>();
+        while (bQueue.length > 0) {
+            const k = bQueue.shift()!;
+            if (bSeen.has(k)) continue;
+            bSeen.add(k);
+            const c = manifest[k];
+            if (c?.file && c.file.endsWith(".js")) {
+                initialFiles.add(c.file);
+            }
+            if (c?.imports) {
+                for (const imp of c.imports) {
+                    if (!bSeen.has(imp)) bQueue.push(imp);
+                }
+            }
+        }
+    }
+
     const server = Deno.serve(
         { hostname: "127.0.0.1", port: 0, onListen() {} },
         (request) => app.fetch(request),

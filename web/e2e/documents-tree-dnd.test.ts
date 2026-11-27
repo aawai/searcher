@@ -363,7 +363,7 @@ Deno.test("笔记本树拖拽：触屏快速滑动节点滚动侧栏而不拖拽
                 /\/(move|position)$/.test(new URL(request.url()).pathname)
             ) moves++;
         });
-        const box = (await ui.item("滑动笔记本3").boundingBox())!;
+        const box = (await ui.item("滑动笔记本0").boundingBox())!;
         const session = await context.newCDPSession(page);
         const x = box.x + box.width / 2;
         const y = box.y + box.height / 2;

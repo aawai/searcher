@@ -792,15 +792,6 @@
     min-height: var(--space-7);
 }
 
-.ask-composer__disclaimer {
-    margin-top: var(--space-2);
-    color: var(--muted);
-    font-size: var(--font-metadata-size);
-    line-height: var(--font-metadata-line-height);
-    text-align: center;
-    user-select: none;
-}
-
 /* Settings popover: retrieval tools, reasoning and generation controls. */
 [data-slot="popover-content"].ask-composer__settings-panel {
     display: flex;
