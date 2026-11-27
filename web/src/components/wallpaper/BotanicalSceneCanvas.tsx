@@ -7,18 +7,26 @@ import {
     type BotanicalPointerState,
     type BotanicalScene,
     buildBotanicalPalette,
+    createBotanicalRuntimeState,
     formatLocalDateKey,
     generateBotanicalScene,
     renderBotanicalFrame,
     resolveBotanicalSpecies,
     resolveBotanicalViewport,
+    resolveDiurnalWindScale,
+    triggerBotanicalResonance,
 } from "./botanical-engine.ts";
+import {
+    BOTANICAL_RESONANCE_EVENT,
+    type BotanicalResonanceDetail,
+} from "./botanical-resonance.ts";
 
 export interface BotanicalSceneCanvasProps {
     species: BotanicalSpecies;
     embedded?: boolean;
     overPhoto?: boolean;
     backdropPolarity?: BackdropPolarity;
+    sceneSide?: "left" | "right";
     testId?: string;
 }
 
@@ -51,12 +59,14 @@ function readThemePalette(
     canvas: HTMLCanvasElement,
     overPhoto = false,
     backdropPolarity?: BackdropPolarity,
+    localHour?: number,
 ): {
     hidden: boolean;
     palette: BotanicalPalette;
 } {
     const root = document.documentElement;
-    const forcedColors = window.matchMedia("(forced-colors: active)").matches;
+    const forcedColors =
+        globalThis.matchMedia("(forced-colors: active)").matches;
     const highContrast = root.dataset.contrast === "more";
     const isDark = backdropPolarity
         ? backdropPolarity === "dark"
@@ -68,7 +78,13 @@ function readThemePalette(
     const foreground = computedRoot.getPropertyValue("--foreground");
     return {
         hidden: forcedColors || highContrast,
-        palette: buildBotanicalPalette(isDark, accent, foreground, overPhoto),
+        palette: buildBotanicalPalette(
+            isDark,
+            accent,
+            foreground,
+            overPhoto,
+            localHour,
+        ),
     };
 }
 
@@ -77,6 +93,7 @@ export default function BotanicalSceneCanvas({
     embedded = false,
     overPhoto = false,
     backdropPolarity,
+    sceneSide = "right",
     testId,
 }: BotanicalSceneCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -84,11 +101,13 @@ export default function BotanicalSceneCanvas({
     overPhotoRef.current = overPhoto;
     const backdropPolarityRef = useRef(backdropPolarity);
     backdropPolarityRef.current = backdropPolarity;
+    const sceneSideRef = useRef(sceneSide);
+    sceneSideRef.current = sceneSide;
     const refreshThemeRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
         refreshThemeRef.current?.();
-    }, [overPhoto, backdropPolarity]);
+    }, [overPhoto, backdropPolarity, sceneSide]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -96,14 +115,16 @@ export default function BotanicalSceneCanvas({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        const reducedMotionQuery = window.matchMedia(
+        const reducedMotionQuery = globalThis.matchMedia(
             "(prefers-reduced-motion: reduce)",
         );
-        const forcedColorsQuery = window.matchMedia("(forced-colors: active)");
+        const forcedColorsQuery = globalThis.matchMedia(
+            "(forced-colors: active)",
+        );
 
         let width = 0;
         let height = 0;
-        let dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
         let viewport = resolveBotanicalViewport(0, 0, embedded);
         let scene: BotanicalScene | null = null;
         let paletteState = readThemePalette(
@@ -120,7 +141,16 @@ export default function BotanicalSceneCanvas({
         let prevFrameSec = 0;
         let rafId: number | null = null;
 
-        const dateKey = formatLocalDateKey(new Date());
+        const nowDate = new Date();
+        const dateKey = formatLocalDateKey(nowDate);
+        const localHour = nowDate.getHours();
+        const diurnalWind = resolveDiurnalWindScale(localHour);
+        paletteState = readThemePalette(
+            canvas,
+            overPhotoRef.current,
+            backdropPolarityRef.current,
+            localHour,
+        );
         const concreteSpecies = resolveBotanicalSpecies(species, dateKey);
         const playSignature = `${dateKey}:${species}`;
         const shouldAnimateGrowth = !embedded && !reducedMotion &&
@@ -137,6 +167,7 @@ export default function BotanicalSceneCanvas({
 
         const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
             [];
+        const runtime = createBotanicalRuntimeState();
         const pointer: BotanicalPointerState = {
             x: -9999,
             y: -9999,
@@ -168,7 +199,7 @@ export default function BotanicalSceneCanvas({
                 : 0.016;
             prevFrameSec = timeSec;
 
-            const targetCalm = searchFocused ? 0.14 : 1.0;
+            const targetCalm = (searchFocused ? 0.14 : 1.0) * diurnalWind;
             windCalm += (targetCalm - windCalm) * Math.min(1, dt * 4.5);
 
             const staticMode = embedded || reducedMotion;
@@ -194,6 +225,10 @@ export default function BotanicalSceneCanvas({
                 drifters,
                 lastDriftSpawn,
                 frameSeq,
+                runtime,
+                sceneSide: sceneSideRef.current,
+                dateKey,
+                localHour,
             });
 
             if (!staticMode && !pageHidden) {
@@ -210,13 +245,13 @@ export default function BotanicalSceneCanvas({
         const measureAndRebuild = () => {
             const host = canvas.parentElement;
             const nextW = Math.round(
-                embedded && host ? host.clientWidth : window.innerWidth,
+                embedded && host ? host.clientWidth : globalThis.innerWidth,
             );
             const nextH = Math.round(
-                embedded && host ? host.clientHeight : window.innerHeight,
+                embedded && host ? host.clientHeight : globalThis.innerHeight,
             );
             if (nextW <= 0 || nextH <= 0) return;
-            const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+            const nextDpr = Math.min(globalThis.devicePixelRatio || 1, 2);
             if (
                 scene && nextW === width && nextH === height && nextDpr === dpr
             ) {
@@ -272,7 +307,36 @@ export default function BotanicalSceneCanvas({
             if (paletteState.hidden) {
                 ctx.clearRect(0, 0, viewport.sceneWidth, viewport.sceneHeight);
             } else {
+                if (!embedded && !reducedMotion) {
+                    triggerBotanicalResonance(
+                        runtime,
+                        "theme-ripple",
+                        performance.now() / 1000,
+                        scene,
+                        drifters,
+                        windCalm,
+                        frameSeq,
+                    );
+                }
                 renderFrame(performance.now());
+            }
+        };
+
+        const onResonance = (e: Event) => {
+            if (embedded || reducedMotion || paletteState.hidden) return;
+            const detail = (e as CustomEvent<BotanicalResonanceDetail>).detail;
+            if (!detail?.kind) return;
+            triggerBotanicalResonance(
+                runtime,
+                detail.kind,
+                performance.now() / 1000,
+                scene,
+                drifters,
+                windCalm,
+                frameSeq,
+            );
+            if (!pageHidden && rafId === null) {
+                scheduleRender();
             }
         };
 
@@ -334,7 +398,7 @@ export default function BotanicalSceneCanvas({
             resizeObserver = new ResizeObserver(measureAndRebuild);
             resizeObserver.observe(canvas.parentElement);
         } else {
-            window.addEventListener("resize", measureAndRebuild);
+            globalThis.addEventListener("resize", measureAndRebuild);
         }
 
         reducedMotionQuery.addEventListener("change", onReducedMotionChange);
@@ -342,6 +406,10 @@ export default function BotanicalSceneCanvas({
         document.addEventListener("visibilitychange", onVisibilityChange);
         globalThis.addEventListener(THEME_SYNC_EVENT, onThemeSync);
         if (!embedded) {
+            globalThis.addEventListener(
+                BOTANICAL_RESONANCE_EVENT,
+                onResonance,
+            );
             document.addEventListener("focusin", onFocusIn);
             document.addEventListener("focusout", onFocusOut);
             globalThis.addEventListener("pointermove", onPointerMove, {
@@ -371,6 +439,10 @@ export default function BotanicalSceneCanvas({
             );
             globalThis.removeEventListener(THEME_SYNC_EVENT, onThemeSync);
             if (!embedded) {
+                globalThis.removeEventListener(
+                    BOTANICAL_RESONANCE_EVENT,
+                    onResonance,
+                );
                 document.removeEventListener("focusin", onFocusIn);
                 document.removeEventListener("focusout", onFocusOut);
                 globalThis.removeEventListener("pointermove", onPointerMove);
@@ -384,6 +456,7 @@ export default function BotanicalSceneCanvas({
             className="wallpaper-surface__scene"
             data-testid={testId ? `${testId}-scene` : undefined}
             data-botanical-species={species}
+            data-scene-side={sceneSide}
             data-ink-polarity={backdropPolarity}
             aria-hidden="true"
         />

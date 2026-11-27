@@ -1,4 +1,5 @@
 import type { BotanicalSpecies } from "@shared/wallpaper.ts";
+import type { BotanicalResonanceKind } from "./botanical-resonance.ts";
 
 export type ConcreteBotanicalSpecies = Exclude<BotanicalSpecies, "auto">;
 
@@ -41,6 +42,8 @@ interface BranchData {
     phase: number;
     waveLag?: number;
     ghost: boolean;
+    bambooNodes?: readonly number[];
+    snowCushions?: boolean;
     parentRef: BranchParentRef | null;
     frameId: number;
     worldCache: WorldSample[] | null;
@@ -91,11 +94,35 @@ interface FernPinnaOrnament extends BaseOrnament {
     feibai: boolean;
 }
 
+interface OrchidBlossomOrnament extends BaseOrnament {
+    kind: "orchidBlossom";
+    size: number;
+    rotation: number;
+}
+
+interface BambooLeafOrnament extends BaseOrnament {
+    kind: "bambooLeaf";
+    len: number;
+    width: number;
+    curve: number;
+    feibai: boolean;
+}
+
+interface MapleLeafOrnament extends BaseOrnament {
+    kind: "mapleLeaf";
+    size: number;
+    stemLen: number;
+    rotation: number;
+}
+
 type BotanicalOrnament =
     | GinkgoOrnament
     | EucalyptusOrnament
     | PlumOrnament
-    | FernPinnaOrnament;
+    | FernPinnaOrnament
+    | OrchidBlossomOrnament
+    | BambooLeafOrnament
+    | MapleLeafOrnament;
 
 interface Drifter {
     species: ConcreteBotanicalSpecies;
@@ -112,11 +139,105 @@ interface Drifter {
     life: number;
 }
 
+export interface FireflySeed {
+    x: number;
+    y: number;
+    phase: number;
+    speed: number;
+}
+
+export type BotanicalVisitorAnchor =
+    | {
+        kind: "sparrow";
+        branch: BranchData;
+        idx: number;
+        fireflies: readonly FireflySeed[];
+    }
+    | {
+        kind: "ladybug";
+        branch: BranchData;
+        idx: number;
+        angleOffset: number;
+        leafSize: number;
+        fireflies: readonly FireflySeed[];
+    }
+    | {
+        kind: "butterfly";
+        branch: BranchData;
+        idx: number;
+        fireflies: readonly FireflySeed[];
+    }
+    | {
+        kind: "dragonfly";
+        branch: BranchData;
+        idx: number;
+        fireflies: readonly FireflySeed[];
+    }
+    | {
+        kind: "dew-or-firefly";
+        branch: BranchData;
+        idx: number;
+        tipOffsetX: number;
+        tipOffsetY: number;
+        fireflies: readonly FireflySeed[];
+    };
+
+export interface BotanicalRewardAnchor {
+    kind: ConcreteBotanicalSpecies;
+    branch: BranchData;
+    idx: number;
+    budIndices: readonly number[];
+}
+
+export interface BotanicalRuntimeState {
+    breezeImpulseStartSec: number;
+    breezeImpulseStrength: number;
+    awakened: boolean;
+    awakenStartSec: number;
+    haloPulseStartSec: number;
+    visitorMode: "perched" | "departing" | "returning";
+    visitorStateStartSec: number;
+    visitorX: number;
+    visitorY: number;
+    visitorVx: number;
+    visitorVy: number;
+    dewState: "hanging" | "falling" | "ripple" | "regrowing";
+    dewStateStartSec: number;
+    dewFallDist: number;
+    dewImpactX: number;
+    dewImpactY: number;
+    fireflyBoostStartSec: number;
+}
+
+export function createBotanicalRuntimeState(): BotanicalRuntimeState {
+    return {
+        breezeImpulseStartSec: -999,
+        breezeImpulseStrength: 0,
+        awakened: false,
+        awakenStartSec: -999,
+        haloPulseStartSec: -999,
+        visitorMode: "perched",
+        visitorStateStartSec: -999,
+        visitorX: 0,
+        visitorY: 0,
+        visitorVx: 0,
+        visitorVy: 0,
+        dewState: "hanging",
+        dewStateStartSec: -999,
+        dewFallDist: 0,
+        dewImpactX: 0,
+        dewImpactY: 0,
+        fireflyBoostStartSec: -999,
+    };
+}
+
 export interface BotanicalScene {
     species: ConcreteBotanicalSpecies;
     branches: BranchData[];
     ornaments: BotanicalOrnament[];
     scale: number;
+    visitorAnchor: BotanicalVisitorAnchor | null;
+    rewardAnchor: BotanicalRewardAnchor | null;
 }
 
 export interface BotanicalViewportMetrics {
@@ -183,14 +304,84 @@ export interface BotanicalRenderParams {
     drifters: Drifter[];
     lastDriftSpawn: number;
     frameSeq: number;
+    runtime?: BotanicalRuntimeState;
+    sceneSide?: "left" | "right";
+    dateKey?: string;
+    localHour?: number;
 }
 
-const CONCRETE_SPECIES: readonly ConcreteBotanicalSpecies[] = [
-    "ginkgo",
-    "eucalyptus",
-    "plum",
-    "fern",
+export interface SolarTermInfo {
+    readonly term: string;
+    readonly season: "spring" | "summer" | "autumn" | "winter";
+    readonly isSnowSeason: boolean;
+}
+
+const SOLAR_TERMS_BY_MMDD: ReadonlyArray<{
+    readonly mmdd: number;
+    readonly term: string;
+    readonly season: "spring" | "summer" | "autumn" | "winter";
+}> = [
+    { mmdd: 105, term: "小寒", season: "winter" },
+    { mmdd: 120, term: "大寒", season: "winter" },
+    { mmdd: 204, term: "立春", season: "spring" },
+    { mmdd: 219, term: "雨水", season: "spring" },
+    { mmdd: 306, term: "惊蛰", season: "spring" },
+    { mmdd: 321, term: "春分", season: "spring" },
+    { mmdd: 405, term: "清明", season: "spring" },
+    { mmdd: 420, term: "谷雨", season: "spring" },
+    { mmdd: 506, term: "立夏", season: "summer" },
+    { mmdd: 521, term: "小满", season: "summer" },
+    { mmdd: 606, term: "芒种", season: "summer" },
+    { mmdd: 621, term: "夏至", season: "summer" },
+    { mmdd: 707, term: "小暑", season: "summer" },
+    { mmdd: 723, term: "大暑", season: "summer" },
+    { mmdd: 807, term: "立秋", season: "autumn" },
+    { mmdd: 823, term: "处暑", season: "autumn" },
+    { mmdd: 907, term: "白露", season: "autumn" },
+    { mmdd: 923, term: "秋分", season: "autumn" },
+    { mmdd: 1008, term: "寒露", season: "autumn" },
+    { mmdd: 1023, term: "霜降", season: "autumn" },
+    { mmdd: 1107, term: "立冬", season: "winter" },
+    { mmdd: 1122, term: "小雪", season: "winter" },
+    { mmdd: 1207, term: "大雪", season: "winter" },
+    { mmdd: 1222, term: "冬至", season: "winter" },
 ];
+
+export function resolveSolarTerm(dateKey: string): SolarTermInfo {
+    const match = dateKey.match(/^\d{4}-(\d{2})-(\d{2})$/);
+    const mmdd = match ? Number(match[1]) * 100 + Number(match[2]) : 1122;
+    let chosen = SOLAR_TERMS_BY_MMDD[SOLAR_TERMS_BY_MMDD.length - 1];
+    for (const entry of SOLAR_TERMS_BY_MMDD) {
+        if (mmdd >= entry.mmdd) chosen = entry;
+    }
+    const isSnowSeason = mmdd >= 1122 || mmdd < 219;
+    return {
+        term: chosen.term,
+        season: chosen.season,
+        isSnowSeason,
+    };
+}
+
+export function resolveDiurnalWindScale(localHour?: number): number {
+    if (localHour === undefined || !Number.isFinite(localHour)) return 1.0;
+    const h = ((Math.floor(localHour) % 24) + 24) % 24;
+    if (h >= 5 && h <= 8) return 0.92;
+    if (h >= 9 && h <= 16) return 1.0;
+    if (h >= 17 && h <= 19) return 0.86;
+    if (h >= 20 && h <= 21) return 0.74;
+    return 0.58;
+}
+
+const SEASONAL_SPECIES_POOLS: Readonly<
+    Record<SolarTermInfo["season"], readonly ConcreteBotanicalSpecies[]>
+> = {
+    spring: ["orchid", "fern", "eucalyptus"],
+    summer: ["bamboo", "fern", "eucalyptus"],
+    autumn: ["ginkgo", "maple", "bamboo"],
+    winter: ["plum", "bamboo", "eucalyptus"],
+};
+
+// Seasonal species pools are used by resolveBotanicalSpecies.
 
 function hashString(str: string): number {
     let h = 2166136261 >>> 0;
@@ -228,7 +419,7 @@ function easeOutQuart(t: number): number {
     return 1 - Math.pow(1 - clamp(t, 0, 1), 4);
 }
 
-function easeInOutQuad(t: number): number {
+function _easeInOutQuad(t: number): number {
     const x = clamp(t, 0, 1);
     return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
 }
@@ -356,7 +547,9 @@ export function resolveBotanicalSpecies(
     dateKey: string,
 ): ConcreteBotanicalSpecies {
     if (species !== "auto") return species;
-    return CONCRETE_SPECIES[hashString(dateKey) % CONCRETE_SPECIES.length];
+    const { season } = resolveSolarTerm(dateKey);
+    const pool = SEASONAL_SPECIES_POOLS[season];
+    return pool[hashString(dateKey) % pool.length];
 }
 
 export function buildBotanicalPalette(
@@ -364,6 +557,7 @@ export function buildBotanicalPalette(
     accentCss: string,
     foregroundCss: string,
     overPhoto = false,
+    localHour?: number,
 ): BotanicalPalette {
     const fallbackAccent: Rgb = isDark ? [93, 169, 255] : [10, 102, 194];
     const fallbackInk: Rgb = isDark ? [232, 234, 240] : [28, 30, 34];
@@ -372,7 +566,7 @@ export function buildBotanicalPalette(
         ? mixRgb(rawAccRgb, [212, 214, 224], 0.10)
         : mixRgb(rawAccRgb, [236, 232, 224], 0.12);
     const shiftedSub = shiftHueRgb(accRgb, -12);
-    const subRgb = isDark
+    let subRgb = isDark
         ? mixRgb(shiftedSub, [186, 192, 206], 0.18)
         : mixRgb(shiftedSub, [244, 240, 234], 0.22);
     const baseInk = parseCssColorToRgb(foregroundCss, fallbackInk, isDark);
@@ -381,9 +575,22 @@ export function buildBotanicalPalette(
     const inkStrokeRgb = isDark
         ? mixRgb(mixRgb(baseInk, [194, 200, 212], 0.52), accRgb, 0.06)
         : mixRgb(mixRgb(baseInk, [44, 37, 31], 0.40), accRgb, 0.04);
-    const inkWashRgb = isDark
+    let inkWashRgb = isDark
         ? mixRgb(mixRgb(baseInk, [168, 178, 194], 0.50), accRgb, 0.08)
         : mixRgb(mixRgb(baseInk, [52, 58, 66], 0.36), accRgb, 0.06);
+
+    if (localHour !== undefined && Number.isFinite(localHour)) {
+        const h = ((Math.floor(localHour) % 24) + 24) % 24;
+        if (h >= 17 && h <= 19) {
+            const duskOchre: Rgb = isDark ? [196, 152, 118] : [188, 134, 88];
+            subRgb = mixRgb(subRgb, duskOchre, 0.06);
+            inkWashRgb = mixRgb(inkWashRgb, duskOchre, 0.06);
+        } else if (h >= 5 && h <= 8) {
+            const dawnMist: Rgb = isDark ? [154, 178, 208] : [142, 170, 198];
+            subRgb = mixRgb(subRgb, dawnMist, 0.04);
+            inkWashRgb = mixRgb(inkWashRgb, dawnMist, 0.04);
+        }
+    }
 
     const highlightRgb: Rgb = isDark ? [18, 19, 22] : [250, 248, 243];
     const harmony = isDark && overPhoto ? 0.52 : 1;
@@ -460,7 +667,7 @@ function cubicTangent(
     return Math.atan2(dy, dx);
 }
 
-function strokeProgressive(
+function _strokeProgressive(
     ctx: CanvasRenderingContext2D,
     perim: number,
     progress: number,
@@ -485,6 +692,8 @@ interface SampleBranchOpts {
     phase?: number;
     waveLag?: number;
     ghost?: boolean;
+    bambooNodes?: readonly number[];
+    snowCushions?: boolean;
     wobble?: number;
     parentRef?: BranchParentRef | null;
 }
@@ -530,6 +739,8 @@ function sampleBranch(
         phase: opts.phase ?? 0,
         waveLag: opts.waveLag,
         ghost: Boolean(opts.ghost),
+        bambooNodes: opts.bambooNodes,
+        snowCushions: opts.snowCushions,
         parentRef: opts.parentRef ?? null,
         frameId: -1,
         worldCache: null,
@@ -765,6 +976,112 @@ export function generateBotanicalScene(
                 push: 0,
                 vel: 0,
             });
+        } else if (species === "orchid") {
+            const echoBlades: ReadonlyArray<{
+                u: number;
+                ang: number;
+                len: number;
+                tint: TintRole;
+            }> = [
+                { u: 0.42, ang: 0.45, len: 68, tint: "ink" },
+                { u: 0.72, ang: -0.35, len: 74, tint: "sub" },
+            ];
+            for (const eb of echoBlades) {
+                const idx = Math.round(eb.u * (echo.points.length - 1));
+                ornaments.push({
+                    kind: "fernPinna",
+                    ghost: true,
+                    branch: echo,
+                    idx,
+                    side: 1,
+                    angleOffset: eb.ang,
+                    len: eb.len * S * echoScale,
+                    width: 6.2 * S * echoScale,
+                    curve: -0.22,
+                    inkWeight: 0.85,
+                    whip: 0.08,
+                    feibai: false,
+                    tint: eb.tint,
+                    profile: false,
+                    t0: lerp(echo.t0, echo.t1, eb.u) + 0.04,
+                    t1: lerp(echo.t0, echo.t1, eb.u) + 0.30,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            }
+            ornaments.push({
+                kind: "orchidBlossom",
+                ghost: true,
+                branch: echo,
+                idx: echo.points.length - 1,
+                angleOffset: 0.1,
+                size: 14 * S * echoScale,
+                rotation: rand(0, 6.28),
+                tint: "sub",
+                profile: false,
+                t0: echo.t1,
+                t1: echo.t1 + 0.28,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
+            });
+        } else if (species === "bamboo") {
+            const echoNodes = [0.35, 0.65, 0.94];
+            echoNodes.forEach((u, ni) => {
+                const idx = Math.round(u * (echo.points.length - 1));
+                for (let li = 0; li < 2; li++) {
+                    ornaments.push({
+                        kind: "bambooLeaf",
+                        ghost: true,
+                        branch: echo,
+                        idx,
+                        angleOffset: (li === 0 ? 0.55 : -0.45) + ni * 0.08,
+                        len: (38 - li * 8) * S * echoScale,
+                        width: 5.5 * S * echoScale,
+                        curve: li === 0 ? 0.16 : -0.14,
+                        feibai: false,
+                        tint: ni === 2 && li === 0 ? "sub" : "ink",
+                        profile: false,
+                        t0: lerp(echo.t0, echo.t1, u) + 0.04,
+                        t1: lerp(echo.t0, echo.t1, u) + 0.28,
+                        phase: rand(0, 6.28),
+                        push: 0,
+                        vel: 0,
+                    });
+                }
+            });
+        } else if (species === "maple") {
+            const echoMaples: ReadonlyArray<{
+                u: number;
+                ang: number;
+                sz: number;
+                tint: TintRole;
+            }> = [
+                { u: 0.45, ang: 0.55, sz: 20, tint: "ink" },
+                { u: 0.78, ang: -0.42, sz: 24, tint: "sub" },
+                { u: 0.98, ang: 0.15, sz: 18, tint: "accent" },
+            ];
+            for (const em of echoMaples) {
+                const idx = Math.round(em.u * (echo.points.length - 1));
+                ornaments.push({
+                    kind: "mapleLeaf",
+                    ghost: true,
+                    branch: echo,
+                    idx,
+                    angleOffset: em.ang,
+                    size: em.sz * S * echoScale,
+                    stemLen: 10 * S * echoScale,
+                    rotation: rand(-0.4, 0.4),
+                    tint: em.tint,
+                    profile: false,
+                    t0: lerp(echo.t0, echo.t1, em.u) + 0.05,
+                    t1: lerp(echo.t0, echo.t1, em.u) + 0.32,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            }
         }
     }
 
@@ -1808,9 +2125,741 @@ export function generateBotanicalScene(
                 vel: 0,
             });
         });
+    } else if (species === "orchid") {
+        // Spring orchid: rock-clump fanning leaves + slender arched flower scapes
+        const orchidScale = isNarrow ? 0.86 : 1;
+        const bladeCfgs = isNarrow
+            ? [
+                {
+                    ghost: true,
+                    rx: 12,
+                    tx: 105,
+                    len: 175,
+                    c1x: 18,
+                    c2x: 44,
+                    curve: -0.22,
+                    w: 6.4,
+                },
+                {
+                    ghost: false,
+                    rx: 18,
+                    tx: 235,
+                    len: 215,
+                    c1x: 24,
+                    c2x: 84,
+                    curve: -0.26,
+                    w: 7.4,
+                },
+                {
+                    ghost: false,
+                    rx: 52,
+                    tx: 315,
+                    len: 235,
+                    c1x: 42,
+                    c2x: 112,
+                    curve: -0.18,
+                    w: 7.8,
+                },
+                {
+                    ghost: false,
+                    rx: 86,
+                    tx: 165,
+                    len: 165,
+                    c1x: 16,
+                    c2x: 52,
+                    curve: 0.14,
+                    w: 6.2,
+                },
+            ]
+            : [
+                {
+                    ghost: true,
+                    rx: 18,
+                    tx: 125,
+                    len: 390,
+                    c1x: 22,
+                    c2x: 78,
+                    curve: -0.22,
+                    w: 9.2,
+                },
+                {
+                    ghost: false,
+                    rx: 32,
+                    tx: 295,
+                    len: 470,
+                    c1x: 34,
+                    c2x: 148,
+                    curve: -0.26,
+                    w: 11.2,
+                },
+                {
+                    ghost: false,
+                    rx: 84,
+                    tx: 465,
+                    len: 510,
+                    c1x: 58,
+                    c2x: 192,
+                    curve: -0.18,
+                    w: 12.0,
+                },
+                {
+                    ghost: false,
+                    rx: 128,
+                    tx: 355,
+                    len: 380,
+                    c1x: 38,
+                    c2x: 128,
+                    curve: -0.14,
+                    w: 9.8,
+                },
+                {
+                    ghost: false,
+                    rx: 56,
+                    tx: 190,
+                    len: 340,
+                    c1x: 20,
+                    c2x: 76,
+                    curve: 0.15,
+                    w: 9.0,
+                },
+            ];
+        bladeCfgs.forEach((cfg, bi) => {
+            const len = cfg.len * S * orchidScale;
+            const p0 = {
+                x: rootX - cfg.rx * S,
+                y: isNarrow ? rootY + 4 * S : rootY + 12 * S,
+            };
+            const p3 = {
+                x: w - cfg.tx * S,
+                y: (isNarrow ? rootY : h) - len * (isNarrow ? 0.84 : 0.72),
+            };
+            const leafBranch = sampleBranch(
+                p0,
+                { x: p0.x - cfg.c1x * S, y: p0.y - len * 0.54 },
+                {
+                    x: p3.x + cfg.c2x * S,
+                    y: p3.y - 26 * S * (cfg.curve < 0 ? 1 : -0.5),
+                },
+                p3,
+                {
+                    steps: 34,
+                    widthStart: cfg.w * 0.28 * S,
+                    widthEnd: 0.35 * S,
+                    t0: cfg.ghost ? 0.10 : bi * 0.04,
+                    t1: 0.48 + bi * 0.04,
+                    flexSpan: 1.15,
+                    phase: bi * 1.1,
+                    waveLag: 1.6,
+                    ghost: cfg.ghost,
+                    wobble: 0.8 * S,
+                },
+                rng,
+            );
+            branches.push(leafBranch);
+            ornaments.push({
+                kind: "fernPinna",
+                ghost: cfg.ghost,
+                branch: leafBranch,
+                idx: Math.round(leafBranch.points.length * 0.18),
+                side: 1,
+                angleOffset: 0.02,
+                len: len * 0.76,
+                width: cfg.w * S,
+                curve: cfg.curve,
+                inkWeight: bi === 2 ? 1.15 : 0.92,
+                whip: 0.07,
+                feibai: !cfg.ghost && bi <= 2,
+                tint: bi === 2 ? "sub" : "ink",
+                profile: bi === 3,
+                t0: leafBranch.t0 + 0.06,
+                t1: leafBranch.t1 + 0.22,
+                phase: bi * 0.9,
+                push: 0,
+                vel: 0,
+            });
+        });
+
+        // Graceful arched flower scape
+        const scapeP0 = {
+            x: rootX - (isNarrow ? 42 : 76) * S,
+            y: isNarrow ? rootY + 2 * S : rootY + 10 * S,
+        };
+        const scapeP3 = isNarrow
+            ? { x: w - 265 * S, y: rootY - 215 * S }
+            : { x: w - 395 * S, y: h - 465 * S };
+        const scape = sampleBranch(
+            scapeP0,
+            {
+                x: scapeP0.x - (isNarrow ? 26 : 44) * S,
+                y: scapeP0.y - (isNarrow ? 125 : 265) * S,
+            },
+            {
+                x: scapeP3.x + (isNarrow ? 55 : 95) * S,
+                y: scapeP3.y - (isNarrow ? 18 : 34) * S,
+            },
+            scapeP3,
+            {
+                steps: 36,
+                widthStart: 1.55 * S,
+                widthEnd: 0.45 * S,
+                t0: 0.08,
+                t1: 0.54,
+                flexSpan: 1.08,
+                phase: 2.1,
+                wobble: 0.7 * S,
+            },
+            rng,
+        );
+        branches.push(scape);
+        [
+            { u: 0.56, ang: -0.45, sz: 22, tint: "sub" as TintRole },
+            { u: 0.78, ang: 0.42, sz: 25, tint: "accent" as TintRole },
+            { u: 0.96, ang: -0.15, sz: 20, tint: "accent" as TintRole },
+        ].forEach((fl, fi) => {
+            const idx = Math.round(fl.u * (scape.points.length - 1));
+            const ts = lerp(scape.t0, scape.t1, fl.u) + 0.06;
+            ornaments.push({
+                kind: "orchidBlossom",
+                ghost: false,
+                branch: scape,
+                idx,
+                angleOffset: fl.ang,
+                size: fl.sz * S * orchidScale,
+                rotation: rand(-0.35, 0.35),
+                tint: fl.tint,
+                profile: fi === 2,
+                t0: ts,
+                t1: ts + 0.32,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
+            });
+        });
+    } else if (species === "bamboo") {
+        // Summer bamboo: segmented upright culms + antler twigs + sharp "个" leaves
+        const bambooScale = isNarrow ? 0.85 : 1;
+        const culms = isNarrow
+            ? [
+                {
+                    ghost: true,
+                    rx: 14,
+                    tx: 108,
+                    hSpan: 215,
+                    w0: 1.8,
+                    nodes: [0.28, 0.58, 0.86],
+                    t0: 0.12,
+                },
+                {
+                    ghost: false,
+                    rx: 54,
+                    tx: 185,
+                    hSpan: 245,
+                    w0: 3.1,
+                    nodes: [0.22, 0.46, 0.70, 0.90],
+                    t0: 0.0,
+                },
+                {
+                    ghost: false,
+                    rx: 96,
+                    tx: 272,
+                    hSpan: 210,
+                    w0: 2.4,
+                    nodes: [0.26, 0.54, 0.82],
+                    t0: 0.08,
+                },
+            ]
+            : [
+                {
+                    ghost: true,
+                    rx: 22,
+                    tx: 130,
+                    hSpan: 440,
+                    w0: 2.2,
+                    nodes: [0.24, 0.48, 0.72, 0.92],
+                    t0: 0.12,
+                },
+                {
+                    ghost: false,
+                    rx: 92,
+                    tx: 260,
+                    hSpan: 590,
+                    w0: 4.0,
+                    nodes: [0.18, 0.36, 0.54, 0.72, 0.88],
+                    t0: 0.0,
+                },
+                {
+                    ghost: false,
+                    rx: 165,
+                    tx: 420,
+                    hSpan: 510,
+                    w0: 3.0,
+                    nodes: [0.22, 0.45, 0.68, 0.88],
+                    t0: 0.08,
+                },
+            ];
+
+        culms.forEach((cfg, ci) => {
+            const p0 = {
+                x: rootX - cfg.rx * S,
+                y: isNarrow ? rootY + 2 * S : rootY + 12 * S,
+            };
+            const p3 = {
+                x: w - cfg.tx * S,
+                y: (isNarrow ? rootY : h) - cfg.hSpan * S,
+            };
+            const culm = sampleBranch(
+                p0,
+                {
+                    x: lerp(p0.x, p3.x, 0.32) - 8 * S,
+                    y: lerp(p0.y, p3.y, 0.35),
+                },
+                {
+                    x: lerp(p0.x, p3.x, 0.68) + 10 * S,
+                    y: lerp(p0.y, p3.y, 0.68),
+                },
+                p3,
+                {
+                    steps: 40,
+                    widthStart: cfg.w0 * S,
+                    widthEnd: cfg.w0 * 0.38 * S,
+                    t0: cfg.t0,
+                    t1: cfg.t0 + 0.44,
+                    flexSpan: 0.65,
+                    phase: ci * 1.1,
+                    ghost: cfg.ghost,
+                    bambooNodes: cfg.nodes,
+                },
+                rng,
+            );
+            branches.push(culm);
+
+            cfg.nodes.forEach((nu, ni) => {
+                if (ni === 0 && !cfg.ghost) return;
+                const pIdx = Math.round(nu * (culm.points.length - 1));
+                const anc = culm.points[pIdx];
+                const dir = (ni + ci) % 2 === 0 ? -1 : 1;
+                const twigAng = anc.angle + dir * rand(0.55, 0.82);
+                const twigLen = (isNarrow ? 64 : 112) * S * (1 - nu * 0.25);
+                const tp3 = {
+                    x: anc.x + Math.cos(twigAng) * twigLen,
+                    y: anc.y + Math.sin(twigAng) * twigLen,
+                };
+                const ts = lerp(culm.t0, culm.t1, nu);
+                const twig = sampleBranch(
+                    { x: anc.x, y: anc.y },
+                    {
+                        x: lerp(anc.x, tp3.x, 0.4),
+                        y: lerp(anc.y, tp3.y, 0.4) - 6 * S,
+                    },
+                    {
+                        x: lerp(anc.x, tp3.x, 0.75),
+                        y: lerp(anc.y, tp3.y, 0.75) + 4 * S,
+                    },
+                    tp3,
+                    {
+                        steps: 14,
+                        widthStart: 1.05 * S,
+                        widthEnd: 0.35 * S,
+                        t0: ts,
+                        t1: ts + 0.18,
+                        flexSpan: 0.48,
+                        phase: ni * 0.9 + ci,
+                        ghost: cfg.ghost,
+                        parentRef: { branch: culm, idx: pIdx },
+                    },
+                    rng,
+                );
+                branches.push(twig);
+
+                // Classic "个" / "介" 3-leaf cluster at twig tip
+                const leafCluster = [
+                    {
+                        ang: -0.52,
+                        len: 54,
+                        curve: 0.14,
+                        tint: "ink" as TintRole,
+                    },
+                    {
+                        ang: 0.04,
+                        len: 64,
+                        curve: 0.08,
+                        tint: (ni === cfg.nodes.length - 1 && !cfg.ghost)
+                            ? "accent" as TintRole
+                            : "ink" as TintRole,
+                    },
+                    {
+                        ang: 0.56,
+                        len: 48,
+                        curve: -0.15,
+                        tint: ni % 2 === 0
+                            ? "sub" as TintRole
+                            : "ink" as TintRole,
+                    },
+                ];
+                leafCluster.forEach((lf, li) => {
+                    ornaments.push({
+                        kind: "bambooLeaf",
+                        ghost: cfg.ghost,
+                        branch: twig,
+                        idx: twig.points.length - 1,
+                        angleOffset: lf.ang + rand(-0.08, 0.08),
+                        len: lf.len * S * bambooScale,
+                        width: 6.2 * S * bambooScale,
+                        curve: lf.curve,
+                        feibai: !cfg.ghost && li === 1,
+                        tint: lf.tint,
+                        profile: false,
+                        t0: twig.t1 - 0.02 + li * 0.04,
+                        t1: twig.t1 + 0.24 + li * 0.04,
+                        phase: rand(0, 6.28),
+                        push: 0,
+                        vel: 0,
+                    });
+                });
+            });
+        });
+    } else if (species === "maple") {
+        // Autumn maple: cliff-hanging sweeping branch (desktop) / gnarled lateral bough (narrow)
+        const mapleScale = isNarrow ? 0.84 : 1;
+        const mainP0 = isNarrow
+            ? { x: rootX - 6 * S, y: rootY - 12 * S }
+            : { x: rootX + 4 * S, y: Math.max(185 * S, h * 0.24) };
+        const mainP3 = isNarrow
+            ? { x: w - 265 * S, y: rootY - 195 * S }
+            : { x: w - 455 * S, y: Math.min(h - 140 * S, h * 0.56) };
+        const main = sampleBranch(
+            mainP0,
+            isNarrow
+                ? { x: mainP0.x - 55 * S, y: mainP0.y - 95 * S }
+                : { x: mainP0.x - 135 * S, y: mainP0.y + 42 * S },
+            isNarrow
+                ? { x: mainP3.x + 85 * S, y: mainP3.y + 24 * S }
+                : { x: mainP3.x + 150 * S, y: mainP3.y - 75 * S },
+            mainP3,
+            {
+                steps: 42,
+                widthStart: (isNarrow ? 3.2 : 4.2) * S,
+                widthEnd: 0.7 * S,
+                t0: 0.0,
+                t1: 0.48,
+                flexSpan: 0.72,
+                phase: 0.4,
+                wobble: 1.8 * S,
+            },
+            rng,
+        );
+        branches.push(main);
+
+        const subCfgs = isNarrow
+            ? [
+                { u: 0.34, ang: -1.95, len: 108 * S },
+                { u: 0.62, ang: -1.42, len: 92 * S },
+                { u: 0.82, ang: -2.45, len: 74 * S },
+            ]
+            : [
+                { u: 0.28, ang: 2.25, len: 185 * S },
+                { u: 0.54, ang: -2.35, len: 165 * S },
+                { u: 0.78, ang: 2.55, len: 135 * S },
+            ];
+        subCfgs.forEach((sc, si) => {
+            const pIdx = Math.round(sc.u * (main.points.length - 1));
+            const anc = main.points[pIdx];
+            const sp3 = {
+                x: anc.x + Math.cos(sc.ang) * sc.len,
+                y: anc.y + Math.sin(sc.ang) * sc.len,
+            };
+            const ts = lerp(main.t0, main.t1, sc.u);
+            const sub = sampleBranch(
+                { x: anc.x, y: anc.y },
+                {
+                    x: lerp(anc.x, sp3.x, 0.38) - 10 * S,
+                    y: lerp(anc.y, sp3.y, 0.38) - 12 * S,
+                },
+                {
+                    x: lerp(anc.x, sp3.x, 0.72) + 8 * S,
+                    y: lerp(anc.y, sp3.y, 0.72) + 8 * S,
+                },
+                sp3,
+                {
+                    steps: 20,
+                    widthStart: 1.55 * S,
+                    widthEnd: 0.5 * S,
+                    t0: ts,
+                    t1: ts + 0.22,
+                    flexSpan: 0.54,
+                    phase: si * 1.1,
+                    wobble: 1.1 * S,
+                    parentRef: { branch: main, idx: pIdx },
+                },
+                rng,
+            );
+            branches.push(sub);
+
+            [0.52, 0.96].forEach((lu, li) => {
+                const lIdx = Math.round(lu * (sub.points.length - 1));
+                const lt = lerp(sub.t0, sub.t1, lu) + 0.04;
+                ornaments.push({
+                    kind: "mapleLeaf",
+                    ghost: false,
+                    branch: sub,
+                    idx: lIdx,
+                    angleOffset: (li === 0 ? -0.55 : 0.25) + rand(-0.15, 0.15),
+                    size: rand(26, 36) * S * mapleScale,
+                    stemLen: 12 * S * mapleScale,
+                    rotation: rand(-0.4, 0.4),
+                    tint: (si + li) % 3 === 0
+                        ? "accent"
+                        : (si + li) % 2 === 0
+                        ? "sub"
+                        : "ink",
+                    profile: false,
+                    t0: lt,
+                    t1: lt + 0.32,
+                    phase: rand(0, 6.28),
+                    push: 0,
+                    vel: 0,
+                });
+            });
+        });
+
+        [0.88, 1.0].forEach((u, mi) => {
+            const mIdx = Math.round(u * (main.points.length - 1));
+            ornaments.push({
+                kind: "mapleLeaf",
+                ghost: false,
+                branch: main,
+                idx: mIdx,
+                angleOffset: mi === 0 ? -0.45 : 0.18,
+                size: (mi === 1 ? 38 : 30) * S * mapleScale,
+                stemLen: 13 * S * mapleScale,
+                rotation: rand(-0.3, 0.3),
+                tint: mi === 1 ? "accent" : "sub",
+                profile: false,
+                t0: main.t1 - 0.04 + mi * 0.05,
+                t1: main.t1 + 0.30 + mi * 0.05,
+                phase: rand(0, 6.28),
+                push: 0,
+                vel: 0,
+            });
+        });
     }
 
-    return { species, branches, ornaments, scale: S };
+    if (species === "plum" && resolveSolarTerm(dateKey).isSnowSeason) {
+        for (const b of branches) {
+            if (!b.ghost && b.widthStart >= 1.4 * S) {
+                b.snowCushions = true;
+            }
+        }
+    }
+
+    if (embedded) {
+        return {
+            species,
+            branches,
+            ornaments,
+            scale: S,
+            visitorAnchor: null,
+            rewardAnchor: null,
+        };
+    }
+
+    // Post-generation anchors for micro-ecology visitors & reward blooms
+    // (sampled after all branch/ornament geometry to preserve deterministic layout).
+    const fgBranches = branches.filter((b) => !b.ghost);
+    const fireflies: FireflySeed[] = [
+        {
+            x: w - (isNarrow ? 105 : 220) * S,
+            y: h - (isNarrow ? 150 : 280) * S,
+            phase: rand(0, 6.28),
+            speed: 0.42,
+        },
+        {
+            x: w - (isNarrow ? 175 : 350) * S,
+            y: h - (isNarrow ? 210 : 390) * S,
+            phase: rand(0, 6.28),
+            speed: 0.33,
+        },
+    ];
+
+    let visitorAnchor: BotanicalVisitorAnchor | null = null;
+    let rewardAnchor: BotanicalRewardAnchor | null = null;
+
+    if (species === "plum") {
+        const perchBranch = fgBranches[1] ?? fgBranches[0] ?? branches[0];
+        const perchIdx = Math.max(
+            2,
+            Math.round((perchBranch.points.length - 1) * 0.42),
+        );
+        visitorAnchor = {
+            kind: "sparrow",
+            branch: perchBranch,
+            idx: perchIdx,
+            fireflies,
+        };
+        const budIndices: number[] = [];
+        for (let i = 0; i < ornaments.length && budIndices.length < 2; i++) {
+            const orn = ornaments[i];
+            if (!orn.ghost && orn.kind === "plumBud") {
+                budIndices.push(i);
+            }
+        }
+        const tipBranch = fgBranches[2] ?? fgBranches[0] ?? branches[0];
+        rewardAnchor = {
+            kind: "plum",
+            branch: tipBranch,
+            idx: Math.max(1, tipBranch.points.length - 1),
+            budIndices,
+        };
+    } else if (species === "ginkgo") {
+        const leafOrn = ornaments.find((o) =>
+            o.kind === "ginkgo" && !o.ghost && !o.profile
+        ) ?? ornaments.find((o) =>
+            o.kind === "ginkgo" && !o.ghost
+        );
+        const perchBranch = leafOrn?.branch ?? fgBranches[0] ?? branches[0];
+        const perchIdx = leafOrn?.idx ??
+            Math.max(1, Math.round((perchBranch.points.length - 1) * 0.72));
+        visitorAnchor = {
+            kind: "ladybug",
+            branch: perchBranch,
+            idx: perchIdx,
+            angleOffset: leafOrn?.angleOffset ?? 0.2,
+            leafSize: leafOrn && leafOrn.kind === "ginkgo"
+                ? leafOrn.size + leafOrn.stemLen
+                : 46 * S,
+            fireflies,
+        };
+        const mainBranch = fgBranches[0] ?? branches[0];
+        rewardAnchor = {
+            kind: "ginkgo",
+            branch: mainBranch,
+            idx: Math.max(1, mainBranch.points.length - 1),
+            budIndices: [],
+        };
+    } else if (species === "fern") {
+        const heroOrn = ornaments.find((o) =>
+            o.kind === "fernPinna" && !o.ghost && !o.profile && o.len >= 50 * S
+        ) ?? ornaments.find((o) =>
+            o.kind === "fernPinna" && !o.ghost
+        );
+        const perchBranch = heroOrn?.branch ??
+            fgBranches[fgBranches.length - 1] ??
+            branches[0];
+        const perchIdx = heroOrn?.idx ??
+            Math.max(1, Math.round((perchBranch.points.length - 1) * 0.65));
+        const ang = (perchBranch.points[perchIdx]?.angle ?? -1.2) +
+            (heroOrn?.angleOffset ?? -0.5);
+        const tipDist = heroOrn && heroOrn.kind === "fernPinna"
+            ? heroOrn.len * 0.88
+            : 64 * S;
+        visitorAnchor = {
+            kind: "dew-or-firefly",
+            branch: perchBranch,
+            idx: perchIdx,
+            tipOffsetX: Math.cos(ang) * tipDist,
+            tipOffsetY: Math.sin(ang) * tipDist,
+            fireflies,
+        };
+        const heroBranch = fgBranches[fgBranches.length - 1] ?? branches[0];
+        rewardAnchor = {
+            kind: "fern",
+            branch: heroBranch,
+            idx: Math.max(1, heroBranch.points.length - 1),
+            budIndices: [],
+        };
+    } else if (species === "eucalyptus") {
+        const eucOrn = ornaments.find((o) =>
+            o.kind === "eucalyptus" && !o.ghost && !o.profile
+        ) ?? ornaments.find((o) =>
+            o.kind === "eucalyptus" && !o.ghost
+        );
+        const perchBranch = eucOrn?.branch ?? fgBranches[0] ?? branches[0];
+        const perchIdx = eucOrn?.idx ??
+            Math.max(1, Math.round((perchBranch.points.length - 1) * 0.65));
+        const ang = (perchBranch.points[perchIdx]?.angle ?? -1.4) +
+            (eucOrn?.angleOffset ?? 0.7);
+        const tipDist = eucOrn && eucOrn.kind === "eucalyptus"
+            ? eucOrn.rx * 1.5 + eucOrn.stemLen
+            : 32 * S;
+        visitorAnchor = {
+            kind: "dew-or-firefly",
+            branch: perchBranch,
+            idx: perchIdx,
+            tipOffsetX: Math.cos(ang) * tipDist,
+            tipOffsetY: Math.sin(ang) * tipDist,
+            fireflies,
+        };
+        const mainBranch = fgBranches[0] ?? branches[0];
+        rewardAnchor = {
+            kind: "eucalyptus",
+            branch: mainBranch,
+            idx: Math.max(1, mainBranch.points.length - 1),
+            budIndices: [],
+        };
+    } else if (species === "orchid") {
+        const scapeBranch = fgBranches[fgBranches.length - 1] ?? branches[0];
+        const perchIdx = Math.max(
+            2,
+            Math.round((scapeBranch.points.length - 1) * 0.62),
+        );
+        visitorAnchor = {
+            kind: "butterfly",
+            branch: scapeBranch,
+            idx: perchIdx,
+            fireflies,
+        };
+        rewardAnchor = {
+            kind: "orchid",
+            branch: scapeBranch,
+            idx: Math.max(1, scapeBranch.points.length - 1),
+            budIndices: [],
+        };
+    } else if (species === "bamboo") {
+        const twigBranch = fgBranches.find((b) => b.parentRef !== null) ??
+            fgBranches[0] ?? branches[0];
+        visitorAnchor = {
+            kind: "dragonfly",
+            branch: twigBranch,
+            idx: Math.max(1, twigBranch.points.length - 1),
+            fireflies,
+        };
+        const mainCulm = fgBranches.find((b) => !b.parentRef) ??
+            fgBranches[0] ??
+            branches[0];
+        rewardAnchor = {
+            kind: "bamboo",
+            branch: mainCulm,
+            idx: Math.max(1, mainCulm.points.length - 1),
+            budIndices: [],
+        };
+    } else {
+        const perchBranch = fgBranches[0] ?? branches[0];
+        const perchIdx = Math.max(
+            2,
+            Math.round((perchBranch.points.length - 1) * 0.45),
+        );
+        visitorAnchor = {
+            kind: "sparrow",
+            branch: perchBranch,
+            idx: perchIdx,
+            fireflies,
+        };
+        rewardAnchor = {
+            kind: "maple",
+            branch: perchBranch,
+            idx: Math.max(1, perchBranch.points.length - 1),
+            budIndices: [],
+        };
+    }
+
+    return {
+        species,
+        branches,
+        ornaments,
+        scale: S,
+        visitorAnchor,
+        rewardAnchor,
+    };
 }
 
 function computeBranchWorldPoints(
@@ -1820,6 +2869,7 @@ function computeBranchWorldPoints(
     windCalm: number,
     scale: number,
     frameSeq: number,
+    breezeImpulse = 0,
 ): WorldSample[] {
     if (branch.frameId === frameSeq && branch.worldCache) {
         return branch.worldCache;
@@ -1837,6 +2887,7 @@ function computeBranchWorldPoints(
             windCalm,
             scale,
             frameSeq,
+            breezeImpulse,
         );
         const pPt = pWorld[branch.parentRef.idx];
         baseDAngle = pPt.dAngle;
@@ -1850,8 +2901,10 @@ function computeBranchWorldPoints(
     const baseBreeze = reducedMotion
         ? 0
         : (Math.sin(timeSec * 0.66 + branch.phase) * 0.65 +
-            Math.sin(timeSec * 1.40 + branch.phase * 1.7 + 1.1) * 0.35) *
-            windCalm;
+                    Math.sin(timeSec * 1.40 + branch.phase * 1.7 + 1.1) *
+                        0.35) *
+                windCalm +
+            breezeImpulse;
 
     const out: WorldSample[] = new Array(branch.points.length);
     for (let i = 0; i < branch.points.length; i++) {
@@ -1860,14 +2913,15 @@ function computeBranchWorldPoints(
         const ry = anchorY + pt.lx * sinA + pt.ly * cosA;
         const breeze = waveLag && !reducedMotion
             ? (Math.sin(timeSec * 0.66 + branch.phase - pt.u * waveLag) *
-                    0.65 +
-                Math.sin(
-                        timeSec * 1.40 +
-                            (branch.phase - pt.u * waveLag) * 1.7 +
-                            1.1,
-                    ) *
-                    0.35) *
-                windCalm
+                            0.65 +
+                        Math.sin(
+                                timeSec * 1.40 +
+                                    (branch.phase - pt.u * waveLag) * 1.7 +
+                                    1.1,
+                            ) *
+                            0.35) *
+                    windCalm +
+                breezeImpulse
             : baseBreeze;
         const amp = 7.5 * scale * pt.localFlex;
         const ldx = breeze * amp;
@@ -1897,6 +2951,7 @@ function drawTaperedBranch(
     scale: number,
     frameSeq: number,
     pal: BotanicalPalette,
+    breezeImpulse = 0,
 ): void {
     const bp = easeOutCubic(
         clamp((rawProgress - branch.t0) / (branch.t1 - branch.t0), 0, 1),
@@ -1911,6 +2966,7 @@ function drawTaperedBranch(
         windCalm,
         scale,
         frameSeq,
+        breezeImpulse,
     );
     const totalSegs = pts.length - 1;
     const maxFloat = bp * totalSegs;
@@ -2098,6 +3154,58 @@ function drawTaperedBranch(
             );
             ctx.fill();
         }
+    }
+
+    // Bamboo nodes (crisp breathing gap + ink joint ridge)
+    if (
+        branch.bambooNodes && branch.bambooNodes.length > 0 && spine.length > 4
+    ) {
+        for (const nu of branch.bambooNodes) {
+            if (bp < nu + 0.04) continue;
+            const nIdx = Math.min(
+                spine.length - 1,
+                Math.floor(nu * totalSegs),
+            );
+            const np = spine[nIdx];
+            const nx = -Math.sin(np.angle);
+            const ny = Math.cos(np.angle);
+            const ridgeW = np.hw * 1.32;
+            ctx.beginPath();
+            ctx.moveTo(np.x - nx * ridgeW, np.y - ny * ridgeW);
+            ctx.quadraticCurveTo(
+                np.x - Math.cos(np.angle) * 2.2 * scale,
+                np.y - Math.sin(np.angle) * 2.2 * scale,
+                np.x + nx * ridgeW,
+                np.y + ny * ridgeW,
+            );
+            ctx.strokeStyle = pal.stroke("ink", branch.ghost ? 0.25 : 0.92);
+            ctx.lineWidth = Math.max(0.85, 1.35 * scale);
+            ctx.lineCap = "round";
+            ctx.stroke();
+        }
+    }
+
+    // Winter snow cushions on upper edge of plum branches
+    if (branch.snowCushions && !branch.ghost && spine.length > 8) {
+        ctx.save();
+        ctx.strokeStyle = pal.highlight(pal.isDark ? 0.45 : 0.88);
+        ctx.lineCap = "round";
+        for (let i = 3; i < spine.length - 3; i++) {
+            if (i % 7 > 3) continue;
+            const p0 = spine[i];
+            const p1 = spine[i + 1];
+            const nx = -Math.sin(p0.angle);
+            const ny = Math.cos(p0.angle);
+            const sign = ny < 0 ? 1 : -1;
+            const ox = nx * sign * (p0.hw + 0.9 * scale);
+            const oy = ny * sign * (p0.hw + 0.9 * scale) - 0.6 * scale;
+            ctx.beginPath();
+            ctx.moveTo(p0.x + ox, p0.y + oy);
+            ctx.lineTo(p1.x + ox, p1.y + oy);
+            ctx.lineWidth = Math.max(1.2, p0.hw * 0.72);
+            ctx.stroke();
+        }
+        ctx.restore();
     }
 
     if (!reducedMotion && !branch.ghost && bp > 0.02 && bp < 0.98) {
@@ -2728,6 +3836,30 @@ function drawDrifters(
                 0,
             );
             ctx.closePath();
+        } else if (d.species === "orchid") {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, d.size * 0.84, d.size * 0.36, 0, 0, Math.PI * 2);
+        } else if (d.species === "bamboo") {
+            const s = d.size * 1.25;
+            ctx.beginPath();
+            ctx.moveTo(-s * 0.85, 0);
+            ctx.quadraticCurveTo(0, -s * 0.28, s * 0.85, 0);
+            ctx.quadraticCurveTo(0, s * 0.28, -s * 0.85, 0);
+            ctx.closePath();
+        } else if (d.species === "maple") {
+            const s = d.size * 0.95;
+            ctx.beginPath();
+            ctx.moveTo(0, -s);
+            ctx.lineTo(s * 0.32, -s * 0.32);
+            ctx.lineTo(s * 0.95, -s * 0.22);
+            ctx.lineTo(s * 0.42, s * 0.24);
+            ctx.lineTo(s * 0.56, s * 0.88);
+            ctx.lineTo(0, s * 0.45);
+            ctx.lineTo(-s * 0.56, s * 0.88);
+            ctx.lineTo(-s * 0.42, s * 0.24);
+            ctx.lineTo(-s * 0.95, -s * 0.22);
+            ctx.lineTo(-s * 0.32, -s * 0.32);
+            ctx.closePath();
         } else {
             ctx.beginPath();
             ctx.ellipse(0, 0, d.size * 0.88, d.size * 0.54, 0, 0, Math.PI * 2);
@@ -2742,6 +3874,233 @@ function drawDrifters(
         ctx.fill();
         ctx.restore();
     }
+}
+
+function drawOrchidBlossom(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    o: OrchidBlossomOrnament,
+    p: number,
+    pal: BotanicalPalette,
+    layerA: number,
+): void {
+    const washP = easeOutCubic(clamp(p / 0.7, 0, 1));
+    const dotP = easeOutCubic(clamp((p - 0.38) / 0.62, 0, 1));
+    if (washP <= 0.02) return;
+    const r = o.size * washP;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(o.rotation + angle * 0.25);
+    if (o.profile) ctx.scale(1, 0.78);
+
+    // 5 slender orchid petals (3 outer sepals + 2 inner petals)
+    const petalAngles = [-1.57, -0.45, 0.45, -2.55, 2.55];
+    for (let i = 0; i < petalAngles.length; i++) {
+        const pa = petalAngles[i];
+        const plen = r * (i < 3 ? 1.05 : 0.78);
+        const pw = plen * 0.24;
+        ctx.save();
+        ctx.rotate(pa);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(plen * 0.35, -pw, plen * 0.78, -pw * 0.7, plen, 0);
+        ctx.bezierCurveTo(plen * 0.78, pw * 0.7, plen * 0.35, pw, 0, 0);
+        ctx.closePath();
+        const grad = ctx.createRadialGradient(
+            plen * 0.3,
+            0,
+            0.5,
+            plen * 0.5,
+            0,
+            Math.max(2, plen * 0.7),
+        );
+        grad.addColorStop(0, pal.wash(o.tint, 1.25 * washP * layerA));
+        grad.addColorStop(1, pal.fill(o.tint, 0.35 * washP * layerA));
+        ctx.fillStyle = grad;
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // Labellum (lip) with vermilion/accent spots
+    if (dotP > 0.02) {
+        ctx.beginPath();
+        ctx.ellipse(0, r * 0.28, r * 0.22, r * 0.30, 0, 0, Math.PI * 2);
+        ctx.fillStyle = pal.wash("accent", 1.15 * dotP * layerA);
+        ctx.fill();
+
+        ctx.fillStyle = pal.stroke("ink", 0.9 * dotP * layerA);
+        ctx.beginPath();
+        ctx.arc(0, 0, Math.max(0.8, r * 0.09 * dotP), 0, Math.PI * 2);
+        ctx.arc(
+            -r * 0.07,
+            r * 0.26,
+            Math.max(0.5, r * 0.05 * dotP),
+            0,
+            Math.PI * 2,
+        );
+        ctx.arc(
+            r * 0.07,
+            r * 0.30,
+            Math.max(0.5, r * 0.05 * dotP),
+            0,
+            Math.PI * 2,
+        );
+        ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawBambooLeaf(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    o: BambooLeafOrnament,
+    p: number,
+    pal: BotanicalPalette,
+    layerA: number,
+): void {
+    const strokeP = easeOutQuart(clamp(p / 0.75, 0, 1));
+    if (strokeP <= 0.02) return;
+    const len = o.len * strokeP;
+    const w = o.width;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(
+        len * 0.28,
+        -w + o.curve * len * 0.3,
+        len * 0.65,
+        -w * 0.55 + o.curve * len * 0.7,
+        len,
+        o.curve * len,
+    );
+    ctx.bezierCurveTo(
+        len * 0.62,
+        w * 0.45 + o.curve * len * 0.7,
+        len * 0.24,
+        w * 0.85 + o.curve * len * 0.3,
+        0,
+        0,
+    );
+    ctx.closePath();
+
+    const grad = ctx.createLinearGradient(
+        0,
+        0,
+        Math.max(1, len),
+        o.curve * len,
+    );
+    grad.addColorStop(0, pal.wash(o.tint, 1.32 * strokeP * layerA));
+    grad.addColorStop(0.65, pal.fill(o.tint, 1.08 * strokeP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.24 * strokeP * layerA));
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Crisp central vein
+    ctx.beginPath();
+    ctx.moveTo(1, 0);
+    ctx.quadraticCurveTo(
+        len * 0.45,
+        o.curve * len * 0.42,
+        len * 0.75,
+        o.curve * len * 0.72,
+    );
+    ctx.strokeStyle = pal.vein(o.tint, 0.65 * strokeP * layerA);
+    ctx.lineWidth = o.ghost ? 0.38 : 0.55;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function drawMapleLeaf(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    o: MapleLeafOrnament,
+    p: number,
+    pal: BotanicalPalette,
+    layerA: number,
+): void {
+    const stemP = easeOutCubic(clamp(p / 0.25, 0, 1));
+    const washP = easeOutCubic(clamp((p - 0.12) / 0.62, 0, 1));
+    if (stemP <= 0.02) return;
+    const stem = o.stemLen * stemP;
+    const s = o.size * Math.max(0.15, washP);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(stem, 0);
+    ctx.strokeStyle = pal.stroke("ink", 0.72 * layerA);
+    ctx.lineWidth = o.ghost ? 0.55 : 0.85;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    if (washP <= 0.05) {
+        ctx.restore();
+        return;
+    }
+
+    ctx.translate(stem, 0);
+    ctx.rotate(o.rotation);
+
+    // 5-lobed palmate maple silhouette
+    const lobes = [-1.45, -0.72, 0, 0.72, 1.45];
+    const lobeLens = [0.58, 0.86, 1.0, 0.86, 0.58];
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    for (let i = 0; i < lobes.length; i++) {
+        const la = lobes[i];
+        const ll = s * lobeLens[i];
+        const tipX = Math.cos(la) * ll;
+        const tipY = Math.sin(la) * ll;
+        const prevA = i === 0 ? -1.85 : (lobes[i - 1] + la) * 0.5;
+        const notchR = s * (i === 0 ? 0.22 : 0.34);
+        ctx.lineTo(Math.cos(prevA) * notchR, Math.sin(prevA) * notchR);
+        ctx.lineTo(tipX, tipY);
+    }
+    ctx.lineTo(Math.cos(1.85) * s * 0.22, Math.sin(1.85) * s * 0.22);
+    ctx.closePath();
+
+    const grad = ctx.createRadialGradient(
+        s * 0.25,
+        0,
+        Math.max(0.5, s * 0.08),
+        s * 0.45,
+        0,
+        Math.max(2, s * 1.05),
+    );
+    grad.addColorStop(0, pal.wash(o.tint, 1.38 * washP * layerA));
+    grad.addColorStop(0.65, pal.fill(o.tint, 1.15 * washP * layerA));
+    grad.addColorStop(1, pal.fill(o.tint, 0.25 * washP * layerA));
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // 5 radiating palmate veins
+    ctx.strokeStyle = pal.vein("ink", 0.58 * washP * layerA);
+    ctx.lineWidth = o.ghost ? 0.38 : 0.55;
+    ctx.lineCap = "round";
+    for (let i = 0; i < lobes.length; i++) {
+        const la = lobes[i];
+        const ll = s * lobeLens[i] * 0.74;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(la) * ll, Math.sin(la) * ll);
+        ctx.stroke();
+    }
+    ctx.restore();
 }
 
 function renderOrnamentItem(
@@ -2764,6 +4123,958 @@ function renderOrnamentItem(
         drawPlumBud(ctx, wx, wy, angle, o, op, pal, layerA);
     } else if (o.kind === "fernPinna") {
         drawFernPinna(ctx, wx, wy, angle, o, op, pal, layerA);
+    } else if (o.kind === "orchidBlossom") {
+        drawOrchidBlossom(ctx, wx, wy, angle, o, op, pal, layerA);
+    } else if (o.kind === "bambooLeaf") {
+        drawBambooLeaf(ctx, wx, wy, angle, o, op, pal, layerA);
+    } else if (o.kind === "mapleLeaf") {
+        drawMapleLeaf(ctx, wx, wy, angle, o, op, pal, layerA);
+    }
+}
+
+export function triggerBotanicalResonance(
+    runtime: BotanicalRuntimeState,
+    kind: BotanicalResonanceKind,
+    timeSec: number,
+    scene: BotanicalScene | null,
+    drifters: Drifter[],
+    windCalm: number,
+    frameSeq: number,
+): void {
+    switch (kind) {
+        case "quick-capture": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 1.15;
+            runtime.fireflyBoostStartSec = timeSec;
+            if (scene && drifters.length < 4) {
+                spawnDrifter(
+                    scene,
+                    drifters,
+                    timeSec,
+                    windCalm,
+                    frameSeq,
+                    null,
+                );
+            }
+            if (runtime.visitorMode === "perched") {
+                runtime.visitorMode = "departing";
+                runtime.visitorStateStartSec = timeSec;
+                runtime.visitorVx = -74;
+                runtime.visitorVy = -62;
+            }
+            if (runtime.dewState === "hanging") {
+                runtime.dewState = "falling";
+                runtime.dewStateStartSec = timeSec;
+                runtime.dewFallDist = 0;
+            }
+            break;
+        }
+        case "task-completed": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 0.72;
+            runtime.fireflyBoostStartSec = timeSec;
+            if (runtime.dewState === "hanging") {
+                runtime.dewState = "falling";
+                runtime.dewStateStartSec = timeSec;
+                runtime.dewFallDist = 0;
+            }
+            break;
+        }
+        case "tasks-cleared": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 1.35;
+            runtime.awakened = true;
+            runtime.awakenStartSec = timeSec;
+            runtime.haloPulseStartSec = timeSec;
+            runtime.fireflyBoostStartSec = timeSec;
+            break;
+        }
+        case "theme-ripple": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 0.9;
+            break;
+        }
+        case "search-submit": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 0.8;
+            runtime.fireflyBoostStartSec = timeSec;
+            if (runtime.visitorMode === "perched") {
+                runtime.visitorMode = "departing";
+                runtime.visitorStateStartSec = timeSec;
+                runtime.visitorVx = -70;
+                runtime.visitorVy = -58;
+            }
+            if (runtime.dewState === "hanging") {
+                runtime.dewState = "falling";
+                runtime.dewStateStartSec = timeSec;
+                runtime.dewFallDist = 0;
+            }
+            break;
+        }
+    }
+}
+
+function drawSparrow(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    scale: number,
+    alpha: number,
+    pal: BotanicalPalette,
+    flapping: boolean,
+    timeSec: number,
+    reducedMotion: boolean,
+): void {
+    if (alpha <= 0.02) return;
+    const s = scale;
+    const bob = reducedMotion || flapping
+        ? 0
+        : Math.sin(timeSec * 2.2) * 0.7 * s;
+    const tailAngle = reducedMotion || flapping
+        ? -0.35
+        : -0.38 + Math.sin(timeSec * 1.4 + 0.8) * 0.08;
+
+    ctx.save();
+    ctx.translate(x, y + bob);
+
+    // Claws gripping the branch (when perched)
+    if (!flapping) {
+        ctx.strokeStyle = pal.stroke("ink", 0.85 * alpha);
+        ctx.lineWidth = Math.max(0.7, 0.9 * s);
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(-2 * s, -4 * s);
+        ctx.lineTo(-3 * s, 0.5 * s);
+        ctx.moveTo(2.5 * s, -4 * s);
+        ctx.lineTo(2 * s, 0.5 * s);
+        ctx.stroke();
+    }
+
+    // Tail feathers
+    ctx.save();
+    ctx.translate(7 * s, -7 * s);
+    ctx.rotate(tailAngle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(13 * s, -3.5 * s);
+    ctx.lineTo(11.5 * s, 1.5 * s);
+    ctx.closePath();
+    ctx.fillStyle = pal.stroke("ink", 0.82 * alpha);
+    ctx.fill();
+    ctx.restore();
+
+    // Plump ink-wash belly
+    const bellyGrad = ctx.createRadialGradient(
+        -2 * s,
+        -9 * s,
+        0.5,
+        0,
+        -8 * s,
+        11 * s,
+    );
+    bellyGrad.addColorStop(0, pal.wash("ink", 1.15 * alpha));
+    bellyGrad.addColorStop(0.7, pal.fill("ink", 0.9 * alpha));
+    bellyGrad.addColorStop(1, pal.fill("ink", 0.25 * alpha));
+    ctx.beginPath();
+    ctx.ellipse(0, -8 * s, 8.8 * s, 6.2 * s, -0.22, 0, Math.PI * 2);
+    ctx.fillStyle = bellyGrad;
+    ctx.fill();
+
+    // Warm accent throat wash
+    ctx.beginPath();
+    ctx.ellipse(-5 * s, -9.5 * s, 4.2 * s, 3.4 * s, -0.1, 0, Math.PI * 2);
+    ctx.fillStyle = pal.wash("accent", 0.36 * alpha);
+    ctx.fill();
+
+    // Head & crown
+    ctx.beginPath();
+    ctx.arc(-6.2 * s, -13.5 * s, 4.6 * s, 0, Math.PI * 2);
+    ctx.fillStyle = pal.stroke("ink", 0.88 * alpha);
+    ctx.fill();
+
+    // Cheek highlight
+    ctx.beginPath();
+    ctx.ellipse(-5.2 * s, -12.6 * s, 2.2 * s, 1.5 * s, 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = pal.highlight(0.75 * alpha);
+    ctx.fill();
+
+    // Beak
+    ctx.beginPath();
+    ctx.moveTo(-10.2 * s, -14.2 * s);
+    ctx.lineTo(-14.2 * s, -13.1 * s);
+    ctx.lineTo(-10.2 * s, -12.1 * s);
+    ctx.closePath();
+    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.fill();
+
+    // Bright eye
+    ctx.beginPath();
+    ctx.arc(-7.8 * s, -14.2 * s, Math.max(0.9, 1.05 * s), 0, Math.PI * 2);
+    ctx.fillStyle = pal.highlight(0.95 * alpha);
+    ctx.fill();
+
+    // Folded or flapping wings
+    if (flapping) {
+        const flap = Math.sin(timeSec * 36) * 0.65;
+        for (const side of [-1, 1] as const) {
+            ctx.save();
+            ctx.translate(-1 * s, -11 * s);
+            ctx.rotate(-0.4 + flap * side);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(6 * s, -14 * s, 14 * s, -8 * s);
+            ctx.quadraticCurveTo(7 * s, -2 * s, 0, 0);
+            ctx.fillStyle = pal.stroke("ink", 0.78 * alpha);
+            ctx.fill();
+            ctx.restore();
+        }
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(-2 * s, -11.5 * s);
+        ctx.quadraticCurveTo(5 * s, -12.5 * s, 9.5 * s, -6.5 * s);
+        ctx.quadraticCurveTo(3 * s, -5.5 * s, -2 * s, -11.5 * s);
+        ctx.fillStyle = pal.stroke("ink", 0.85 * alpha);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawLadybug(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    scale: number,
+    alpha: number,
+    pal: BotanicalPalette,
+    flying: boolean,
+    timeSec: number,
+    reducedMotion: boolean,
+): void {
+    if (alpha <= 0.02) return;
+    const s = scale;
+    const antTwitch = reducedMotion ? 0 : Math.sin(timeSec * 4.5) * 0.14;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    // Subtle open translucent wings when flying
+    if (flying) {
+        const wingFlap = Math.sin(timeSec * 42) * 0.25;
+        for (const side of [-1, 1] as const) {
+            ctx.save();
+            ctx.rotate(side * (0.65 + wingFlap));
+            ctx.beginPath();
+            ctx.ellipse(3.5 * s, 0, 4.5 * s, 1.8 * s, 0, 0, Math.PI * 2);
+            ctx.fillStyle = pal.highlight(0.45 * alpha);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // Accent/vermilion shell
+    const shellGrad = ctx.createRadialGradient(
+        -0.5 * s,
+        -0.5 * s,
+        0.3,
+        0,
+        0,
+        4.6 * s,
+    );
+    shellGrad.addColorStop(0, pal.wash("accent", 1.35 * alpha));
+    shellGrad.addColorStop(1, pal.stroke("accent", 0.92 * alpha));
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 4.2 * s, 3.3 * s, 0, 0, Math.PI * 2);
+    ctx.fillStyle = shellGrad;
+    ctx.fill();
+    ctx.strokeStyle = pal.stroke("ink", 0.72 * alpha);
+    ctx.lineWidth = Math.max(0.55, 0.7 * s);
+    ctx.stroke();
+
+    // Pronotum (head cap)
+    ctx.beginPath();
+    ctx.arc(-3.5 * s, 0, 1.65 * s, 0, Math.PI * 2);
+    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.fill();
+
+    // Antennae
+    ctx.strokeStyle = pal.stroke("ink", 0.8 * alpha);
+    ctx.lineWidth = Math.max(0.45, 0.55 * s);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(-4.8 * s, -0.5 * s);
+    ctx.lineTo(-6.8 * s, (-1.6 + antTwitch) * s);
+    ctx.moveTo(-4.8 * s, 0.5 * s);
+    ctx.lineTo(-6.8 * s, (1.6 - antTwitch) * s);
+    ctx.stroke();
+
+    // Center suture & spots
+    ctx.beginPath();
+    ctx.moveTo(-2.2 * s, 0);
+    ctx.lineTo(4.0 * s, 0);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.stroke("ink", 0.9 * alpha);
+    const spots: readonly [number, number, number][] = [
+        [-0.4, -1.4, 0.65],
+        [1.6, -1.1, 0.55],
+        [0.4, 1.3, 0.65],
+        [2.1, 0.9, 0.5],
+    ];
+    for (const [sx, sy, sr] of spots) {
+        ctx.beginPath();
+        ctx.arc(sx * s, sy * s, Math.max(0.45, sr * s), 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Specular highlight dot
+    ctx.beginPath();
+    ctx.arc(-0.8 * s, -1.1 * s, Math.max(0.4, 0.65 * s), 0, Math.PI * 2);
+    ctx.fillStyle = pal.highlight(0.85 * alpha);
+    ctx.fill();
+
+    ctx.restore();
+}
+
+function drawDewdropAndRipple(
+    ctx: CanvasRenderingContext2D,
+    tipX: number,
+    tipY: number,
+    runtime: BotanicalRuntimeState,
+    timeSec: number,
+    dt: number,
+    scale: number,
+    pal: BotanicalPalette,
+    reducedMotion: boolean,
+): void {
+    if (reducedMotion) {
+        // Static crystal dewdrop at leaf tip
+        ctx.save();
+        ctx.translate(tipX, tipY + 2 * scale);
+        ctx.beginPath();
+        ctx.moveTo(0, -3.5 * scale);
+        ctx.bezierCurveTo(
+            2.5 * scale,
+            -0.5 * scale,
+            2.6 * scale,
+            3.2 * scale,
+            0,
+            3.6 * scale,
+        );
+        ctx.bezierCurveTo(
+            -2.6 * scale,
+            3.2 * scale,
+            -2.5 * scale,
+            -0.5 * scale,
+            0,
+            -3.5 * scale,
+        );
+        ctx.fillStyle = pal.highlight(0.85);
+        ctx.fill();
+        ctx.strokeStyle = pal.stroke("accent", 0.65);
+        ctx.lineWidth = Math.max(0.55, 0.75 * scale);
+        ctx.stroke();
+        ctx.restore();
+        return;
+    }
+
+    if (runtime.dewState === "hanging") {
+        if (runtime.dewStateStartSec < -100) {
+            runtime.dewStateStartSec = timeSec;
+        }
+        if (timeSec - runtime.dewStateStartSec > 26) {
+            runtime.dewState = "falling";
+            runtime.dewStateStartSec = timeSec;
+            runtime.dewFallDist = 0;
+        }
+    }
+
+    if (runtime.dewState === "falling") {
+        const fallAge = timeSec - runtime.dewStateStartSec;
+        runtime.dewFallDist = 0.5 * 360 * scale * fallAge * fallAge;
+        const dropY = tipY + 2 * scale + runtime.dewFallDist;
+        const maxFall = 95 * scale;
+        if (runtime.dewFallDist >= maxFall) {
+            runtime.dewState = "ripple";
+            runtime.dewStateStartSec = timeSec;
+            runtime.dewImpactX = tipX;
+            runtime.dewImpactY = tipY + maxFall;
+        } else {
+            ctx.save();
+            ctx.translate(tipX, dropY);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 1.8 * scale, 2.8 * scale, 0, 0, Math.PI * 2);
+            ctx.fillStyle = pal.highlight(0.88);
+            ctx.fill();
+            ctx.strokeStyle = pal.stroke("accent", 0.7);
+            ctx.lineWidth = Math.max(0.55, 0.75 * scale);
+            ctx.stroke();
+            ctx.restore();
+            return;
+        }
+    }
+
+    if (runtime.dewState === "ripple") {
+        const rAge = timeSec - runtime.dewStateStartSec;
+        const dur = 1.6;
+        if (rAge >= dur) {
+            runtime.dewState = "regrowing";
+            runtime.dewStateStartSec = timeSec;
+        } else {
+            const p = rAge / dur;
+            for (let k = 0; k < 2; k++) {
+                const kp = clamp((p - k * 0.22) / (1 - k * 0.22), 0, 1);
+                if (kp <= 0) continue;
+                const rx = (4 + easeOutCubic(kp) * 26) * scale;
+                const ry = rx * 0.3;
+                const a = (1 - kp) * 0.58;
+                ctx.beginPath();
+                ctx.ellipse(
+                    runtime.dewImpactX,
+                    runtime.dewImpactY,
+                    rx,
+                    ry,
+                    0,
+                    0,
+                    Math.PI * 2,
+                );
+                ctx.strokeStyle = k === 0
+                    ? pal.stroke("ink", a)
+                    : pal.stroke("accent", a * 0.85);
+                ctx.lineWidth = Math.max(0.5, (1.1 - kp * 0.6) * scale);
+                ctx.stroke();
+            }
+            return;
+        }
+    }
+
+    let growScale = 1;
+    if (runtime.dewState === "regrowing") {
+        const gAge = timeSec - runtime.dewStateStartSec;
+        if (gAge >= 6.0) {
+            runtime.dewState = "hanging";
+            runtime.dewStateStartSec = timeSec;
+            growScale = 1;
+        } else {
+            growScale = easeOutCubic(clamp(gAge / 6.0, 0.05, 1));
+        }
+    }
+
+    const tremble = Math.sin(timeSec * 3.2) * 0.35 * scale * dt * 60 * 0.016;
+    const ds = scale * growScale;
+    ctx.save();
+    ctx.translate(tipX + tremble, tipY + 2 * ds);
+    ctx.beginPath();
+    ctx.moveTo(0, -3.2 * ds);
+    ctx.bezierCurveTo(2.4 * ds, -0.4 * ds, 2.5 * ds, 3.0 * ds, 0, 3.4 * ds);
+    ctx.bezierCurveTo(-2.5 * ds, 3.0 * ds, -2.4 * ds, -0.4 * ds, 0, -3.2 * ds);
+    ctx.fillStyle = pal.highlight(0.86 * growScale);
+    ctx.fill();
+    ctx.strokeStyle = pal.stroke("accent", 0.68 * growScale);
+    ctx.lineWidth = Math.max(0.5, 0.72 * ds);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(-0.7 * ds, 0.8 * ds, Math.max(0.35, 0.7 * ds), 0, Math.PI * 2);
+    ctx.fillStyle = pal.highlight(0.95 * growScale);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawFireflies(
+    ctx: CanvasRenderingContext2D,
+    seeds: readonly FireflySeed[],
+    runtime: BotanicalRuntimeState,
+    timeSec: number,
+    scale: number,
+    pal: BotanicalPalette,
+    pointer: BotanicalPointerState,
+    reducedMotion: boolean,
+): void {
+    const boostAge = timeSec - runtime.fireflyBoostStartSec;
+    const boost = !reducedMotion && boostAge >= 0 && boostAge < 1.8
+        ? 1 + Math.sin((boostAge / 1.8) * Math.PI) * 0.65
+        : 1;
+
+    for (const f of seeds) {
+        const driftX = reducedMotion
+            ? 0
+            : Math.sin(timeSec * f.speed + f.phase) * 22 * scale;
+        const driftY = reducedMotion
+            ? 0
+            : Math.cos(timeSec * f.speed * 0.82 + f.phase * 1.3) * 16 * scale;
+        let fx = f.x + driftX;
+        let fy = f.y + driftY;
+
+        if (!reducedMotion && pointer.x > -1000) {
+            const dx = fx - pointer.x;
+            const dy = fy - pointer.y;
+            const dist = Math.hypot(dx, dy);
+            const repulseR = 110 * scale;
+            if (dist > 1 && dist < repulseR) {
+                const push = ((repulseR - dist) / repulseR) * 28 * scale;
+                fx += (dx / dist) * push;
+                fy += (dy / dist) * push;
+            }
+        }
+
+        const breath = reducedMotion ? 0.75 : 0.42 +
+            0.58 *
+                (0.5 +
+                    0.5 *
+                        Math.sin(
+                            timeSec * f.speed * Math.PI * 2 + f.phase,
+                        ));
+        const glowR = Math.max(4, 16 * scale * breath * boost);
+
+        const glow = ctx.createRadialGradient(fx, fy, 0.5, fx, fy, glowR);
+        glow.addColorStop(
+            0,
+            pal.wash("accent", clamp(0.85 * breath * boost, 0, 1)),
+        );
+        glow.addColorStop(
+            0.4,
+            pal.fill("accent", clamp(0.45 * breath * boost, 0, 1)),
+        );
+        glow.addColorStop(1, pal.fill("accent", 0));
+
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(fx, fy, glowR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.beginPath();
+        ctx.arc(fx, fy, Math.max(0.8, 1.5 * scale), 0, Math.PI * 2);
+        ctx.fillStyle = pal.highlight(clamp(0.95 * breath, 0.3, 1));
+        ctx.fill();
+    }
+}
+
+function drawButterfly(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    scale: number,
+    alpha: number,
+    pal: BotanicalPalette,
+    flying: boolean,
+    timeSec: number,
+    reducedMotion: boolean,
+): void {
+    if (alpha <= 0.02) return;
+    const s = scale;
+    const flap = reducedMotion
+        ? 0.85
+        : flying
+        ? 0.25 + 0.75 * Math.abs(Math.sin(timeSec * 24))
+        : 0.72 + 0.28 * Math.sin(timeSec * 1.6);
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.35);
+
+    for (const side of [-1, 1] as const) {
+        ctx.save();
+        ctx.scale(1, side * flap);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-4 * s, -12 * s, 9 * s, -13 * s, 7 * s, -2 * s);
+        ctx.bezierCurveTo(6 * s, 2 * s, 1 * s, 2 * s, 0, 0);
+        ctx.fillStyle = pal.wash("sub", 0.95 * alpha);
+        ctx.fill();
+        ctx.strokeStyle = pal.stroke("ink", 0.55 * alpha);
+        ctx.lineWidth = Math.max(0.45, 0.65 * s);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(4 * s, -5 * s, Math.max(0.8, 1.4 * s), 0, Math.PI * 2);
+        ctx.fillStyle = pal.stroke("accent", 0.85 * alpha);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 4.5 * s, 0.9 * s, 0, 0, Math.PI * 2);
+    ctx.fillStyle = pal.stroke("ink", 0.9 * alpha);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawDragonfly(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    scale: number,
+    alpha: number,
+    pal: BotanicalPalette,
+    flying: boolean,
+    timeSec: number,
+    reducedMotion: boolean,
+): void {
+    if (alpha <= 0.02) return;
+    const s = scale;
+    const wingBuzz = reducedMotion
+        ? 0
+        : flying
+        ? Math.sin(timeSec * 45) * 0.28
+        : Math.sin(timeSec * 2.1) * 0.04;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-0.48);
+
+    // 4 translucent veined wings
+    for (const side of [-1, 1] as const) {
+        for (const pair of [0, 1] as const) {
+            ctx.save();
+            ctx.translate(-1 * s + pair * 2 * s, 0);
+            ctx.rotate(side * (1.15 - pair * 0.25 + wingBuzz));
+            ctx.beginPath();
+            ctx.ellipse(6.5 * s, 0, 6.8 * s, 1.5 * s, 0, 0, Math.PI * 2);
+            ctx.fillStyle = pal.highlight(0.48 * alpha);
+            ctx.fill();
+            ctx.strokeStyle = pal.stroke("ink", 0.45 * alpha);
+            ctx.lineWidth = Math.max(0.4, 0.52 * s);
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+
+    // Slender segmented crimson/accent abdomen
+    ctx.beginPath();
+    ctx.moveTo(-4 * s, 0);
+    ctx.lineTo(14 * s, 0);
+    ctx.strokeStyle = pal.stroke("accent", 0.92 * alpha);
+    ctx.lineWidth = Math.max(1.0, 1.65 * s);
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // Head & eyes
+    ctx.beginPath();
+    ctx.arc(-4.6 * s, 0, Math.max(1.1, 1.7 * s), 0, Math.PI * 2);
+    ctx.fillStyle = pal.stroke("ink", 0.92 * alpha);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawSolarTermSeal(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    scale: number,
+    term: string,
+    sceneSide: "left" | "right",
+    pal: BotanicalPalette,
+    alpha: number,
+): void {
+    if (alpha <= 0.02 || !term) return;
+    const s = scale;
+    const isNarrow = width < 720;
+    const wBox = 15 * s;
+    const hBox = 28 * s;
+    const x = sceneSide === "left" ? 28 * s : width - 28 * s;
+    const y = isNarrow ? height - 118 * s : height - 46 * s;
+    const sealAlpha = (pal.overPhoto ? 0.34 : 0.48) * alpha;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.beginPath();
+    ctx.moveTo(-wBox / 2 + 2 * s, -hBox / 2);
+    ctx.lineTo(wBox / 2 - 2 * s, -hBox / 2);
+    ctx.quadraticCurveTo(wBox / 2, -hBox / 2, wBox / 2, -hBox / 2 + 2 * s);
+    ctx.lineTo(wBox / 2, hBox / 2 - 2 * s);
+    ctx.quadraticCurveTo(wBox / 2, hBox / 2, wBox / 2 - 2 * s, hBox / 2);
+    ctx.lineTo(-wBox / 2 + 2 * s, hBox / 2);
+    ctx.quadraticCurveTo(-wBox / 2, hBox / 2, -wBox / 2, hBox / 2 - 2 * s);
+    ctx.lineTo(-wBox / 2, -hBox / 2 + 2 * s);
+    ctx.quadraticCurveTo(-wBox / 2, -hBox / 2, -wBox / 2 + 2 * s, -hBox / 2);
+    ctx.closePath();
+
+    ctx.fillStyle = pal.fill("accent", sealAlpha * 0.45);
+    ctx.fill();
+    ctx.strokeStyle = pal.stroke("accent", sealAlpha);
+    ctx.lineWidth = Math.max(0.75, 1.05 * s);
+    ctx.stroke();
+
+    if (typeof ctx.fillText === "function") {
+        const chars = Array.from(term).slice(0, 2);
+        const fontSize = Math.max(8, Math.round(9.5 * s));
+        ctx.font = `${fontSize}px "Noto Serif SC", "Songti SC", serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = pal.stroke("accent", Math.min(1, sealAlpha * 1.35));
+        if (chars.length === 2) {
+            ctx.fillText(chars[0], 0, -5.5 * s);
+            ctx.fillText(chars[1], 0, 5.5 * s);
+        } else if (chars.length === 1) {
+            ctx.fillText(chars[0], 0, 0);
+        }
+    }
+    ctx.restore();
+}
+
+function drawRewardBloom(
+    ctx: CanvasRenderingContext2D,
+    scene: BotanicalScene,
+    reward: BotanicalRewardAnchor,
+    runtime: BotanicalRuntimeState,
+    timeSec: number,
+    reducedMotion: boolean,
+    windCalm: number,
+    frameSeq: number,
+    breezeImpulse: number,
+    pal: BotanicalPalette,
+): void {
+    const bloomP = reducedMotion
+        ? 1
+        : easeOutCubic(clamp((timeSec - runtime.awakenStartSec) / 1.8, 0, 1));
+    if (bloomP <= 0.02) return;
+
+    const tipPt = computeBranchWorldPoints(
+        reward.branch,
+        timeSec,
+        reducedMotion,
+        windCalm,
+        scene.scale,
+        frameSeq,
+        breezeImpulse,
+    )[reward.idx];
+    const s = scene.scale;
+
+    // Subtle expanding halo pulse when tasks are cleared
+    const haloAge = timeSec - runtime.haloPulseStartSec;
+    if (!reducedMotion && haloAge >= 0 && haloAge < 1.4) {
+        const hp = haloAge / 1.4;
+        const hr = (10 + easeOutCubic(hp) * 48) * s;
+        ctx.beginPath();
+        ctx.arc(tipPt.x, tipPt.y, hr, 0, Math.PI * 2);
+        ctx.strokeStyle = pal.stroke("accent", (1 - hp) * 0.42);
+        ctx.lineWidth = Math.max(0.6, (1.4 - hp) * s);
+        ctx.stroke();
+    }
+
+    if (reward.kind === "plum") {
+        // Buds bloom into five-petal accent blossoms
+        for (const budIdx of reward.budIndices) {
+            const bud = scene.ornaments[budIdx];
+            if (!bud || bud.kind !== "plumBud") continue;
+            const wp = computeBranchWorldPoints(
+                bud.branch,
+                timeSec,
+                reducedMotion,
+                windCalm,
+                s,
+                frameSeq,
+                breezeImpulse,
+            )[bud.idx];
+            const blossom: PlumOrnament = {
+                ...bud,
+                kind: "plumBlossom",
+                size: Math.max(bud.size * 2.8, 14 * s) * bloomP,
+                tint: "accent",
+            };
+            drawPlumBlossom(
+                ctx,
+                wp.x,
+                wp.y,
+                wp.angle + bud.angleOffset,
+                blossom,
+                bloomP,
+                pal,
+                1.0,
+            );
+        }
+    } else if (reward.kind === "ginkgo") {
+        for (const angOff of [-0.42, 0.36]) {
+            const shoot: GinkgoOrnament = {
+                kind: "ginkgo",
+                branch: reward.branch,
+                idx: reward.idx,
+                ghost: false,
+                t0: 0,
+                t1: 1,
+                phase: 1.2,
+                angleOffset: angOff,
+                tint: "accent",
+                profile: angOff > 0,
+                push: 0,
+                vel: 0,
+                size: 26 * s * bloomP,
+                notch: 0.22,
+                stemLen: 10 * s,
+            };
+            drawGinkgoLeaf(
+                ctx,
+                tipPt.x,
+                tipPt.y,
+                tipPt.angle + angOff,
+                shoot,
+                bloomP,
+                pal,
+                1.0,
+            );
+        }
+    } else if (reward.kind === "eucalyptus") {
+        const rays = 14;
+        const rLen = 16 * s * bloomP;
+        ctx.save();
+        ctx.translate(tipPt.x, tipPt.y);
+        for (let i = 0; i < rays; i++) {
+            const a = (i / rays) * Math.PI * 2 + 0.2;
+            const ex = Math.cos(a) * rLen;
+            const ey = Math.sin(a) * rLen;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(ex, ey);
+            ctx.strokeStyle = pal.stroke("accent", 0.72 * bloomP);
+            ctx.lineWidth = Math.max(0.55, 0.75 * s);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(ex, ey, Math.max(0.9, 1.4 * s * bloomP), 0, Math.PI * 2);
+            ctx.fillStyle = pal.stroke("accent", 0.9 * bloomP);
+            ctx.fill();
+        }
+        ctx.restore();
+    } else if (reward.kind === "fern") {
+        // Fern spiral fiddlehead crozier at hero tip
+        ctx.save();
+        ctx.translate(tipPt.x, tipPt.y);
+        ctx.rotate(tipPt.angle);
+        const r = 10 * s * bloomP;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(
+            14 * s * bloomP,
+            -2 * s * bloomP,
+            18 * s * bloomP,
+            -16 * s * bloomP,
+            8 * s * bloomP,
+            -16 * s * bloomP,
+        );
+        ctx.bezierCurveTo(
+            2 * s * bloomP,
+            -16 * s * bloomP,
+            2 * s * bloomP,
+            -8 * s * bloomP,
+            8 * s * bloomP,
+            -9 * s * bloomP,
+        );
+        ctx.strokeStyle = pal.stroke("accent", 0.88 * bloomP);
+        ctx.lineWidth = Math.max(1.0, 1.65 * s);
+        ctx.lineCap = "round";
+        ctx.stroke();
+        const glow = ctx.createRadialGradient(
+            8 * s * bloomP,
+            -11 * s * bloomP,
+            0.5,
+            8 * s * bloomP,
+            -11 * s * bloomP,
+            Math.max(2, r * 1.4),
+        );
+        glow.addColorStop(0, pal.wash("accent", 0.45 * bloomP));
+        glow.addColorStop(1, pal.fill("accent", 0));
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(
+            8 * s * bloomP,
+            -11 * s * bloomP,
+            Math.max(2, r * 1.4),
+            0,
+            Math.PI * 2,
+        );
+        ctx.fill();
+        ctx.restore();
+    } else if (reward.kind === "orchid") {
+        const bloom: OrchidBlossomOrnament = {
+            kind: "orchidBlossom",
+            branch: reward.branch,
+            idx: reward.idx,
+            ghost: false,
+            t0: 0,
+            t1: 1,
+            phase: 0.4,
+            angleOffset: -0.2,
+            tint: "accent",
+            profile: false,
+            push: 0,
+            vel: 0,
+            size: 26 * s * bloomP,
+            rotation: -0.25,
+        };
+        drawOrchidBlossom(
+            ctx,
+            tipPt.x,
+            tipPt.y,
+            tipPt.angle,
+            bloom,
+            bloomP,
+            pal,
+            1.0,
+        );
+    } else if (reward.kind === "bamboo") {
+        for (const angOff of [-0.46, 0.06, 0.52]) {
+            const shoot: BambooLeafOrnament = {
+                kind: "bambooLeaf",
+                branch: reward.branch,
+                idx: reward.idx,
+                ghost: false,
+                t0: 0,
+                t1: 1,
+                phase: 0.7,
+                angleOffset: angOff,
+                tint: "accent",
+                profile: false,
+                push: 0,
+                vel: 0,
+                len: 52 * s * bloomP,
+                width: 5.8 * s,
+                curve: angOff * 0.2,
+                feibai: false,
+            };
+            drawBambooLeaf(
+                ctx,
+                tipPt.x,
+                tipPt.y,
+                tipPt.angle + angOff,
+                shoot,
+                bloomP,
+                pal,
+                1.0,
+            );
+        }
+    } else if (reward.kind === "maple") {
+        const leaf: MapleLeafOrnament = {
+            kind: "mapleLeaf",
+            branch: reward.branch,
+            idx: reward.idx,
+            ghost: false,
+            t0: 0,
+            t1: 1,
+            phase: 0.5,
+            angleOffset: 0.1,
+            tint: "accent",
+            profile: false,
+            push: 0,
+            vel: 0,
+            size: 36 * s * bloomP,
+            stemLen: 12 * s,
+            rotation: 0.15,
+        };
+        drawMapleLeaf(
+            ctx,
+            tipPt.x,
+            tipPt.y,
+            tipPt.angle + 0.15,
+            leaf,
+            bloomP,
+            pal,
+            1.0,
+        );
     }
 }
 
@@ -2781,13 +5092,40 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         searchFocused,
         embedded,
         palette,
-        pointer,
+        pointer: rawPointer,
         drifters,
         frameSeq,
+        runtime,
+        sceneSide = "right",
+        dateKey = "2026-11-27",
     } = params;
     let nextDriftSpawn = params.lastDriftSpawn;
 
+    const mirrorLeft = !embedded && sceneSide === "left" && width >= 768;
+    const pointer: BotanicalPointerState = mirrorLeft
+        ? {
+            ...rawPointer,
+            x: rawPointer.x > -1000 ? width - rawPointer.x : rawPointer.x,
+            vx: -rawPointer.vx,
+        }
+        : rawPointer;
+
+    const impulseAge = runtime ? timeSec - runtime.breezeImpulseStartSec : -1;
+    const breezeImpulse = !reducedMotion &&
+            runtime &&
+            impulseAge >= 0 &&
+            impulseAge < 2.6
+        ? Math.sin(impulseAge * 4.2) *
+            Math.exp(-impulseAge * 1.65) *
+            runtime.breezeImpulseStrength
+        : 0;
+
     ctx.clearRect(0, 0, width, height);
+    if (mirrorLeft) {
+        ctx.save();
+        ctx.translate(width, 0);
+        ctx.scale(-1, 1);
+    }
 
     // Precompute ornament world transforms & interactive physics once per frame
     const pSpeed = embedded ? 0 : Math.hypot(pointer.vx, pointer.vy);
@@ -2810,6 +5148,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             windCalm,
             scene.scale,
             frameSeq,
+            breezeImpulse,
         )[o.idx];
 
         if (!reducedMotion && !o.ghost && !embedded) {
@@ -2871,6 +5210,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 scene.scale,
                 frameSeq,
                 palette,
+                breezeImpulse,
             );
         }
     }
@@ -2903,6 +5243,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 scene.scale,
                 frameSeq,
                 palette,
+                breezeImpulse,
             );
         }
     }
@@ -2986,6 +5327,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 windCalm,
                 scene.scale,
                 frameSeq,
+                breezeImpulse,
             );
             if (pts.length < 3) continue;
             const anchorIdx = Math.floor(pts.length * (bi === 0 ? 0.88 : 0.72));
@@ -3024,6 +5366,321 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             nextDriftSpawn = timeSec;
         }
         drawDrifters(ctx, drifters, height, timeSec, dt, palette);
+    }
+
+    // Layer 6: Micro-ecology visitors & tasks-cleared reward blooms
+    if (!embedded && runtime && rawProgress > 0.78) {
+        const visFade = easeOutCubic(clamp((rawProgress - 0.78) / 0.22, 0, 1));
+        if (scene.visitorAnchor) {
+            const va = scene.visitorAnchor;
+            const anchorPt = computeBranchWorldPoints(
+                va.branch,
+                timeSec,
+                reducedMotion,
+                windCalm,
+                scene.scale,
+                frameSeq,
+                breezeImpulse,
+            )[va.idx];
+
+            if (va.kind === "sparrow") {
+                if (runtime.visitorMode === "perched") {
+                    if (
+                        !reducedMotion &&
+                        pSpeed > 30 &&
+                        Math.hypot(
+                                anchorPt.x - pointer.x,
+                                anchorPt.y - pointer.y,
+                            ) < 96 * scene.scale
+                    ) {
+                        runtime.visitorMode = "departing";
+                        runtime.visitorStateStartSec = timeSec;
+                        runtime.visitorX = anchorPt.x;
+                        runtime.visitorY = anchorPt.y;
+                        runtime.visitorVx = -74;
+                        runtime.visitorVy = -62;
+                    } else {
+                        runtime.visitorX = anchorPt.x;
+                        runtime.visitorY = anchorPt.y;
+                        drawSparrow(
+                            ctx,
+                            anchorPt.x,
+                            anchorPt.y,
+                            scene.scale,
+                            visFade,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else if (runtime.visitorMode === "departing") {
+                    const dAge = timeSec - runtime.visitorStateStartSec;
+                    if (dAge > 2.4) {
+                        runtime.visitorMode = "returning";
+                        runtime.visitorStateStartSec = timeSec;
+                    } else {
+                        runtime.visitorX += runtime.visitorVx * scene.scale *
+                            dt;
+                        runtime.visitorY += runtime.visitorVy * scene.scale *
+                            dt;
+                        const flyAlpha = clamp(1 - dAge / 2.2, 0, 1) * visFade;
+                        drawSparrow(
+                            ctx,
+                            runtime.visitorX,
+                            runtime.visitorY,
+                            scene.scale,
+                            flyAlpha,
+                            palette,
+                            true,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else {
+                    const rAge = timeSec - runtime.visitorStateStartSec;
+                    if (rAge > 18) {
+                        runtime.visitorMode = "perched";
+                    } else if (rAge > 16.5) {
+                        const retAlpha = clamp((rAge - 16.5) / 1.5, 0, 1) *
+                            visFade;
+                        drawSparrow(
+                            ctx,
+                            anchorPt.x,
+                            anchorPt.y,
+                            scene.scale,
+                            retAlpha,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                }
+            } else if (va.kind === "ladybug") {
+                const lx = anchorPt.x +
+                    Math.cos(anchorPt.angle + va.angleOffset) * va.leafSize *
+                        0.72;
+                const ly = anchorPt.y +
+                    Math.sin(anchorPt.angle + va.angleOffset) * va.leafSize *
+                        0.72;
+                if (runtime.visitorMode === "perched") {
+                    if (
+                        !reducedMotion &&
+                        pSpeed > 25 &&
+                        Math.hypot(lx - pointer.x, ly - pointer.y) <
+                            88 * scene.scale
+                    ) {
+                        runtime.visitorMode = "departing";
+                        runtime.visitorStateStartSec = timeSec;
+                        runtime.visitorX = lx;
+                        runtime.visitorY = ly;
+                        runtime.visitorVx = -52;
+                        runtime.visitorVy = -46;
+                    } else {
+                        drawLadybug(
+                            ctx,
+                            lx,
+                            ly,
+                            anchorPt.angle + va.angleOffset,
+                            scene.scale,
+                            visFade,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else if (runtime.visitorMode === "departing") {
+                    const dAge = timeSec - runtime.visitorStateStartSec;
+                    if (dAge > 2.2) {
+                        runtime.visitorMode = "returning";
+                        runtime.visitorStateStartSec = timeSec;
+                    } else {
+                        runtime.visitorX += (runtime.visitorVx +
+                            Math.sin(dAge * 5) * 28) * scene.scale * dt;
+                        runtime.visitorY += runtime.visitorVy * scene.scale *
+                            dt;
+                        drawLadybug(
+                            ctx,
+                            runtime.visitorX,
+                            runtime.visitorY,
+                            -0.6,
+                            scene.scale,
+                            clamp(1 - dAge / 2.0, 0, 1) * visFade,
+                            palette,
+                            true,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else {
+                    const rAge = timeSec - runtime.visitorStateStartSec;
+                    if (rAge > 16) {
+                        runtime.visitorMode = "perched";
+                    } else if (rAge > 14.5) {
+                        drawLadybug(
+                            ctx,
+                            lx,
+                            ly,
+                            anchorPt.angle + va.angleOffset,
+                            scene.scale,
+                            clamp((rAge - 14.5) / 1.5, 0, 1) * visFade,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                }
+            } else if (va.kind === "butterfly" || va.kind === "dragonfly") {
+                const drawInsect = va.kind === "butterfly"
+                    ? drawButterfly
+                    : drawDragonfly;
+                if (runtime.visitorMode === "perched") {
+                    if (
+                        !reducedMotion &&
+                        pSpeed > 25 &&
+                        Math.hypot(
+                                anchorPt.x - pointer.x,
+                                anchorPt.y - pointer.y,
+                            ) < 92 * scene.scale
+                    ) {
+                        runtime.visitorMode = "departing";
+                        runtime.visitorStateStartSec = timeSec;
+                        runtime.visitorX = anchorPt.x;
+                        runtime.visitorY = anchorPt.y;
+                        runtime.visitorVx = -64;
+                        runtime.visitorVy = -54;
+                    } else {
+                        drawInsect(
+                            ctx,
+                            anchorPt.x,
+                            anchorPt.y,
+                            scene.scale,
+                            visFade,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else if (runtime.visitorMode === "departing") {
+                    const dAge = timeSec - runtime.visitorStateStartSec;
+                    if (dAge > 2.2) {
+                        runtime.visitorMode = "returning";
+                        runtime.visitorStateStartSec = timeSec;
+                    } else {
+                        runtime.visitorX += (runtime.visitorVx +
+                            Math.sin(dAge * 5) * 32) * scene.scale * dt;
+                        runtime.visitorY += runtime.visitorVy * scene.scale *
+                            dt;
+                        drawInsect(
+                            ctx,
+                            runtime.visitorX,
+                            runtime.visitorY,
+                            scene.scale,
+                            clamp(1 - dAge / 2.0, 0, 1) * visFade,
+                            palette,
+                            true,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                } else {
+                    const rAge = timeSec - runtime.visitorStateStartSec;
+                    if (rAge > 16) {
+                        runtime.visitorMode = "perched";
+                    } else if (rAge > 14.5) {
+                        drawInsect(
+                            ctx,
+                            anchorPt.x,
+                            anchorPt.y,
+                            scene.scale,
+                            clamp((rAge - 14.5) / 1.5, 0, 1) * visFade,
+                            palette,
+                            false,
+                            timeSec,
+                            reducedMotion,
+                        );
+                    }
+                }
+            } else {
+                const tipX = anchorPt.x + va.tipOffsetX;
+                const tipY = anchorPt.y + va.tipOffsetY;
+                if (!palette.isDark) {
+                    if (
+                        !reducedMotion &&
+                        runtime.dewState === "hanging" &&
+                        pSpeed > 25 &&
+                        Math.hypot(tipX - pointer.x, tipY - pointer.y) <
+                            84 * scene.scale
+                    ) {
+                        runtime.dewState = "falling";
+                        runtime.dewStateStartSec = timeSec;
+                        runtime.dewFallDist = 0;
+                    }
+                    drawDewdropAndRipple(
+                        ctx,
+                        tipX,
+                        tipY,
+                        runtime,
+                        timeSec,
+                        dt,
+                        scene.scale,
+                        palette,
+                        reducedMotion,
+                    );
+                }
+            }
+
+            if (palette.isDark) {
+                drawFireflies(
+                    ctx,
+                    va.fireflies,
+                    runtime,
+                    timeSec,
+                    scene.scale,
+                    palette,
+                    pointer,
+                    reducedMotion,
+                );
+            }
+        }
+
+        if (runtime.awakened && scene.rewardAnchor) {
+            drawRewardBloom(
+                ctx,
+                scene,
+                scene.rewardAnchor,
+                runtime,
+                timeSec,
+                reducedMotion,
+                windCalm,
+                frameSeq,
+                breezeImpulse,
+                palette,
+            );
+        }
+    }
+
+    if (mirrorLeft) {
+        ctx.restore();
+    }
+
+    if (!embedded && rawProgress > 0.85) {
+        const sealFade = easeOutCubic(clamp((rawProgress - 0.85) / 0.15, 0, 1));
+        const { term } = resolveSolarTerm(dateKey);
+        drawSolarTermSeal(
+            ctx,
+            width,
+            height,
+            scene.scale,
+            term,
+            mirrorLeft ? "left" : "right",
+            palette,
+            sealFade,
+        );
     }
 
     return nextDriftSpawn;

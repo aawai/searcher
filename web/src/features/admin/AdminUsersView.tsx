@@ -537,7 +537,7 @@ export function AdminUsersView() {
                 ? (
                     <div className="admin-surface admin-ua-state-card">
                         <EmptyState
-                            illustration="auth-or-error"
+                            illustration="load-error"
                             title="无法加载用户列表"
                             action={
                                 <Button

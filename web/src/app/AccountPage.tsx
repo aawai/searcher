@@ -656,7 +656,7 @@ export function AccountContent(
     if (!user) {
         const emptyContent = (
             <EmptyState
-                illustration="auth-or-error"
+                illustration="auth-required"
                 title="未登录"
                 action={
                     <Link

@@ -70,7 +70,7 @@ export class RouteErrorBoundary extends React.Component<
                 >
                     <div className="route-error-fallback">
                         <Illustration
-                            name="auth-or-error"
+                            name="load-error"
                             size="md"
                             className="system-illustration--utility"
                         />

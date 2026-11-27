@@ -58,9 +58,15 @@ Deno.test("wallpaper shared: parseWallpaperSource validates uploaded and remote 
     // 5. Built-in botanical scene helpers (separate from image wallpaper sources)
     assertEquals(normalizeBotanicalSpecies("auto"), "auto");
     assertEquals(normalizeBotanicalSpecies(" GINKGO "), "ginkgo");
+    assertEquals(normalizeBotanicalSpecies("orchid"), "orchid");
+    assertEquals(normalizeBotanicalSpecies(" BAMBOO "), "bamboo");
+    assertEquals(normalizeBotanicalSpecies("maple"), "maple");
     assertEquals(normalizeBotanicalSpecies("unknown"), null);
     assertEquals(parseBotanicalSceneSource("scene:botanical:auto"), "auto");
     assertEquals(parseBotanicalSceneSource("SCENE:BOTANICAL:GINKGO"), "ginkgo");
+    assertEquals(parseBotanicalSceneSource("scene:botanical:orchid"), "orchid");
+    assertEquals(parseBotanicalSceneSource("scene:botanical:bamboo"), "bamboo");
+    assertEquals(parseBotanicalSceneSource("scene:botanical:maple"), "maple");
     assertEquals(parseBotanicalSceneSource("scene:botanical:unknown"), null);
     assertEquals(parseBotanicalSceneSource("scene:other:auto"), null);
     assertEquals(parseWallpaperSource("scene:botanical:ginkgo"), null);

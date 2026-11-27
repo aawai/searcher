@@ -2,13 +2,21 @@ import { assert, assertEquals } from "@std/assert";
 import {
     buildBotanicalPalette,
     type ConcreteBotanicalSpecies,
+    createBotanicalRuntimeState,
     generateBotanicalScene,
     renderBotanicalFrame,
+    resolveBotanicalSpecies,
     resolveBotanicalViewport,
+    resolveDiurnalWindScale,
+    resolveSolarTerm,
+    triggerBotanicalResonance,
 } from "./botanical-engine.ts";
 
 const SPECIES: readonly ConcreteBotanicalSpecies[] = [
+    "orchid",
+    "bamboo",
     "ginkgo",
+    "maple",
     "eucalyptus",
     "plum",
     "fern",
@@ -178,6 +186,9 @@ function createMockCanvasContext(): {
     const ctx = {
         fillStyle: "",
         strokeStyle: "",
+        font: "",
+        textAlign: "center",
+        textBaseline: "middle",
         lineWidth: 1,
         lineCap: "butt",
         lineJoin: "miter",
@@ -216,6 +227,7 @@ function createMockCanvasContext(): {
         ) => checkNums(x, y, rx, ry, rot, s, e),
         fill: () => {},
         stroke: () => {},
+        fillText: (_text: string, x: number, y: number) => checkNums(x, y),
         setLineDash: () => {},
         createLinearGradient: (
             x0: number,
@@ -361,4 +373,343 @@ Deno.test("generateBotanicalScene (fern): uses minimalist 3-frond orchid-brush c
         fernPinnae.some((p) => p.feibai),
         "Expected dry-brush feibai fern pinnae",
     );
+});
+
+Deno.test("generateBotanicalScene: attaches visitorAnchor and rewardAnchor only for non-embedded scenes", () => {
+    for (const species of SPECIES) {
+        const desktop = generateBotanicalScene(
+            species,
+            1440,
+            900,
+            "2026-11-27",
+            false,
+        );
+        assert(
+            desktop.visitorAnchor !== null,
+            `${species}: expected visitorAnchor for non-embedded scene`,
+        );
+        assert(
+            desktop.rewardAnchor !== null,
+            `${species}: expected rewardAnchor for non-embedded scene`,
+        );
+
+        const embedded = generateBotanicalScene(
+            species,
+            1440,
+            810,
+            "2026-11-27",
+            true,
+        );
+        assertEquals(embedded.visitorAnchor, null);
+        assertEquals(embedded.rewardAnchor, null);
+    }
+});
+
+Deno.test("renderBotanicalFrame: renders micro-ecology visitors in light and dark modes with valid coords", () => {
+    for (const species of SPECIES) {
+        const scene = generateBotanicalScene(
+            species,
+            1440,
+            900,
+            "2026-11-27",
+            false,
+        );
+        for (const isDark of [false, true]) {
+            for (const reducedMotion of [false, true]) {
+                const runtime = createBotanicalRuntimeState();
+                const palette = buildBotanicalPalette(
+                    isDark,
+                    "#be123c",
+                    isDark ? "#f5f5f7" : "#1d1d1f",
+                );
+                const { ctx, assertFiniteCoords } = createMockCanvasContext();
+                renderBotanicalFrame({
+                    ctx,
+                    scene,
+                    width: 1440,
+                    height: 900,
+                    timeSec: 15,
+                    dt: 0.016,
+                    rawProgress: 1,
+                    reducedMotion,
+                    windCalm: 1,
+                    searchFocused: false,
+                    embedded: false,
+                    palette,
+                    pointer: {
+                        x: 1120,
+                        y: 640,
+                        vx: 320,
+                        vy: -40,
+                        lastT: 100,
+                        lastRustleSpawn: 0,
+                    },
+                    drifters: [],
+                    lastDriftSpawn: 0,
+                    frameSeq: 1,
+                    runtime,
+                });
+                assertFiniteCoords();
+            }
+        }
+    }
+});
+
+Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and tasks-cleared cleanly", () => {
+    for (const species of SPECIES) {
+        const scene = generateBotanicalScene(
+            species,
+            1440,
+            900,
+            "2026-11-27",
+            false,
+        );
+        const palette = buildBotanicalPalette(false, "#be123c", "#1d1d1f");
+        const runtime = createBotanicalRuntimeState();
+        const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
+            [];
+
+        // 1. theme-ripple at exact t=0 must have 0 impulse displacement, then wave at t+0.3
+        triggerBotanicalResonance(
+            runtime,
+            "theme-ripple",
+            10,
+            scene,
+            drifters,
+            1,
+            1,
+        );
+        const { ctx: ctx0, assertFiniteCoords: check0 } =
+            createMockCanvasContext();
+        renderBotanicalFrame({
+            ctx: ctx0,
+            scene,
+            width: 1440,
+            height: 900,
+            timeSec: 10,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: false,
+            windCalm: 1,
+            searchFocused: false,
+            embedded: false,
+            palette,
+            pointer: {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            },
+            drifters,
+            lastDriftSpawn: 0,
+            frameSeq: 1,
+            runtime,
+        });
+        check0();
+
+        const { ctx: ctx1, assertFiniteCoords: check1 } =
+            createMockCanvasContext();
+        renderBotanicalFrame({
+            ctx: ctx1,
+            scene,
+            width: 1440,
+            height: 900,
+            timeSec: 10.3,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: false,
+            windCalm: 1,
+            searchFocused: false,
+            embedded: false,
+            palette,
+            pointer: {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            },
+            drifters,
+            lastDriftSpawn: 0,
+            frameSeq: 2,
+            runtime,
+        });
+        check1();
+
+        // 2. quick-capture spawns accent/sub drifter even when searchFocused is true
+        triggerBotanicalResonance(
+            runtime,
+            "quick-capture",
+            12,
+            scene,
+            drifters,
+            0.14,
+            3,
+        );
+        assert(
+            drifters.length >= 1,
+            `${species}: expected quick-capture to spawn a drifter`,
+        );
+
+        // 3. tasks-cleared awakens the scene and renders reward blossom/shoot
+        triggerBotanicalResonance(
+            runtime,
+            "tasks-cleared",
+            14,
+            scene,
+            drifters,
+            1,
+            4,
+        );
+        assertEquals(runtime.awakened, true);
+        const { ctx: ctx2, assertFiniteCoords: check2 } =
+            createMockCanvasContext();
+        renderBotanicalFrame({
+            ctx: ctx2,
+            scene,
+            width: 1440,
+            height: 900,
+            timeSec: 15.2,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: false,
+            windCalm: 1,
+            searchFocused: true,
+            embedded: false,
+            palette,
+            pointer: {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            },
+            drifters,
+            lastDriftSpawn: 0,
+            frameSeq: 5,
+            runtime,
+        });
+        check2();
+    }
+});
+
+Deno.test("resolveSolarTerm & resolveBotanicalSpecies: selects seasonal pool and snow season accurately", () => {
+    const xiaxue = resolveSolarTerm("2026-11-27");
+    assertEquals(xiaxue.term, "小雪");
+    assertEquals(xiaxue.season, "winter");
+    assertEquals(xiaxue.isSnowSeason, true);
+
+    const springTerm = resolveSolarTerm("2026-04-06");
+    assertEquals(springTerm.season, "spring");
+    assertEquals(springTerm.isSnowSeason, false);
+    assert(
+        ["orchid", "fern", "eucalyptus"].includes(
+            resolveBotanicalSpecies("auto", "2026-04-06"),
+        ),
+    );
+
+    const summerTerm = resolveSolarTerm("2026-07-10");
+    assertEquals(summerTerm.season, "summer");
+    assert(
+        ["bamboo", "fern", "eucalyptus"].includes(
+            resolveBotanicalSpecies("auto", "2026-07-10"),
+        ),
+    );
+
+    const autumnTerm = resolveSolarTerm("2026-10-12");
+    assertEquals(autumnTerm.season, "autumn");
+    assert(
+        ["ginkgo", "maple", "bamboo"].includes(
+            resolveBotanicalSpecies("auto", "2026-10-12"),
+        ),
+    );
+
+    assert(
+        ["plum", "bamboo", "eucalyptus"].includes(
+            resolveBotanicalSpecies("auto", "2026-11-27"),
+        ),
+    );
+});
+
+Deno.test("buildBotanicalPalette & resolveDiurnalWindScale: supports dawn/day/dusk/night safely", () => {
+    for (const hour of [6, 12, 18, 23]) {
+        const pal = buildBotanicalPalette(
+            false,
+            "#be123c",
+            "#1d1d1f",
+            false,
+            hour,
+        );
+        assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.stroke("ink")));
+        assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.wash("sub")));
+        const scale = resolveDiurnalWindScale(hour);
+        assert(scale > 0 && scale <= 1);
+    }
+    assert(resolveDiurnalWindScale(23) < resolveDiurnalWindScale(12));
+});
+
+Deno.test("renderBotanicalFrame: supports left-mirrored layout, snow cushions, solar term seal, and search-submit", () => {
+    for (const species of SPECIES) {
+        const scene = generateBotanicalScene(
+            species,
+            1440,
+            900,
+            "2026-11-27",
+            false,
+        );
+        const runtime = createBotanicalRuntimeState();
+        const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
+            [];
+        triggerBotanicalResonance(
+            runtime,
+            "search-submit",
+            10,
+            scene,
+            drifters,
+            1,
+            1,
+        );
+        const palette = buildBotanicalPalette(
+            false,
+            "#be123c",
+            "#1d1d1f",
+            false,
+            18,
+        );
+        const { ctx, assertFiniteCoords } = createMockCanvasContext();
+        renderBotanicalFrame({
+            ctx,
+            scene,
+            width: 1440,
+            height: 900,
+            timeSec: 10.4,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: false,
+            windCalm: 1,
+            searchFocused: false,
+            embedded: false,
+            palette,
+            pointer: {
+                x: 240,
+                y: 620,
+                vx: 160,
+                vy: -20,
+                lastT: 100,
+                lastRustleSpawn: 0,
+            },
+            drifters,
+            lastDriftSpawn: 0,
+            frameSeq: 1,
+            runtime,
+            sceneSide: "left",
+            dateKey: "2026-11-27",
+            localHour: 18,
+        });
+        assertFiniteCoords();
+    }
 });

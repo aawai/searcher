@@ -184,6 +184,22 @@ Deno.test("preferences: authenticated appearance sync is isolated and partial up
         assertEquals(clearBgBody.data?.backgroundImage, null);
         assertEquals(clearBgBody.data?.botanicalScene, "ginkgo");
 
+        // New seasonal species (orchid, bamboo, maple) are accepted
+        for (const species of ["orchid", "bamboo", "maple"] as const) {
+            const spRes = await app.request("/api/preferences", {
+                method: "PATCH",
+                headers: {
+                    origin,
+                    cookie: first,
+                    "content-type": "application/json",
+                },
+                body: JSON.stringify({ botanicalScene: species }),
+            });
+            assertEquals(spRes.status, 200);
+            const spBody = await spRes.json() as Envelope<PreferencesDto>;
+            assertEquals(spBody.data?.botanicalScene, species);
+        }
+
         // Disabling botanicalScene independently
         const clearSceneRes = await app.request("/api/preferences", {
             method: "PATCH",

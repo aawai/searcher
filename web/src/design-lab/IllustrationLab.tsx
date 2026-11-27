@@ -27,7 +27,7 @@ export default function IllustrationLab() {
         <PageShell archetype="workbench" className="design-lab-page">
             <PageHeader
                 title="系统插画实验室"
-                description="预览「植物蓝图」系统插画在当前主题、强调色与三档尺寸下的实际 SVG 渲染效果。"
+                description="预览「博物套色版画」系统插画在当前主题、强调色与三档尺寸下的实际 SVG 渲染与指尖微交互。"
                 actions={<Link to="/design-lab">返回设计实验室</Link>}
             />
 
@@ -85,7 +85,7 @@ export default function IllustrationLab() {
                 </SettingsGroup>
             </Section>
 
-            <Section title="6 组核心场景（植物蓝图）">
+            <Section title="8 组核心场景（博物套色版画）">
                 <div
                     data-accent={previewAccent === "inherit"
                         ? undefined
@@ -100,6 +100,7 @@ export default function IllustrationLab() {
                     {ILLUSTRATION_CATALOG.map((item) => (
                         <div
                             key={item.name}
+                            className="design-lab-illustration-card"
                             style={{
                                 background: "var(--surface)",
                                 border: "1px solid var(--border)",
@@ -128,6 +129,7 @@ export default function IllustrationLab() {
                                 </div>
                             </div>
                             <div
+                                data-illustration-stage=""
                                 style={{
                                     background: "var(--background)",
                                     borderRadius: "var(--radius-control)",
@@ -142,6 +144,24 @@ export default function IllustrationLab() {
                                     name={item.name}
                                     size={size}
                                 />
+                                {item.name === "not-found" && (
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        data-compass-target="home"
+                                        render={<Link to="/" />}
+                                    >
+                                        返回首页
+                                    </Button>
+                                )}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: "var(--font-metadata-size)",
+                                    color: "var(--muted)",
+                                }}
+                            >
+                                {item.interactionHint}
                             </div>
                         </div>
                     ))}

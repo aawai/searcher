@@ -1,11 +1,19 @@
 .system-illustration {
+    --illustration-width: 192px;
+    --illustration-compass-deg: 165deg;
+    --illustration-lens-x: 0px;
+    --illustration-lens-y: 0px;
+    --illustration-critter-x: 0px;
+    --illustration-critter-y: 0px;
     display: block;
-    width: var(--illustration-width, 192px);
+    width: var(--illustration-width);
     height: auto;
     flex-shrink: 0;
     color: var(--foreground);
     user-select: none;
-    pointer-events: none;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent;
+    overflow: visible;
     transition: opacity 160ms ease-out;
 }
 
@@ -25,16 +33,275 @@
     margin-bottom: var(--space-4);
 }
 
+.system-illustration[data-interactive="click"] {
+    cursor: pointer;
+}
+
+/* --- Risograph overprint layer --- */
+.system-illustration .ill-overprint {
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- empty-documents: nib dip, page curl, ink ripple, literati seal --- */
+.system-illustration[data-illustration="empty-documents"] .ill-nib-group,
+.system-illustration[data-illustration="empty-documents"] .ill-page-curl {
+    transform-origin: 0px 0px;
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-illustration="empty-documents"]:hover .ill-nib-group {
+    transform: translate(0px, 1.8px) rotate(-3deg);
+}
+
+.system-illustration[data-illustration="empty-documents"]:hover .ill-page-curl {
+    transform: translate(-0.8px, -1.2px) rotate(-2.5deg);
+}
+
+.system-illustration .ill-ink-ripple {
+    transform-origin: 0px 0px;
+    opacity: 0;
+    transform: scale(0.35);
+}
+
+.system-illustration[data-pulse="active"] .ill-ink-ripple {
+    animation: ill-ink-ripple 620ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.system-illustration .ill-literati-seal {
+    transform-origin: 0px 0px;
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+    transition:
+        opacity 220ms ease-out,
+        transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-sealed="true"] .ill-literati-seal {
+    opacity: 1;
+    transform: scale(1) rotate(-3deg);
+}
+
+/* --- empty-apps: sprout sway --- */
+.system-illustration[data-illustration="empty-apps"] .ill-sprout-group {
+    transform-origin: 0px 0px;
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-illustration="empty-apps"]:hover .ill-sprout-group {
+    transform: rotate(-6deg) scale(1.04);
+}
+
+.system-illustration[data-illustration="empty-apps"][data-pulse="active"] .ill-sprout-group {
+    animation: ill-sprout-sway 640ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- empty-ask: astrolabe ring rotation & refracted glow --- */
+.system-illustration[data-illustration="empty-ask"] .ill-astrolabe-ring {
+    transform-origin: 0px 0px;
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-illustration="empty-ask"]:hover .ill-astrolabe-ring {
+    transform: rotate(18deg);
+}
+
+.system-illustration[data-illustration="empty-ask"][data-pulse="active"] .ill-astrolabe-ring {
+    transform: rotate(42deg);
+}
+
+.system-illustration[data-illustration="empty-ask"] .ill-prism-ray {
+    transition: opacity 240ms ease-out;
+}
+
+.system-illustration[data-illustration="empty-ask"]:hover .ill-prism-ray,
+.system-illustration[data-illustration="empty-ask"][data-pulse="active"] .ill-prism-ray {
+    opacity: 1;
+}
+
+/* --- empty-trash: ceramic bowl tumbler wobble & clean sparkle --- */
+.system-illustration[data-illustration="empty-trash"] .ill-bowl-group {
+    transform-origin: 0px 0px;
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-illustration="empty-trash"]:hover .ill-bowl-group {
+    transform: rotate(-2.5deg);
+}
+
+.system-illustration[data-illustration="empty-trash"][data-pulse="active"] .ill-bowl-group {
+    animation: ill-bowl-wobble 680ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration .ill-sparkle {
+    transform-origin: 0px 0px;
+    opacity: 0;
+    transform: scale(0.4);
+}
+
+.system-illustration[data-illustration="empty-trash"][data-pulse="active"] .ill-sparkle {
+    animation: ill-sparkle-pop 640ms ease-out forwards;
+}
+
+/* --- no-results: parallax loupe & peeking critter --- */
+.system-illustration[data-illustration="no-results"] .ill-loupe-group {
+    transform: translate(
+        var(--illustration-lens-x),
+        var(--illustration-lens-y)
+    );
+    transition: transform 120ms ease-out;
+    will-change: transform;
+}
+
+.system-illustration[data-illustration="no-results"] .ill-critter-group {
+    transform: translate(
+        var(--illustration-critter-x),
+        var(--illustration-critter-y)
+    );
+    transition: transform 160ms ease-out;
+    will-change: transform;
+}
+
+/* --- not-found: real-time homing compass needle --- */
+.system-illustration[data-illustration="not-found"] .ill-compass-needle {
+    transform-origin: 0px 0px;
+    transform: rotate(var(--illustration-compass-deg));
+    transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+}
+
+/* --- auth-required: swinging brass key --- */
+.system-illustration[data-illustration="auth-required"] .ill-key-pendulum {
+    transform-origin: 0px 0px;
+    transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration[data-illustration="auth-required"]:hover .ill-key-pendulum {
+    transform: rotate(-8deg);
+}
+
+.system-illustration[data-illustration="auth-required"][data-pulse="active"] .ill-key-pendulum {
+    animation: ill-key-swing 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --- load-error / auth-or-error: kintsugi shimmer & sprout --- */
+.system-illustration .ill-kintsugi-sprout {
+    transform-origin: 0px 0px;
+    transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-illustration:hover .ill-kintsugi-sprout {
+    transform: translate(0px, -1.2px) rotate(-4deg);
+}
+
+.system-illustration[data-pulse="active"] .ill-kintsugi-sprout {
+    animation: ill-sprout-sway 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ill-ink-ripple {
+    0% {
+        opacity: 0.9;
+        transform: scale(0.35);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1.65);
+    }
+}
+
+@keyframes ill-sprout-sway {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    30% {
+        transform: rotate(-9deg) scale(1.06);
+    }
+    65% {
+        transform: rotate(5deg) scale(1.02);
+    }
+    100% {
+        transform: rotate(0deg) scale(1);
+    }
+}
+
+@keyframes ill-bowl-wobble {
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-6deg);
+    }
+    55% {
+        transform: rotate(4deg);
+    }
+    80% {
+        transform: rotate(-2deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+@keyframes ill-sparkle-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.35) rotate(-15deg);
+    }
+    35% {
+        opacity: 1;
+        transform: scale(1.12) rotate(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.85) rotate(12deg) translateY(-2px);
+    }
+}
+
+@keyframes ill-key-swing {
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(-11deg);
+    }
+    55% {
+        transform: rotate(8deg);
+    }
+    80% {
+        transform: rotate(-4deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+/* High contrast & forced-colors: hide overprint tint and render crisp monochrome ink */
+[data-contrast="more"] .system-illustration .ill-overprint {
+    display: none;
+}
+
+@media (forced-colors: active) {
+    .system-illustration {
+        color: CanvasText;
+    }
+
+    .system-illustration .ill-overprint {
+        display: none;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .system-illustration,
     .system-illustration * {
         transition: none !important;
         animation: none !important;
     }
-}
 
-@media (forced-colors: active) {
-    .system-illustration {
-        color: CanvasText;
+    .system-illustration[data-illustration="no-results"] .ill-loupe-group,
+    .system-illustration[data-illustration="no-results"] .ill-critter-group {
+        transform: none !important;
+    }
+
+    .system-illustration[data-illustration="not-found"] .ill-compass-needle {
+        transform: rotate(165deg) !important;
     }
 }

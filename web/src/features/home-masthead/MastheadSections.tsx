@@ -42,6 +42,7 @@ import {
     DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu.tsx";
 import { focusContainer } from "../../components/ui/focus-recovery.ts";
+import { emitBotanicalResonance } from "../../components/wallpaper/botanical-resonance.ts";
 import type { HomeNoteItem } from "../home-layouts/home-notes.ts";
 import { formatRelativeNoteTime } from "./masthead-layout.ts";
 import {
@@ -162,12 +163,23 @@ export function MastheadSections({
                                     <Checkbox
                                         checked={task.checked}
                                         aria-label={task.text}
-                                        onCheckedChange={(nextChecked) =>
+                                        onCheckedChange={(nextChecked) => {
+                                            const checked = Boolean(
+                                                nextChecked,
+                                            );
+                                            if (!task.checked && checked) {
+                                                emitBotanicalResonance(
+                                                    tasksModel.open === 1
+                                                        ? "tasks-cleared"
+                                                        : "task-completed",
+                                                );
+                                            }
                                             onToggleTask(
                                                 task.note,
                                                 task.index,
-                                                Boolean(nextChecked),
-                                            )}
+                                                checked,
+                                            );
+                                        }}
                                     />
                                 </span>
                                 <span className="home-masthead__task-text">

@@ -25,6 +25,7 @@ import { accentLabel, AccentSwatches } from "./AccentSwatches.tsx";
 import { ThemeChoices } from "./ThemeChoices.tsx";
 import {
     BOTANICAL_SCENE_CHOICES,
+    BOTANICAL_SPECIES_NOTES,
     buildDarkWallpaperSelectionPatch,
     buildWallpaperHistoryItems,
     buildWallpaperSelectionPatch,
@@ -306,6 +307,7 @@ export function AppearancePicker(
                             <RadioGroupItem
                                 key={id}
                                 value={id}
+                                title={BOTANICAL_SPECIES_NOTES[id]}
                                 data-testid={`appearance-picker-scene-${id}`}
                             >
                                 {text}

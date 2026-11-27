@@ -28,6 +28,7 @@ import {
     usePagePresenter,
 } from "./page-host.tsx";
 import { PageShell } from "../components/searcher/PageShell.tsx";
+import { emitBotanicalResonance } from "../components/wallpaper/botanical-resonance.ts";
 import type { Reachability } from "../components/searcher/SearcherSearchInput.tsx";
 import { StatusBanner, UndoToast } from "../components/searcher/semantic.tsx";
 import {
@@ -1147,6 +1148,7 @@ export function DesktopHost(
         const effEngine = override?.engine ?? engine;
         const url = buildSearchUrl(effEngine, trimmed);
         if (!url) return;
+        emitBotanicalResonance("search-submit");
         if (user) {
             api(
                 "/api/search/history",
@@ -1547,6 +1549,7 @@ export function DesktopHost(
                 isRestoring: false,
             };
             setUndoQueue((items) => [...items, record]);
+            emitBotanicalResonance("quick-capture");
             return true;
         } catch (cause) {
             if (
