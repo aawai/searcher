@@ -1,23 +1,3 @@
-import type { GenerationConfig } from "./types.ts";
-
-/**
- * Returns true only when the user has overridden generation parameters
- * relative to the model's resolved baseline configuration.
- */
-export function hasCustomGenerationOverrides(
-    current: GenerationConfig,
-    baseline: GenerationConfig,
-    isReasoningStrict?: boolean,
-): boolean {
-    if (!isReasoningStrict) {
-        if (current.temperature !== baseline.temperature) return true;
-        if (current.topP !== baseline.topP) return true;
-    }
-    if (current.maxTokens !== baseline.maxTokens) return true;
-    if (current.reasoningEffort !== baseline.reasoningEffort) return true;
-    return false;
-}
-
 export interface HighlightSegment {
     text: string;
     match: boolean;

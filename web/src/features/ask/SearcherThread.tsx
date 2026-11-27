@@ -30,7 +30,6 @@ interface SearcherThreadProps {
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
-    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     toolsConfig: ToolsConfig;
     onChangeToolsConfig: (cfg: ToolsConfig) => void;
@@ -52,7 +51,6 @@ export function SearcherThread({
     selectedModelId,
     onSelectModel,
     generationConfig,
-    baselineGenerationConfig,
     onChangeGenerationConfig,
     toolsConfig,
     onChangeToolsConfig,
@@ -187,7 +185,6 @@ export function SearcherThread({
                                     selectedModelId={selectedModelId}
                                     onSelectModel={onSelectModel}
                                     generationConfig={generationConfig}
-                                    baselineGenerationConfig={baselineGenerationConfig}
                                     onChangeGenerationConfig={onChangeGenerationConfig}
                                     toolsConfig={toolsConfig}
                                     onChangeToolsConfig={onChangeToolsConfig}
@@ -251,7 +248,6 @@ export function SearcherThread({
                             selectedModelId={selectedModelId}
                             onSelectModel={onSelectModel}
                             generationConfig={generationConfig}
-                            baselineGenerationConfig={baselineGenerationConfig}
                             onChangeGenerationConfig={onChangeGenerationConfig}
                             toolsConfig={toolsConfig}
                             onChangeToolsConfig={onChangeToolsConfig}

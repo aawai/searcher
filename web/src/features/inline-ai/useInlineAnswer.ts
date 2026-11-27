@@ -70,7 +70,6 @@ export function useInlineAnswer(
     const [error, setError] = useState<string | null>(null);
     const [settings, setSettings] = useState<AnswerSettings | null>(null);
     const [pending, setPending] = useState<string | null>(null);
-    const [input, setInput] = useState("");
     const [, setHistory] = useState<AiConversationDto[]>([]);
     const generationEpochRef = useRef(0);
     const askRef = useRef(0);
@@ -107,8 +106,6 @@ export function useInlineAnswer(
         setConversation,
         setHistory,
         setError,
-        input,
-        setInput,
         newConvHistoryEnabled: true,
         newConvSystemInstruction: null,
         toolsConfig,

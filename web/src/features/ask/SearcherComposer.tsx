@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import {
     AttachmentPrimitive,
     ComposerPrimitive,
@@ -48,14 +49,12 @@ import {
 import { ReasoningSelector } from "./ReasoningSelector.tsx";
 import { GenerationSettings } from "./GenerationSettings.tsx";
 import { useAttachmentError } from "./assistant-runtime.tsx";
-import { hasCustomGenerationOverrides } from "./ask-ui-helpers.ts";
 interface SearcherComposerProps {
     models: AiModelDto[];
     modelOptions: ModelOption[];
     selectedModelId: string | null;
     onSelectModel: (id: string) => void;
     generationConfig: GenerationConfig;
-    baselineGenerationConfig?: GenerationConfig;
     onChangeGenerationConfig: (cfg: GenerationConfig) => void;
     toolsConfig: ToolsConfig;
     onChangeToolsConfig: (cfg: ToolsConfig) => void;
@@ -120,7 +119,6 @@ export function SearcherComposer({
     selectedModelId,
     onSelectModel,
     generationConfig,
-    baselineGenerationConfig = {},
     onChangeGenerationConfig,
     toolsConfig,
     onChangeToolsConfig,
@@ -138,23 +136,45 @@ export function SearcherComposer({
 
     const aui = useAui();
     const { attachmentError, clearAttachmentError } = useAttachmentError();
+    const [isDraggingFiles, setIsDraggingFiles] = useState(false);
+    const dragDepthRef = useRef(0);
     const isComposerEmpty = useAuiState((s) =>
         s.composer.text.trim().length === 0 &&
         s.composer.attachments.length === 0
     );
 
-    const handleDragOver = (e: React.DragEvent) => {
-        if (
+    const hasFileTransfer = (e: React.DragEvent) =>
+        Boolean(
             e.dataTransfer &&
-            (e.dataTransfer.types?.includes("Files") ||
-                (e.dataTransfer.files && e.dataTransfer.files.length > 0))
-        ) {
+                (e.dataTransfer.types?.includes("Files") ||
+                    (e.dataTransfer.files && e.dataTransfer.files.length > 0)),
+        );
+
+    const handleDragEnter = (e: React.DragEvent) => {
+        if (!hasFileTransfer(e)) return;
+        e.preventDefault();
+        dragDepthRef.current += 1;
+        setIsDraggingFiles(true);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (hasFileTransfer(e)) {
             e.preventDefault();
             e.dataTransfer.dropEffect = "copy";
         }
     };
 
+    const handleDragLeave = (e: React.DragEvent) => {
+        if (!hasFileTransfer(e)) return;
+        dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+        if (dragDepthRef.current === 0) {
+            setIsDraggingFiles(false);
+        }
+    };
+
     const handleDrop = async (e: React.DragEvent) => {
+        dragDepthRef.current = 0;
+        setIsDraggingFiles(false);
         const files = e.dataTransfer?.files
             ? Array.from(e.dataTransfer.files)
             : [];
@@ -188,18 +208,24 @@ export function SearcherComposer({
     ) {
         activeTools.push({ key: "webSearch", label: "联网搜索" });
     }
-    const hasActiveSettings = hasCustomGenerationOverrides(
-        generationConfig,
-        baselineGenerationConfig,
-        activeModel?.isReasoningStrict,
-    );
     return (
         <div className="ask-composer-container">
             <ComposerPrimitive.Root
                 className="ask-composer-surface"
+                data-dragging={isDraggingFiles ? "true" : undefined}
+                onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             >
+                {isDraggingFiles && (
+                    <div
+                        className="ask-composer__drop-hint"
+                        aria-hidden="true"
+                    >
+                        释放以添加附件
+                    </div>
+                )}
                 {/* Assistant-UI Attachments Preview */}
                 <div className="ask-composer__attachments-bar">
                     <ComposerPrimitive.Attachments
@@ -331,12 +357,6 @@ export function SearcherComposer({
                                         className="icon-md"
                                         aria-hidden="true"
                                     />
-                                    {hasActiveSettings && (
-                                        <span
-                                            className="ask-composer__active-dot"
-                                            aria-hidden="true"
-                                        />
-                                    )}
                                 </TooltipTrigger>
                                 <TooltipContent>更多设置</TooltipContent>
                             </Tooltip>
@@ -548,6 +568,10 @@ export function SearcherComposer({
                             onChange={onSelectModel}
                             align="end"
                         />
+                        <span
+                            className="ask-composer__toolbar-divider"
+                            aria-hidden="true"
+                        />
                         <ThreadPrimitive.If running={false}>
                             <Tooltip>
                                 <ComposerPrimitive.Send asChild>
@@ -583,16 +607,17 @@ export function SearcherComposer({
                                     <TooltipTrigger
                                         render={
                                             <Button
-                                                variant="outline"
+                                                variant="default"
                                                 size="icon"
-                                                className="ask-composer__send-btn"
+                                                className="ask-composer__send-btn ask-composer__stop-btn"
                                                 aria-label="停止生成"
                                             />
                                         }
                                     >
                                         <Square
                                             size="1em"
-                                            className="icon-md"
+                                            fill="currentColor"
+                                            className="ask-composer__stop-icon"
                                             aria-hidden="true"
                                         />
                                     </TooltipTrigger>

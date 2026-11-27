@@ -1,73 +1,8 @@
 import { assertEquals } from "@std/assert";
 import {
-    hasCustomGenerationOverrides,
     shouldUseVisualViewportHeight,
     splitHighlightSegments,
 } from "./ask-ui-helpers.ts";
-
-Deno.test("hasCustomGenerationOverrides returns false when config matches baseline", () => {
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { reasoningEffort: "medium" },
-            { reasoningEffort: "medium" },
-        ),
-        false,
-    );
-    assertEquals(
-        hasCustomGenerationOverrides({}, {}),
-        false,
-    );
-});
-
-Deno.test("hasCustomGenerationOverrides detects explicit sampling, length, and reasoning overrides", () => {
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { reasoningEffort: "high" },
-            { reasoningEffort: "medium" },
-        ),
-        true,
-    );
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { reasoningEffort: "medium", temperature: 0.3 },
-            { reasoningEffort: "medium" },
-        ),
-        true,
-    );
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { topP: 0.9 },
-            {},
-        ),
-        true,
-    );
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { maxTokens: 2048 },
-            {},
-        ),
-        true,
-    );
-});
-
-Deno.test("hasCustomGenerationOverrides ignores temperature and topP for strict reasoning models", () => {
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { reasoningEffort: "medium", temperature: 0.7, topP: 1 },
-            { reasoningEffort: "medium" },
-            true,
-        ),
-        false,
-    );
-    assertEquals(
-        hasCustomGenerationOverrides(
-            { reasoningEffort: "high", temperature: 0.7 },
-            { reasoningEffort: "medium" },
-            true,
-        ),
-        true,
-    );
-});
 
 Deno.test("splitHighlightSegments returns single unmatched segment for empty query", () => {
     assertEquals(

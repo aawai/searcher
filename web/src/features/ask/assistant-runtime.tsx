@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 interface AttachmentErrorContextValue {
     attachmentError: string | null;
@@ -26,13 +33,18 @@ import type { AiMessageDto, AttachmentInput } from "./types.ts";
 import { convertAiMessageToThreadMessageLike } from "./assistant-message-adapter.ts";
 import { SearcherAttachmentAdapter } from "./SearcherAttachmentAdapter.ts";
 
+export interface ComposerDraftCommand {
+    text: string;
+    version: number;
+}
+
 interface SearcherAssistantRuntimeProps {
     children: React.ReactNode;
     isRunning: boolean;
     messages: AiMessageDto[];
     activeLeafMessageId?: string | null;
     supportsVision?: boolean;
-    draft: string;
+    draftCommand: ComposerDraftCommand;
     draftKey: number;
     onDraftChange: (text: string) => void;
     onAttachmentCountChange?: (count: number) => void;
@@ -52,7 +64,7 @@ export function SearcherAssistantRuntimeProvider({
     messages,
     activeLeafMessageId = null,
     supportsVision = true,
-    draft,
+    draftCommand,
     draftKey,
     onDraftChange,
     onAttachmentCountChange,
@@ -183,23 +195,34 @@ export function SearcherAssistantRuntimeProvider({
         },
     });
 
+    const lastAppliedDraftKeyRef = useRef(draftKey);
     useEffect(() => {
+        if (draftKey === lastAppliedDraftKeyRef.current) return;
+        lastAppliedDraftKeyRef.current = draftKey;
         void runtime.thread.composer.clearAttachments();
         attachmentAdapter.reset();
     }, [runtime, attachmentAdapter, draftKey]);
 
+    const lastAppliedDraftVersionRef = useRef(0);
     useEffect(() => {
-        if (runtime.thread.composer.getState().text !== draft) {
-            runtime.thread.composer.setText(draft);
+        if (draftCommand.version === lastAppliedDraftVersionRef.current) return;
+        lastAppliedDraftVersionRef.current = draftCommand.version;
+        if (runtime.thread.composer.getState().text !== draftCommand.text) {
+            runtime.thread.composer.setText(draftCommand.text);
         }
-    }, [runtime, draft]);
+    }, [runtime, draftCommand]);
+
+    const onDraftChangeRef = useRef(onDraftChange);
+    onDraftChangeRef.current = onDraftChange;
+    const onAttachmentCountChangeRef = useRef(onAttachmentCountChange);
+    onAttachmentCountChangeRef.current = onAttachmentCountChange;
 
     useEffect(() =>
         runtime.thread.composer.subscribe(() => {
             const state = runtime.thread.composer.getState();
-            onDraftChange(state.text);
-            onAttachmentCountChange?.(state.attachments.length);
-        }), [runtime, onDraftChange, onAttachmentCountChange]);
+            onDraftChangeRef.current(state.text);
+            onAttachmentCountChangeRef.current?.(state.attachments.length);
+        }), [runtime]);
 
     const errorContextValue = useMemo(() => ({
         attachmentError,

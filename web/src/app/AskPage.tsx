@@ -27,6 +27,7 @@ import {
 import "../features/ask/ask-workspace.css";
 import { ConversationSidebar } from "../features/ask/ConversationSidebar.tsx";
 import { ConversationWorkspace } from "../features/ask/ConversationWorkspace.tsx";
+import type { ComposerDraftCommand } from "../features/ask/assistant-runtime.tsx";
 import type {
     AiCapabilitiesDto,
     ConversationFullData,
@@ -101,7 +102,21 @@ function AskWorkspaceContent(
     const handedOver = (location.state as Partial<ExpandedAnswerState> | null)
         ?.conversation;
 
-    const [input, setInput] = useState("");
+    const inputRef = useRef("");
+    const [draftCommand, setDraftCommand] = useState<ComposerDraftCommand>({
+        text: "",
+        version: 0,
+    });
+    const handleDraftChange = useCallback((text: string) => {
+        inputRef.current = text;
+    }, []);
+    const replaceDraft = useCallback((text: string) => {
+        inputRef.current = text;
+        setDraftCommand((prev) => ({
+            text,
+            version: prev.version + 1,
+        }));
+    }, []);
     const [models, setModels] = useState<AiModelDto[]>([]);
     const [providers, setProviders] = useState<AiProviderDto[]>([]);
     const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
@@ -171,8 +186,7 @@ function AskWorkspaceContent(
         setConversation,
         setHistory,
         setError,
-        input,
-        setInput,
+        setInput: replaceDraft,
         newConvHistoryEnabled,
         newConvSystemInstruction,
         toolsConfig,
@@ -187,8 +201,6 @@ function AskWorkspaceContent(
     // What leaving would lose. Read when a decision is needed, never rendered.
     const streamingRef = useRef(isStreaming);
     streamingRef.current = isStreaming;
-    const inputRef = useRef(input);
-    inputRef.current = input;
     const attachmentsRef = useRef(0);
     const reportAttachments = useCallback((count: number) => {
         attachmentsRef.current = count;
@@ -431,9 +443,9 @@ function AskWorkspaceContent(
     // Save and switch drafts
     function switchDraft(nextConversationId: string | null) {
         const currentKey = conversation?.conversation.id ?? "new";
-        draftsRef.current[currentKey] = input;
+        draftsRef.current[currentKey] = inputRef.current;
         const nextKey = nextConversationId ?? "new";
-        setInput(draftsRef.current[nextKey] ?? "");
+        replaceDraft(draftsRef.current[nextKey] ?? "");
         setDraftKey((key) => key + 1);
     }
 
@@ -665,13 +677,6 @@ function AskWorkspaceContent(
         provider: providers.find((p) => p.id === model.providerId)?.name ??
             "服务商",
     }));
-    const activeModel = models.find((m) => m.id === selectedModelId);
-    const baselineGenerationConfig = activeModel
-        ? resolveModelSwitchGenerationConfig({
-            targetModel: activeModel,
-            userDefaults,
-        })
-        : {};
     const desktopSidebarCollapsed = !host.narrow && sidebarCollapsed;
 
     return (
@@ -779,15 +784,14 @@ function AskWorkspaceContent(
                             conversation={conversation?.conversation ?? null}
                             allMessages={conversation?.messages ?? []}
                             isStreaming={isStreaming}
-                            draft={input}
+                            draftCommand={draftCommand}
                             draftKey={draftKey}
-                            onDraftChange={setInput}
+                            onDraftChange={handleDraftChange}
                             models={models}
                             modelOptions={modelOptions}
                             selectedModelId={selectedModelId}
                             onSelectModel={handleSelectModel}
                             generationConfig={generationConfig}
-                            baselineGenerationConfig={baselineGenerationConfig}
                             onChangeGenerationConfig={setGenerationConfig}
                             onSaveDefaultGenerationConfig={(config) =>
                                 saveGenerationDefault(config)}

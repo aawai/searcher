@@ -591,16 +591,21 @@
 }
 
 .ask-composer-surface {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-2) var(--space-3);
+    padding: 12px 12px 10px;
     border: 1px solid transparent;
-    border-radius: var(--radius-lg);
+    border-radius: 22px;
     background: var(--surface-l3);
-    box-shadow: inset 0 0 0 1px var(--border), var(--shadow-l2);
+    box-shadow:
+        inset 0 0 0 1px rgb(29 29 31 / 0.13),
+        0 1px 2px rgb(15 23 42 / 0.04),
+        0 10px 26px -12px rgb(15 23 42 / 0.12);
     transition: border-color var(--motion-fast) var(--ease-standard),
-        box-shadow var(--motion-fast) var(--ease-standard);
+        box-shadow var(--motion-fast) var(--ease-standard),
+        background-color var(--motion-fast) var(--ease-standard);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -609,16 +614,84 @@
     }
 }
 
+@media (hover: hover) {
+    .ask-composer-surface:not(:has(.ask-composer__textarea:focus-visible)):hover {
+        box-shadow:
+            inset 0 0 0 1px rgb(29 29 31 / 0.21),
+            0 2px 4px rgb(15 23 42 / 0.05),
+            0 12px 30px -12px rgb(15 23 42 / 0.15);
+    }
+}
+
 .ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
-    border-color: color-mix(in oklab, var(--ring) 52%, transparent);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 12%, transparent),
-        var(--shadow-l2);
+    border-color: color-mix(in oklab, var(--ring) 54%, transparent);
+    box-shadow:
+        0 0 0 3px color-mix(in oklab, var(--ring) 11%, transparent),
+        0 2px 6px rgb(15 23 42 / 0.05),
+        0 14px 32px -12px color-mix(in oklab, var(--ring) 15%, rgb(15 23 42 / 0.14));
+}
+
+[data-theme="dark"]:not([data-contrast="more"]) .ask-composer-surface {
+    background: color-mix(in srgb, var(--foreground) 4.5%, var(--surface-l3));
+    box-shadow:
+        inset 0 0 0 1px rgb(255 255 255 / 0.12),
+        inset 0 1px 0 rgb(255 255 255 / 0.06),
+        0 14px 34px -12px rgb(0 0 0 / 0.68),
+        0 2px 8px -2px rgb(0 0 0 / 0.36);
+}
+
+@media (hover: hover) {
+    [data-theme="dark"]:not([data-contrast="more"]) .ask-composer-surface:not(:has(.ask-composer__textarea:focus-visible)):hover {
+        box-shadow:
+            inset 0 0 0 1px rgb(255 255 255 / 0.18),
+            inset 0 1px 0 rgb(255 255 255 / 0.06),
+            0 16px 36px -12px rgb(0 0 0 / 0.72),
+            0 2px 8px -2px rgb(0 0 0 / 0.40);
+    }
+}
+
+[data-theme="dark"]:not([data-contrast="more"]) .ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
+    border-color: color-mix(in oklab, var(--ring) 62%, transparent);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.10),
+        0 0 0 3px color-mix(in oklab, var(--ring) 18%, transparent),
+        0 14px 36px -12px rgb(0 0 0 / 0.72);
+}
+
+[data-contrast="more"] .ask-composer-surface {
+    background: var(--surface-l3);
+    box-shadow: inset 0 0 0 1px var(--border-control), var(--shadow-l2);
 }
 
 [data-contrast="more"] .ask-composer-surface:has(.ask-composer__textarea:focus-visible) {
     border-color: transparent;
     outline: 2px solid var(--ring);
     box-shadow: var(--shadow-l2);
+}
+
+.ask-composer-surface[data-dragging="true"] {
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 5%, var(--surface-l3));
+    box-shadow:
+        0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent),
+        var(--shadow-l2);
+}
+
+.ask-composer__drop-hint {
+    position: absolute;
+    inset: 0;
+    z-index: var(--elevation-local-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    background: color-mix(in oklab, var(--surface-l3) 84%, transparent);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    color: var(--accent);
+    font-size: var(--font-body-size);
+    font-weight: var(--font-label-weight);
+    pointer-events: none;
 }
 
 @media (forced-colors: active) {
@@ -634,17 +707,18 @@
 .ask-composer__textarea {
     display: block;
     width: 100%;
-    min-height: var(--row-min-height);
-    max-height: 180px;
+    min-height: 48px;
+    max-height: 200px;
     margin: 0;
-    padding: var(--space-2);
+    padding: 4px 6px 8px;
     border: 0;
     outline: none;
     background: transparent;
     color: var(--foreground);
     font-family: inherit;
-    font-size: var(--font-body-size);
-    line-height: var(--font-body-line-height);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    caret-color: var(--accent);
     resize: none;
     overflow-y: auto;
 }
@@ -656,7 +730,8 @@
 .ask-composer__attachments-bar {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1);
+    gap: 6px;
+    padding: 0 4px 4px;
 }
 
 .ask-composer__attachments-bar:empty {
@@ -666,18 +741,24 @@
 .ask-composer__attachment-chip {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: 6px;
     max-width: 100%;
-    min-height: var(--control-compact-height);
-    padding-left: var(--space-2);
-    border-radius: var(--control-radius);
-    background: var(--surface-soft);
+    min-height: 30px;
+    padding: 3px 4px 3px 8px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--foreground) 4.5%, transparent);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
 }
 
+.ask-composer__attachment-chip:has(.ask-attachment-preview) {
+    padding-left: 4px;
+}
+
 .ask-composer__attachment-chip.is-error {
     background: color-mix(in srgb, var(--danger) 10%, var(--surface-l3));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 24%, transparent);
     color: var(--danger);
 }
 
@@ -685,7 +766,15 @@
     flex-shrink: 0;
 }
 
-.ask-attachment-preview,
+.ask-attachment-preview {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 0.5px var(--border);
+    object-fit: cover;
+}
+
 .ask-user-attachment-img {
     flex-shrink: 0;
     width: var(--icon-lg);
@@ -712,11 +801,14 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
-    /* --radius minus the --space-1 inset leaves the close button's 8px. */
-    border-radius: var(--radius);
+    margin: 0 4px 4px;
+    padding: 6px 6px 6px 12px;
+    border-radius: 12px;
     background: color-mix(in srgb, var(--danger) 10%, var(--surface-l3));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--danger) 24%, transparent);
     color: var(--danger);
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
 }
 
 .ask-composer__attachment-error > svg {
@@ -733,36 +825,42 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2) 0;
+    gap: 6px;
+    padding: 0 4px 4px;
 }
 
 .ask-composer__tool-chip {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    min-height: var(--control-compact-height);
-    padding: 0 var(--space-2);
+    min-height: 26px;
+    padding: 0 8px 0 10px;
     border: 0;
     border-radius: var(--radius-pill);
-    background: var(--surface-soft);
-    color: var(--foreground);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--accent);
     font-size: var(--font-metadata-size);
     line-height: var(--font-metadata-line-height);
     font-weight: var(--font-label-weight);
     cursor: pointer;
-    transition: background-color var(--motion-fast) var(--ease-standard);
+    transition: background-color var(--motion-fast) var(--ease-standard),
+        color var(--motion-fast) var(--ease-standard);
 }
 
 @media (hover: hover) {
     .ask-composer__tool-chip:hover {
-        background: var(--surface-hover);
+        background: color-mix(in srgb, var(--accent) 15%, var(--surface-l3));
     }
 }
 
 .ask-composer__tool-chip:focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
+}
+
+[data-contrast="more"] .ask-composer__tool-chip {
+    border: 1px solid var(--accent);
 }
 
 @media (any-pointer: coarse), (hover: none) {
@@ -782,6 +880,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
+    padding-top: 2px;
 }
 
 .ask-composer__tools-left {
@@ -796,9 +895,18 @@
     flex: 1 1 auto;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--space-2);
+    gap: var(--space-1);
     min-width: 0;
     margin-left: auto;
+}
+
+.ask-composer__toolbar-divider {
+    flex-shrink: 0;
+    width: 1px;
+    height: 14px;
+    margin-inline: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--border);
 }
 
 :is([data-slot="button"], [data-slot="popover-trigger"]).ask-composer__icon-btn {
@@ -808,32 +916,20 @@
     min-width: var(--space-7);
     height: var(--space-7);
     min-height: var(--space-7);
+    border-radius: var(--radius-pill);
     color: var(--muted);
 }
 
 @media (hover: hover) {
     :is([data-slot="button"], [data-slot="popover-trigger"]).ask-composer__icon-btn:hover {
+        background: var(--surface-hover);
         color: var(--foreground);
     }
 }
 
 :is([data-slot="button"], [data-slot="popover-trigger"]).ask-composer__icon-btn[aria-expanded="true"] {
+    background: var(--surface-soft);
     color: var(--foreground);
-}
-
-:is([data-slot="button"], [data-slot="popover-trigger"]).ask-composer__icon-btn.is-active {
-    color: var(--accent);
-}
-
-.ask-composer__active-dot {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 6px;
-    height: 6px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    box-shadow: 0 0 0 1.5px var(--surface-l3);
 }
 
 [data-slot="button"].ask-composer__send-btn {
@@ -842,14 +938,18 @@
     min-width: var(--space-7);
     height: var(--space-7);
     min-height: var(--space-7);
-    border-radius: var(--shape-button-radius);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.14), inset 0 1px 0 rgb(255 255 255 / 0.18);
     transition: background-color var(--motion-fast) var(--ease-standard),
-        color var(--motion-fast) var(--ease-standard);
+        color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard),
+        opacity var(--motion-fast) var(--ease-standard);
 }
 
 [data-slot="button"].ask-composer__send-btn[data-empty="true"] {
     background: var(--surface-soft);
-    color: var(--muted);
+    color: color-mix(in srgb, var(--muted) 82%, transparent);
+    box-shadow: none;
 }
 
 @media (hover: hover) {
@@ -864,22 +964,42 @@
     color: var(--foreground);
 }
 
+[data-slot="button"].ask-composer__stop-btn {
+    background: var(--foreground);
+    color: var(--surface-solid);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.14);
+}
+
+@media (hover: hover) {
+    [data-slot="button"].ask-composer__stop-btn:hover {
+        background: var(--foreground);
+        opacity: 0.88;
+    }
+}
+
+.ask-composer__stop-icon {
+    width: 11px;
+    height: 11px;
+}
+
 /* Model & reasoning triggers: borderless ghost pill beside the send button. */
 .ask-composer-surface .model-trigger {
     min-width: 0;
     max-width: min(240px, 44vw);
-    height: var(--control-compact-height);
-    min-height: var(--control-compact-height);
-    padding-inline: 10px 7px;
-    gap: var(--space-half);
+    height: var(--space-7);
+    min-height: var(--space-7);
+    padding-inline: 10px 8px;
+    gap: var(--space-1);
     border-radius: var(--radius-pill);
     background: transparent;
     color: var(--foreground);
     font-size: 0.8125rem;
     line-height: 1.25;
     font-weight: var(--font-label-weight);
+    letter-spacing: -0.005em;
     transition: background-color var(--motion-fast) var(--ease-standard),
-        color var(--motion-fast) var(--ease-standard);
+        color var(--motion-fast) var(--ease-standard),
+        box-shadow var(--motion-fast) var(--ease-standard);
 }
 
 .ask-composer-surface .model-trigger > svg {
@@ -894,16 +1014,18 @@
     height: 12px;
 }
 
-@supports (text-box-trim: trim-both) {
+@supports (text-box-trim: trim-both) and (text-box-edge: cap alphabetic) {
     .ask-composer-surface .model-pill-label {
         text-box-trim: trim-both;
-        text-box-edge: text;
+        text-box-edge: cap alphabetic;
+        padding-block: 0.35em;
     }
 }
 
 @media (hover: hover) {
     .ask-composer-surface .model-trigger:hover {
         background: var(--surface-hover);
+        box-shadow: inset 0 0 0 1px var(--border-subtle);
         color: var(--foreground);
     }
 
@@ -913,7 +1035,8 @@
 }
 
 .ask-composer-surface .model-trigger:is([data-popup-open], [aria-expanded="true"]) {
-    background: var(--surface-hover);
+    background: var(--surface-soft);
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
     color: var(--foreground);
 }
 
@@ -950,6 +1073,15 @@
 }
 
 @media (max-width: 520px) {
+    .ask-composer-surface {
+        border-radius: var(--radius-lg);
+        padding: 10px 10px 8px;
+    }
+
+    .ask-composer__toolbar-divider {
+        margin-inline: 2px;
+    }
+
     .ask-composer-surface .model-trigger {
         max-width: min(150px, 42vw);
     }
