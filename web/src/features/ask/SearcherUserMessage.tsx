@@ -33,6 +33,7 @@ export function SearcherUserMessage() {
     return (
         <MessagePrimitive.Root
             className="ask-user-msg-container"
+            data-message-id={rawMessage?.id}
             aria-label="用户提问"
         >
             <div

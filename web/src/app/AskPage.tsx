@@ -4,8 +4,13 @@ import type {
 } from "@shared/contracts.ts";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftOpen } from "lucide-react";
 import { Button } from "../components/ui/button.tsx";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "../components/ui/tooltip.tsx";
 import { resolveModelSwitchGenerationConfig } from "../../../src/features/ai/reasoning.ts";
 import type {
     AiConversationDto,
@@ -135,6 +140,7 @@ function AskWorkspaceContent(
 
     // UI state
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [leaseOwner] = useState(() => new TemporaryLeaseOwner(setError));
     const [undoConversation, setUndoConversation] = useState<
@@ -640,7 +646,9 @@ function AskWorkspaceContent(
                         action={
                             <Button
                                 variant="default"
-                                render={<Link to={authPath("login", location)} />}
+                                render={
+                                    <Link to={authPath("login", location)} />
+                                }
                             >
                                 登录后提问
                             </Button>
@@ -657,6 +665,14 @@ function AskWorkspaceContent(
         provider: providers.find((p) => p.id === model.providerId)?.name ??
             "服务商",
     }));
+    const activeModel = models.find((m) => m.id === selectedModelId);
+    const baselineGenerationConfig = activeModel
+        ? resolveModelSwitchGenerationConfig({
+            targetModel: activeModel,
+            userDefaults,
+        })
+        : {};
+    const desktopSidebarCollapsed = !host.narrow && sidebarCollapsed;
 
     return (
         <PageShell
@@ -664,6 +680,9 @@ function AskWorkspaceContent(
             archetype="workbench"
             className="ask-page-shell"
             data-host-narrow={host.narrow ? "true" : undefined}
+            data-sidebar-collapsed={desktopSidebarCollapsed
+                ? "true"
+                : undefined}
         >
             <div className="ask-workspace-layout">
                 <ConversationSidebar
@@ -671,6 +690,7 @@ function AskWorkspaceContent(
                     activeId={conversation?.conversation.id ?? null}
                     drawerOpen={drawerOpen}
                     onDrawerOpenChange={setDrawerOpen}
+                    onCollapse={() => setSidebarCollapsed(true)}
                     onSelectConversation={(id) => {
                         if (id === routeId) void openConversation(id);
                         else navigate(routes.askConversation(id));
@@ -700,6 +720,34 @@ function AskWorkspaceContent(
                                     >
                                         <Menu size="1em" className="icon-md" />
                                     </Button>
+                                    {desktopSidebarCollapsed && (
+                                        <Tooltip>
+                                            <TooltipTrigger
+                                                render={
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="ask-header__icon-btn ask-header__sidebar-expand"
+                                                        onClick={() =>
+                                                            setSidebarCollapsed(
+                                                                false,
+                                                            )}
+                                                        aria-label="展开历史侧栏"
+                                                    />
+                                                }
+                                            >
+                                                <PanelLeftOpen
+                                                    size="1em"
+                                                    className="icon-md"
+                                                    aria-hidden="true"
+                                                />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                展开历史侧栏
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    )}
                                     <h1 className="sr-only">AI 问答</h1>
                                 </div>
                             </header>
@@ -739,6 +787,7 @@ function AskWorkspaceContent(
                             selectedModelId={selectedModelId}
                             onSelectModel={handleSelectModel}
                             generationConfig={generationConfig}
+                            baselineGenerationConfig={baselineGenerationConfig}
                             onChangeGenerationConfig={setGenerationConfig}
                             onSaveDefaultGenerationConfig={(config) =>
                                 saveGenerationDefault(config)}
@@ -792,6 +841,8 @@ function AskWorkspaceContent(
                                 });
                             }}
                             onOpenDrawer={() => setDrawerOpen(true)}
+                            sidebarCollapsed={desktopSidebarCollapsed}
+                            onExpandSidebar={() => setSidebarCollapsed(false)}
                             onRenameConversation={(newTitle) =>
                                 conversation
                                     ? renameConversation(
