@@ -198,6 +198,10 @@ export function checkBundle(rootDir = Deno.cwd()): {
         "editor-vendor",
         "src/features/markdown-editor/runtime",
         "src/features/documents/DocumentEditor",
+        "src/components/wallpaper/BotanicalSceneCanvas",
+        "src/components/wallpaper/botanical/",
+        "botanical-engine",
+        "BotanicalSceneCanvas",
     ];
 
     for (const key of initialGraphKeys) {
@@ -418,6 +422,15 @@ export function checkBundle(rootDir = Deno.cwd()): {
                         "Editor framework in initial graph: " + module.id,
                     );
                 }
+            }
+            if (
+                initialFilesSet.has(file) &&
+                /components\/wallpaper\/(?:BotanicalSceneCanvas|botanical\/|botanical-engine)/
+                    .test(module.id)
+            ) {
+                errors.push(
+                    "Botanical canvas runtime in initial graph: " + module.id,
+                );
             }
             if (
                 noteFiles.has(file) &&

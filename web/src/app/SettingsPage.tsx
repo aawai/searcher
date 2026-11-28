@@ -72,8 +72,14 @@ import { WallpaperSurface } from "../components/wallpaper/WallpaperSurface.tsx";
 import { WallpaperStageContextPreview } from "../components/wallpaper/WallpaperStageContextPreview.tsx";
 import { useWallpaperAccent } from "../components/wallpaper/wallpaper-accent-source.ts";
 import { resolveBackdropPolarity } from "../design-system/wallpaper-accent.ts";
+import { BotanicalSceneChoices } from "../components/searcher/BotanicalSceneChoices.tsx";
 import {
-    BOTANICAL_SCENE_CHOICES,
+    formatLocalDateKey,
+    resolveBotanicalSpecies,
+    resolveSolarTerm,
+} from "../components/wallpaper/solar-terms.ts";
+import {
+    BOTANICAL_SPECIES_LABELS,
     BOTANICAL_SPECIES_NOTES,
     buildDarkWallpaperSelectionPatch,
     buildWallpaperSelectionPatch,
@@ -1121,44 +1127,41 @@ export function SettingsPanel({ host, tab: tabProp }: SettingsPanelProps) {
                                 data-testid="wallpaper-scene-switch"
                             />
                         </SettingsRow>
-                        {hasBotanicalScene && (
-                            <SettingsRow
-                                title="插画枝型"
-                                description={appearance.botanicalScene
-                                    ? BOTANICAL_SPECIES_NOTES[
-                                        appearance.botanicalScene
-                                    ]
-                                    : undefined}
-                                className="settings-row--vertical"
-                            >
-                                <RadioGroup
-                                    variant="segmented"
-                                    className="settings-botanical-group"
-                                    value={appearance.botanicalScene ?? ""}
-                                    onValueChange={(next) =>
-                                        void handleSelectBotanicalScene(
-                                            next as BotanicalSpecies,
-                                        )}
-                                    aria-label="插画枝型"
-                                    data-testid="wallpaper-scene-group"
+                        {hasBotanicalScene && (() => {
+                            const todayKey = formatLocalDateKey(new Date());
+                            const todayTerm = resolveSolarTerm(todayKey).term;
+                            const todaySpecies = resolveBotanicalSpecies(
+                                "auto",
+                                todayKey,
+                            );
+                            const note = appearance.botanicalScene === "auto"
+                                ? `${BOTANICAL_SPECIES_NOTES.auto}（今日：${
+                                    BOTANICAL_SPECIES_LABELS[todaySpecies]
+                                } · ${todayTerm}）`
+                                : appearance.botanicalScene
+                                ? BOTANICAL_SPECIES_NOTES[
+                                    appearance.botanicalScene
+                                ]
+                                : undefined;
+                            return (
+                                <SettingsRow
+                                    title="插画枝型"
+                                    description={note}
+                                    className="settings-row--vertical"
                                 >
-                                    {BOTANICAL_SCENE_CHOICES.map(
-                                        ([id, label]) => (
-                                            <RadioGroupItem
-                                                key={id}
-                                                value={id}
-                                                title={BOTANICAL_SPECIES_NOTES[
-                                                    id
-                                                ]}
-                                                data-testid={`wallpaper-scene-${id}`}
-                                            >
-                                                {label}
-                                            </RadioGroupItem>
-                                        ),
-                                    )}
-                                </RadioGroup>
-                            </SettingsRow>
-                        )}
+                                    <BotanicalSceneChoices
+                                        className="settings-botanical-group"
+                                        value={appearance.botanicalScene}
+                                        onValueChange={(next) =>
+                                            void handleSelectBotanicalScene(
+                                                next,
+                                            )}
+                                        testId="wallpaper-scene-group"
+                                        itemTestIdPrefix="wallpaper-scene"
+                                    />
+                                </SettingsRow>
+                            );
+                        })()}
                         {(Boolean(stageSource) || hasBotanicalScene ||
                             (resolvedScheme === "dark" &&
                                 appearance.darkWallpaperMode !== "follow")) &&

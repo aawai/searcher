@@ -2,12 +2,17 @@ import { assert, assertEquals } from "@std/assert";
 import {
     BOTANICAL_ARCHETYPE_NAMES,
     type BotanicalArchetype,
+    type BotanicalScene,
+    type BotanicalSpeciesModule,
     buildBotanicalPalette,
     type ConcreteBotanicalSpecies,
+    createBotanicalRenderCache,
     createBotanicalRuntimeState,
+    evalGustEnvelope,
     generateBotanicalScene,
-    hasSealVectorGlyph,
+    getVisitorReturnShowSec,
     isBotanicalSceneActive,
+    loadBotanicalSpecies,
     nextBotanicalWakeDelayMs,
     renderBotanicalFrame,
     resolveBotanicalArchetype,
@@ -16,20 +21,40 @@ import {
     resolveBotanicalViewport,
     resolveDiurnalWindScale,
     resolveSolarTerm,
-    SOLAR_TERMS_BY_MMDD,
+    stepBotanicalWindSpring,
+    type SurfaceFactory,
     triggerBotanicalGust,
     triggerBotanicalResonance,
-} from "./botanical-engine.ts";
+} from "./botanical/index.ts";
 
 const SPECIES: readonly ConcreteBotanicalSpecies[] = [
-    "orchid",
-    "bamboo",
     "ginkgo",
     "maple",
     "eucalyptus",
     "plum",
     "fern",
 ];
+
+async function loadAllSpeciesModules(): Promise<
+    Record<ConcreteBotanicalSpecies, BotanicalSpeciesModule>
+> {
+    const entries = await Promise.all(
+        SPECIES.map(async (sp) =>
+            [sp, await loadBotanicalSpecies(sp)] as const
+        ),
+    );
+    return Object.fromEntries(entries) as Record<
+        ConcreteBotanicalSpecies,
+        BotanicalSpeciesModule
+    >;
+}
+
+Deno.test("loadBotanicalSpecies: lazily resolves each of the 5 concrete species modules", async () => {
+    for (const species of SPECIES) {
+        const mod = await loadBotanicalSpecies(species);
+        assertEquals(mod.species, species);
+    }
+});
 
 Deno.test("resolveBotanicalViewport: maps embedded previews to 1440px virtual width", () => {
     assertEquals(resolveBotanicalViewport(390, 844, false), {
@@ -44,10 +69,11 @@ Deno.test("resolveBotanicalViewport: maps embedded previews to 1440px virtual wi
     assert(Math.abs(embedded.renderScale - 440 / 1440) < 1e-6);
 });
 
-Deno.test("generateBotanicalScene: mobile (390x844) keeps upper-right echo and clears search/dock", () => {
+Deno.test("generateBotanicalScene: mobile (390x844) keeps upper-right echo and clears search/dock", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             390,
             844,
             "2026-11-22",
@@ -92,11 +118,12 @@ Deno.test("generateBotanicalScene: mobile (390x844) keeps upper-right echo and c
     }
 });
 
-Deno.test("generateBotanicalScene: embedded 16:9 preview preserves top-right echo without top clipping", () => {
+Deno.test("generateBotanicalScene: embedded 16:9 preview preserves top-right echo without top clipping", async () => {
+    const modules = await loadAllSpeciesModules();
     const viewport = resolveBotanicalViewport(440, 247.5, true);
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             viewport.sceneWidth,
             viewport.sceneHeight,
             "2026-11-22",
@@ -134,6 +161,8 @@ Deno.test("buildBotanicalPalette: emits valid rgba strings for all roles in ligh
             pal.wash("sub"),
             pal.wash("ink"),
             pal.highlight(),
+            pal.luminous(),
+            pal.goldDust(),
         ];
         for (const s of samples) {
             assert(
@@ -238,6 +267,8 @@ function createMockCanvasContext(): {
         stroke: () => {},
         fillText: (_text: string, x: number, y: number) => checkNums(x, y),
         setLineDash: () => {},
+        setTransform: () => {},
+        drawImage: () => {},
         createLinearGradient: (
             x0: number,
             y0: number,
@@ -277,7 +308,8 @@ function createMockCanvasContext(): {
     };
 }
 
-Deno.test("renderBotanicalFrame: renders all species across progress and embedded states cleanly", () => {
+Deno.test("renderBotanicalFrame: renders all species across progress and embedded states cleanly", async () => {
+    const modules = await loadAllSpeciesModules();
     const scenarios = [
         { reducedMotion: true, rawProgress: 1, embedded: false },
         { reducedMotion: false, rawProgress: 0.5, embedded: false },
@@ -287,7 +319,7 @@ Deno.test("renderBotanicalFrame: renders all species across progress and embedde
     for (const species of SPECIES) {
         const palette = buildBotanicalPalette(false, "#0a66c2", "#1c1e22");
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-11-23",
@@ -325,9 +357,10 @@ Deno.test("renderBotanicalFrame: renders all species across progress and embedde
     }
 });
 
-Deno.test("generateBotanicalScene (fern): uses minimalist 3-frond orchid-brush composition with folded leaves and feibai", () => {
+Deno.test("generateBotanicalScene (fern): uses minimalist 3-frond orchid-brush composition with folded leaves and feibai", async () => {
+    const fernMod = await loadBotanicalSpecies("fern");
     const desktop = generateBotanicalScene(
-        "fern",
+        fernMod,
         1440,
         900,
         "2026-11-27",
@@ -384,10 +417,11 @@ Deno.test("generateBotanicalScene (fern): uses minimalist 3-frond orchid-brush c
     );
 });
 
-Deno.test("generateBotanicalScene: attaches visitorAnchor and rewardAnchor only for non-embedded scenes", () => {
+Deno.test("generateBotanicalScene: attaches visitorAnchor and rewardAnchor only for non-embedded scenes", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const desktop = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-11-27",
@@ -403,7 +437,7 @@ Deno.test("generateBotanicalScene: attaches visitorAnchor and rewardAnchor only 
         );
 
         const embedded = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             810,
             "2026-11-27",
@@ -414,10 +448,11 @@ Deno.test("generateBotanicalScene: attaches visitorAnchor and rewardAnchor only 
     }
 });
 
-Deno.test("renderBotanicalFrame: renders micro-ecology visitors in light and dark modes with valid coords", () => {
+Deno.test("renderBotanicalFrame: renders micro-ecology visitors in light and dark modes with valid coords", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-11-27",
@@ -464,10 +499,11 @@ Deno.test("renderBotanicalFrame: renders micro-ecology visitors in light and dar
     }
 });
 
-Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and tasks-cleared cleanly", () => {
+Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and tasks-cleared cleanly", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-11-27",
@@ -478,7 +514,6 @@ Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and t
         const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
             [];
 
-        // 1. theme-ripple at exact t=0 must have 0 impulse displacement, then wave at t+0.3
         triggerBotanicalResonance(
             runtime,
             "theme-ripple",
@@ -548,7 +583,6 @@ Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and t
         });
         check1();
 
-        // 2. quick-capture spawns accent/sub drifter even when searchFocused is true
         triggerBotanicalResonance(
             runtime,
             "quick-capture",
@@ -563,7 +597,6 @@ Deno.test("triggerBotanicalResonance: handles theme-ripple, quick-capture, and t
             `${species}: expected quick-capture to spawn a drifter`,
         );
 
-        // 3. tasks-cleared awakens the scene and renders reward blossom/shoot
         triggerBotanicalResonance(
             runtime,
             "tasks-cleared",
@@ -616,7 +649,7 @@ Deno.test("resolveSolarTerm & resolveBotanicalSpecies: selects seasonal pool and
     assertEquals(springTerm.season, "spring");
     assertEquals(springTerm.isSnowSeason, false);
     assert(
-        ["orchid", "fern", "eucalyptus"].includes(
+        ["fern", "eucalyptus"].includes(
             resolveBotanicalSpecies("auto", "2026-04-06"),
         ),
     );
@@ -624,7 +657,7 @@ Deno.test("resolveSolarTerm & resolveBotanicalSpecies: selects seasonal pool and
     const summerTerm = resolveSolarTerm("2026-07-10");
     assertEquals(summerTerm.season, "summer");
     assert(
-        ["bamboo", "fern", "eucalyptus"].includes(
+        ["eucalyptus", "fern"].includes(
             resolveBotanicalSpecies("auto", "2026-07-10"),
         ),
     );
@@ -632,13 +665,13 @@ Deno.test("resolveSolarTerm & resolveBotanicalSpecies: selects seasonal pool and
     const autumnTerm = resolveSolarTerm("2026-10-12");
     assertEquals(autumnTerm.season, "autumn");
     assert(
-        ["ginkgo", "maple", "bamboo"].includes(
+        ["ginkgo", "maple"].includes(
             resolveBotanicalSpecies("auto", "2026-10-12"),
         ),
     );
 
     assert(
-        ["plum", "bamboo", "eucalyptus"].includes(
+        ["plum", "eucalyptus"].includes(
             resolveBotanicalSpecies("auto", "2026-11-27"),
         ),
     );
@@ -661,10 +694,11 @@ Deno.test("buildBotanicalPalette & resolveDiurnalWindScale: supports dawn/day/du
     assert(resolveDiurnalWindScale(23) < resolveDiurnalWindScale(12));
 });
 
-Deno.test("renderBotanicalFrame: supports left-mirrored layout, snow cushions, solar term seal, and search-submit", () => {
+Deno.test("renderBotanicalFrame: supports left-mirrored layout, snow cushions, and search-submit with zero solar-term seal", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-11-27",
@@ -716,14 +750,92 @@ Deno.test("renderBotanicalFrame: supports left-mirrored layout, snow cushions, s
             frameSeq: 1,
             runtime,
             sceneSide: "left",
-            dateKey: "2026-11-27",
-            localHour: 18,
         });
         assertFiniteCoords();
     }
+
+    // Empty synthetic scene at rawProgress=1 with solidSurface=true must emit 0 fill/stroke/fillText (zero corner seal)
+    const emptyScene: BotanicalScene = {
+        species: "plum",
+        module: modules.plum,
+        side: "right",
+        archetype: 0,
+        visitorPresent: false,
+        branches: [],
+        ornaments: [],
+        rocks: [],
+        scale: 1,
+        visitorAnchor: null,
+        rewardAnchor: null,
+    };
+    for (const isDark of [false, true]) {
+        const solidPal = buildBotanicalPalette(
+            isDark,
+            "#be123c",
+            isDark ? "#f5f5f7" : "#1d1d1f",
+            false,
+            12,
+            "plum",
+            { solidSurface: true },
+        );
+        const { ctx } = createMockCanvasContext();
+        let fillCalls = 0;
+        let strokeCalls = 0;
+        let fillTextCalls = 0;
+        ctx.fill = () => {
+            fillCalls++;
+        };
+        ctx.stroke = () => {
+            strokeCalls++;
+        };
+        ctx.fillText = () => {
+            fillTextCalls++;
+        };
+        renderBotanicalFrame({
+            ctx,
+            scene: emptyScene,
+            width: 1440,
+            height: 900,
+            timeSec: 12,
+            dt: 0.016,
+            rawProgress: 1,
+            reducedMotion: true,
+            windCalm: 1,
+            searchFocused: false,
+            embedded: false,
+            palette: solidPal,
+            pointer: {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            },
+            drifters: [],
+            lastDriftSpawn: 0,
+            frameSeq: 1,
+        });
+        assertEquals(
+            fillCalls,
+            0,
+            `dark=${isDark}: expected 0 fill calls on empty finished frame (no seal)`,
+        );
+        assertEquals(
+            strokeCalls,
+            0,
+            `dark=${isDark}: expected 0 stroke calls on empty finished frame (no seal)`,
+        );
+        assertEquals(
+            fillTextCalls,
+            0,
+            `dark=${isDark}: expected 0 fillText calls on empty finished frame`,
+        );
+    }
 });
 
-Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-breaking bamboo, and idle sleep", () => {
+Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, phenology, fern rock, and idle sleep", async () => {
+    const modules = await loadAllSpeciesModules();
     const pal = buildBotanicalPalette(
         false,
         "oklch(0.54 0.16 25)",
@@ -732,29 +844,6 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
     assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.waterline("accent")));
     assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.inkGrade("jiao")));
     assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(pal.inkGrade("qing")));
-
-    // Wide non-embedded bamboo breaks boldly out of the top edge
-    const wideBamboo = generateBotanicalScene(
-        "bamboo",
-        1440,
-        900,
-        "2026-06-21",
-        false,
-    );
-    assert(
-        wideBamboo.branches.some((b) => b.points.some((p) => p.y < 0)),
-        "Expected wide desktop bamboo culm to pierce top viewport edge",
-    );
-
-    // Orchid carries slope rock base
-    const wideOrchid = generateBotanicalScene(
-        "orchid",
-        1440,
-        900,
-        "2026-04-05",
-        false,
-    );
-    assert(wideOrchid.rocks.length >= 1, "Expected slope rock base for orchid");
 
     // Branch feibai must not use destination-out on main canvas
     const ops: string[] = [];
@@ -772,7 +861,13 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
         },
         configurable: true,
     });
-    const plum = generateBotanicalScene("plum", 1440, 900, "2026-12-22", false);
+    const plum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-12-22",
+        false,
+    );
     renderBotanicalFrame({
         ctx,
         scene: plum,
@@ -837,14 +932,14 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
 
     // Ginkgo phenology: Frost (霜降) has significantly more golden accent/sub leaves than early summer
     const ginkgoFrost = generateBotanicalScene(
-        "ginkgo",
+        modules.ginkgo,
         1440,
         900,
         "2026-10-25",
         false,
     );
     const ginkgoSummer = generateBotanicalScene(
-        "ginkgo",
+        modules.ginkgo,
         1440,
         900,
         "2026-05-10",
@@ -863,14 +958,14 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
 
     // Plum phenology: 立春 has higher open-blossom share than 冬至
     const plumSpring = generateBotanicalScene(
-        "plum",
+        modules.plum,
         1440,
         900,
         "2026-02-06",
         false,
     );
     const plumWinter = generateBotanicalScene(
-        "plum",
+        modules.plum,
         1440,
         900,
         "2026-12-22",
@@ -885,9 +980,9 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
         })`,
     );
 
-    // Fern & Orchid include slope rocks on wide desktop
+    // Fern includes slope rock on wide desktop
     const wideFern = generateBotanicalScene(
-        "fern",
+        modules.fern,
         1440,
         900,
         "2026-07-10",
@@ -898,12 +993,20 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
         "Expected slope rock base for wide fern",
     );
 
-    // Rendering with dockInsets emits valid finite coordinates
+    // Generating with dockInsets emits valid finite coordinates
+    const dockedPlum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-02-06",
+        false,
+        { top: 0, right: 64, bottom: 56, left: 0 },
+    );
     const { ctx: dockCtx, assertFiniteCoords: assertDockCoords } =
         createMockCanvasContext();
     renderBotanicalFrame({
         ctx: dockCtx,
-        scene: plumSpring,
+        scene: dockedPlum,
         width: 1440,
         height: 900,
         timeSec: 14,
@@ -925,37 +1028,21 @@ Deno.test("botanical evolution: OKLCH palette, non-destructive feibai, edge-brea
         drifters: [],
         lastDriftSpawn: 0,
         frameSeq: 2,
-        dockInsets: { top: 0, right: 64, bottom: 56, left: 0 },
     });
     assertDockCoords();
 });
 
-Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/goldDust, and trunk weight", () => {
+Deno.test("museum pass: zero dashed lines, goldDust, and trunk weight", async () => {
+    const modules = await loadAllSpeciesModules();
     const palLight = buildBotanicalPalette(false, "#be123c", "#1d1d1f");
     const palDark = buildBotanicalPalette(true, "#fb7185", "#f5f5f7");
-    for (
-        const s of [
-            palLight.cinnabar(),
-            palLight.goldDust(),
-            palDark.cinnabar(),
-            palDark.goldDust(),
-        ]
-    ) {
+    for (const s of [palLight.goldDust(), palDark.goldDust()]) {
         assert(/^rgba\(\d+,\d+,\d+,\d+\.\d+\)$/.test(s), `Invalid rgba: ${s}`);
     }
 
-    // 全部 24 节气均具备手工矢量小篆字模
-    for (const entry of SOLAR_TERMS_BY_MMDD) {
-        assert(
-            hasSealVectorGlyph(entry.term),
-            `Expected vector seal glyph for solar term ${entry.term}`,
-        );
-    }
-
-    // 桌面端寒梅、红枫、银杏主干具备苍劲量感且末梢收细
     for (const sp of ["plum", "maple", "ginkgo"] as const) {
         const scene = generateBotanicalScene(
-            sp,
+            modules[sp],
             1440,
             900,
             "2026-04-05",
@@ -974,7 +1061,6 @@ Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/
         );
     }
 
-    // 完整渲染帧期间零 fillText、零非空虚线 setLineDash（覆盖春夏朱文与秋冬白文）
     for (const dateKey of ["2026-04-05", "2026-11-22"]) {
         for (const isDark of [false, true]) {
             const pal = buildBotanicalPalette(
@@ -983,7 +1069,7 @@ Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/
                 isDark ? "#f5f5f7" : "#1d1d1f",
             );
             const scene = generateBotanicalScene(
-                "plum",
+                modules.plum,
                 1440,
                 900,
                 dateKey,
@@ -1022,13 +1108,12 @@ Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/
                 drifters: [],
                 lastDriftSpawn: 0,
                 frameSeq: 1,
-                dateKey,
             });
             assertFiniteCoords();
             assertEquals(
                 fillTextCalls,
                 0,
-                `${dateKey} (dark=${isDark}): seal must render vector glyphs without fillText`,
+                `${dateKey} (dark=${isDark}): finished frame must not call fillText`,
             );
             assertEquals(
                 nonEmptyDashCalls,
@@ -1039,14 +1124,14 @@ Deno.test("museum pass: 24 solar-term vector seals, zero dashed lines, cinnabar/
     }
 });
 
-Deno.test("museum polish: intrinsic species color harmony, maple search clearance, and staggered bamboo leaves", () => {
+Deno.test("museum polish: intrinsic species color harmony and search clearance", async () => {
+    const modules = await loadAllSpeciesModules();
     const parseRgb = (s: string) => {
         const m = s.match(/^rgba\((\d+),(\d+),(\d+),/);
         assert(m, `Expected rgba string: ${s}`);
         return [Number(m[1]), Number(m[2]), Number(m[3])] as const;
     };
 
-    // 1. 植物博物本色基因融合：在玫瑰红强调色下，银杏呈暖金黄、尤加利呈冷翠绿、寒梅保持绯红
     const ginkgoPal = buildBotanicalPalette(
         false,
         "#be123c",
@@ -1089,9 +1174,8 @@ Deno.test("museum polish: intrinsic species color harmony, maple search clearanc
         `Expected crimson plum accent under rose theme, got (${pr},${pg},${pb})`,
     );
 
-    // 2. 红枫桌面 1440x900 全部分支采样点必须避让中央搜索框安全区
     const wideMaple = generateBotanicalScene(
-        "maple",
+        modules.maple,
         1440,
         900,
         "2026-10-23",
@@ -1110,24 +1194,6 @@ Deno.test("museum polish: intrinsic species color harmony, maple search clearanc
         }
     }
 
-    // 3. 夏竹前景叶簇着生于枝条多个不同节点，打破单点对称放射
-    const wideBamboo = generateBotanicalScene(
-        "bamboo",
-        1440,
-        900,
-        "2026-06-21",
-        false,
-    );
-    const fgBambooLeaves = wideBamboo.ornaments.filter(
-        (o) => o.kind === "bambooLeaf" && !o.ghost && !o.midground,
-    );
-    const distinctIdx = new Set(fgBambooLeaves.map((o) => o.idx));
-    assert(
-        distinctIdx.size >= 3,
-        `Expected staggered bamboo leaf attachment nodes (>=3), got ${distinctIdx.size}`,
-    );
-
-    // 4. 经典蓝下寒梅仍保持宋画「宫粉胭脂梅 × 绿萼」，不染成蓝梅花
     const plumBluePal = buildBotanicalPalette(
         false,
         "#0a66c2",
@@ -1142,9 +1208,8 @@ Deno.test("museum polish: intrinsic species color harmony, maple search clearanc
         `Expected crimson/pink plum accent even under blue theme, got (${pbr},${pbg},${pbb})`,
     );
 
-    // 5. 寒梅桌面 1440x900 全部分支采样点必须避让中央搜索框安全区
     const widePlum = generateBotanicalScene(
-        "plum",
+        modules.plum,
         1440,
         900,
         "2026-02-04",
@@ -1164,7 +1229,8 @@ Deno.test("museum polish: intrinsic species color harmony, maple search clearanc
     }
 });
 
-Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero moon disc or mountain ridge curves", () => {
+Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero moon disc or mountain ridge curves", async () => {
+    const plumMod = await loadBotanicalSpecies("plum");
     const captureAtmosphereCalls = (
         width: number,
         height: number,
@@ -1242,7 +1308,7 @@ Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero
             overPhoto,
         );
         const scene = generateBotanicalScene(
-            "plum",
+            plumMod,
             width,
             height,
             "2026-11-22",
@@ -1332,11 +1398,11 @@ Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero
     }
 });
 
-Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band adaptation & gongbi-line, solidSurface suppresses air wash", () => {
-    // 1. All 7 species at 1440x900 must keep non-ghost branches clear of the central search bar [420, 1020] x [315, 420]
+Deno.test("phase 1+2 contract: all 5 species clear wide search zone, local band adaptation & gongbi-line, solidSurface suppresses air wash", async () => {
+    const modules = await loadAllSpeciesModules();
     for (const species of SPECIES) {
         const scene = generateBotanicalScene(
-            species,
+            modules[species],
             1440,
             900,
             "2026-06-21",
@@ -1357,7 +1423,6 @@ Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band 
         }
     }
 
-    // 2. Local band adaptation: split-tone wallpaper (bright left, dark textured right)
     const splitBands = {
         left: { lightness: 0.78, spread: 0.10 },
         right: { lightness: 0.24, spread: 0.25 },
@@ -1391,7 +1456,6 @@ Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band 
     assertEquals(plainCanvas.photoStyle, "xuan");
     assertEquals(plainCanvas.solidSurface, true);
 
-    // 3. gongbi-line reduces fill/wash opacity vs silk-wash
     const silkPal = buildBotanicalPalette(
         true,
         "#fb7185",
@@ -1418,7 +1482,6 @@ Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band 
         "Expected gongbi-line to soften wash alpha over busy photos",
     );
 
-    // 4. solidSurface suppresses atmospheric bokeh washes in renderBotanicalFrame
     const solidPal = buildBotanicalPalette(
         false,
         "#be123c",
@@ -1436,7 +1499,13 @@ Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band 
         if (r >= 120) solidLargeEllipses++;
         origArc(x, y, r, s, e);
     };
-    const plum = generateBotanicalScene("plum", 1440, 900, "2026-11-22", false);
+    const plum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-11-22",
+        false,
+    );
     renderBotanicalFrame({
         ctx: solidCtx,
         scene: plum,
@@ -1469,10 +1538,10 @@ Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band 
     );
 });
 
-Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, serendipity visitor, and AI resonance", () => {
-    // 1. Parameter-level left-side generation without ctx.scale(-1, 1)
+Deno.test("phase 3 contract: non-mirrored left-side geometry, 5x3 archetypes, serendipity visitor, and AI resonance", async () => {
+    const modules = await loadAllSpeciesModules();
     const leftPlum = generateBotanicalScene(
-        "plum",
+        modules.plum,
         1440,
         900,
         "2026-11-27",
@@ -1530,7 +1599,6 @@ Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, se
         "Expected parameter-level left-side scene to render without full-canvas mirror translate(width, 0)",
     );
 
-    // 2. 7 species x 3 archetypes all satisfy search clearance & core species invariants
     for (const species of SPECIES) {
         assertEquals(BOTANICAL_ARCHETYPE_NAMES[species].length, 3);
         for (
@@ -1545,7 +1613,7 @@ Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, se
                 arch,
             );
             const scene = generateBotanicalScene(
-                species,
+                modules[species],
                 1440,
                 900,
                 "2026-11-27",
@@ -1567,12 +1635,6 @@ Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, se
                     );
                 }
             }
-            if (species === "bamboo") {
-                assert(
-                    scene.branches.some((b) => b.points.some((p) => p.y < 0)),
-                    `bamboo arch=${arch}: expected top-piercing culm`,
-                );
-            }
             if (species === "fern") {
                 assert(
                     scene.rocks.length >= 1,
@@ -1582,7 +1644,6 @@ Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, se
         }
     }
 
-    // 3. AI thinking & AI complete resonance
     const runtime = createBotanicalRuntimeState();
     triggerBotanicalGust(runtime, 10, 0.9, 4.6);
     triggerBotanicalResonance(runtime, "ai-thinking", 11, leftPlum, [], 1, 1);
@@ -1591,4 +1652,482 @@ Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, se
     triggerBotanicalResonance(runtime, "ai-complete", 14, leftPlum, [], 1, 2);
     assert(runtime.breezeImpulseStrength > 0);
     assertEquals(runtime.haloPulseStartSec, 14);
+});
+
+Deno.test("audit regression: resonance settles to idle across all species/themes, luminous stays bright, geometry anchors cleanly, and lazy boundaries hold", async () => {
+    const modules = await loadAllSpeciesModules();
+    for (const isDark of [false, true]) {
+        const pal = buildBotanicalPalette(
+            isDark,
+            "#be123c",
+            isDark ? "#f5f5f7" : "#1d1d1f",
+        );
+        for (const species of SPECIES) {
+            const scene = generateBotanicalScene(
+                modules[species],
+                1440,
+                900,
+                "2026-11-28",
+                false,
+            );
+            for (
+                const kind of [
+                    "search-submit",
+                    "quick-capture",
+                    "task-completed",
+                ] as const
+            ) {
+                const rt = createBotanicalRuntimeState();
+                const drifters: Parameters<
+                    typeof renderBotanicalFrame
+                >[0]["drifters"] = [];
+                triggerBotanicalResonance(rt, kind, 10, scene, drifters, 1, 1, {
+                    isDark,
+                });
+                let t = 10.016;
+                const { ctx } = createMockCanvasContext();
+                for (let i = 0; i < 160; i++, t += 0.2) {
+                    renderBotanicalFrame({
+                        ctx,
+                        scene,
+                        width: 1440,
+                        height: 900,
+                        timeSec: t,
+                        dt: 0.05,
+                        rawProgress: 1,
+                        reducedMotion: false,
+                        windCalm: 1,
+                        searchFocused: false,
+                        embedded: false,
+                        palette: pal,
+                        pointer: {
+                            x: -9999,
+                            y: -9999,
+                            vx: 0,
+                            vy: 0,
+                            lastT: 0,
+                            lastRustleSpawn: 0,
+                        },
+                        drifters,
+                        lastDriftSpawn: 999,
+                        frameSeq: i + 2,
+                        runtime: rt,
+                    });
+                }
+                assertEquals(
+                    rt.visitorMode,
+                    "perched",
+                    `dark=${isDark} ${species} ${kind}: visitorMode must return to perched`,
+                );
+                assertEquals(
+                    rt.dewState,
+                    "hanging",
+                    `dark=${isDark} ${species} ${kind}: dewState must return to hanging`,
+                );
+                assertEquals(
+                    isBotanicalSceneActive({
+                        runtime: rt,
+                        rawProgress: 1,
+                        timeSec: t,
+                        scene,
+                        drifters,
+                        reducedMotion: false,
+                        embedded: false,
+                    }),
+                    false,
+                    `dark=${isDark} ${species} ${kind}: scene must settle to idle`,
+                );
+            }
+        }
+    }
+
+    const leftPlum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-11-28",
+        false,
+        undefined,
+        { sceneSide: "left" },
+    );
+    const leftRt = createBotanicalRuntimeState();
+    triggerBotanicalResonance(leftRt, "search-submit", 10, leftPlum, [], 1, 1, {
+        isDark: false,
+        forceVisitor: true,
+    });
+    assertEquals(leftRt.visitorMode, "departing");
+    assert(
+        leftRt.visitorVx > 0,
+        `Expected left-side visitorVx > 0, got ${leftRt.visitorVx}`,
+    );
+
+    for (const isDark of [false, true]) {
+        const pal = buildBotanicalPalette(
+            isDark,
+            "#be123c",
+            isDark ? "#f5f5f7" : "#1d1d1f",
+        );
+        const m = pal.luminous(0.9).match(/^rgba\((\d+),(\d+),(\d+),/);
+        assert(m, `Invalid luminous rgba: ${pal.luminous(0.9)}`);
+        const [r, g, b] = [Number(m[1]), Number(m[2]), Number(m[3])];
+        assert(
+            r >= 220 && g >= 220 && b >= 220,
+            `dark=${isDark}: luminous must stay bright, got (${r},${g},${b})`,
+        );
+    }
+
+    const hangingPlum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-11-28",
+        false,
+        undefined,
+        { archetype: 2 },
+    );
+    const hangingHero = hangingPlum.branches.find((b) =>
+        !b.ghost && !b.parentRef
+    );
+    assert(hangingHero, "Expected hero branch for hanging plum");
+    assert(
+        hangingHero.points[0].x >= 1440,
+        `Expected hanging plum root off right edge (>=1440), got ${
+            hangingHero.points[0].x
+        }`,
+    );
+
+    for (
+        const species of [
+            "plum",
+            "ginkgo",
+            "eucalyptus",
+            "fern",
+        ] as const
+    ) {
+        const mobile = generateBotanicalScene(
+            modules[species],
+            390,
+            844,
+            "2026-11-28",
+            false,
+        );
+        for (const b of mobile.branches) {
+            if (b.ghost || b.parentRef) continue;
+            assert(
+                b.points[0].x >= 390,
+                `mobile ${species}: expected root off right edge (>=390), got (${
+                    b.points[0].x.toFixed(1)
+                }, ${b.points[0].y.toFixed(1)})`,
+            );
+        }
+    }
+
+    // Lazy-load boundary guards
+    const pickerSource = await Deno.readTextFile(
+        new URL("../searcher/AppearancePicker.tsx", import.meta.url),
+    );
+    assert(
+        !pickerSource.includes("botanical-engine") &&
+            !pickerSource.includes("./botanical") &&
+            !pickerSource.includes("../wallpaper/botanical"),
+        "AppearancePicker must import solar-terms.ts rather than botanical runtime",
+    );
+    const choicesSource = await Deno.readTextFile(
+        new URL("../searcher/BotanicalSceneChoices.tsx", import.meta.url),
+    );
+    assert(
+        !choicesSource.includes("botanical-engine") &&
+            !choicesSource.includes("../wallpaper/botanical"),
+        "BotanicalSceneChoices must not import botanical canvas runtime",
+    );
+    const canvasSource = await Deno.readTextFile(
+        new URL("./BotanicalSceneCanvas.tsx", import.meta.url),
+    );
+    assert(
+        !canvasSource.includes("./species/") &&
+            !canvasSource.includes("./botanical/species/"),
+        "BotanicalSceneCanvas must not statically import species modules",
+    );
+    const indexSource = await Deno.readTextFile(
+        new URL("./botanical/index.ts", import.meta.url),
+    );
+    assert(
+        !indexSource.includes("./species/"),
+        "botanical/index.ts must not statically import species modules",
+    );
+});
+
+Deno.test("motion naturalness & performance: asymmetric gust, wind spring, returning sleep, firefly phase, worldCache reuse, and offscreen cache", async () => {
+    const modules = await loadAllSpeciesModules();
+
+    // 1. Asymmetric gust envelope: 0 at start/end, peaks early (u ≈ 0.27), smoothly tapers
+    const gustRt = createBotanicalRuntimeState();
+    triggerBotanicalGust(gustRt, 10, 1.0, 4.0);
+    assertEquals(evalGustEnvelope(gustRt, 10, 1), 0);
+    assertEquals(evalGustEnvelope(gustRt, 14, 1), 0);
+    const earlyPeak = evalGustEnvelope(gustRt, 10 + 4 * 0.27, 1);
+    const midVal = evalGustEnvelope(gustRt, 10 + 4 * 0.65, 1);
+    const tailVal = evalGustEnvelope(gustRt, 10 + 4 * 0.98, 1);
+    assert(earlyPeak > 0.95, `Expected early peak > 0.95, got ${earlyPeak}`);
+    assert(
+        earlyPeak > midVal && midVal > tailVal && tailVal < 0.05,
+        `Expected smooth asymmetric decay: peak=${earlyPeak}, mid=${midVal}, tail=${tailVal}`,
+    );
+
+    // 2. Unified wind spring: rapid double resonance accumulates velocity without position jump & settles to 0
+    const springRt = createBotanicalRuntimeState();
+    const plum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-11-28",
+        false,
+    );
+    triggerBotanicalResonance(springRt, "theme-ripple", 10, plum, [], 1, 1);
+    assertEquals(stepBotanicalWindSpring(springRt, 0.016, false), 0);
+    const posAfterFirst = stepBotanicalWindSpring(springRt, 0.016, false);
+    assert(posAfterFirst > 0);
+    const posBeforeSecond = springRt.windPos;
+    triggerBotanicalResonance(springRt, "search-submit", 10.05, plum, [], 1, 2);
+    assertEquals(
+        springRt.windPos,
+        posBeforeSecond,
+        "Second resonance must not jump windPos discontinuously",
+    );
+    for (let i = 0; i < 200; i++) {
+        stepBotanicalWindSpring(springRt, 0.05, false);
+    }
+    assertEquals(springRt.windPos, 0);
+    assertEquals(springRt.windVel, 0);
+
+    // 3. Returning visitor sleeps during hidden wait (0..showAt) and schedules wakeup
+    const retRt = createBotanicalRuntimeState();
+    retRt.visitorMode = "returning";
+    retRt.visitorStateStartSec = 20;
+    const showAt = getVisitorReturnShowSec(plum);
+    assertEquals(showAt, 16.5);
+    assertEquals(
+        isBotanicalSceneActive({
+            runtime: retRt,
+            rawProgress: 1,
+            timeSec: 22,
+            scene: plum,
+            drifters: [],
+            reducedMotion: false,
+            embedded: false,
+        }),
+        false,
+        "Returning sparrow must allow idle sleep during hidden wait",
+    );
+    const wakeDelay = nextBotanicalWakeDelayMs(retRt, 22, plum);
+    assert(
+        wakeDelay >= 14_000 && wakeDelay <= 15_000,
+        `Expected wake delay ~14500ms, got ${wakeDelay}`,
+    );
+    assertEquals(
+        isBotanicalSceneActive({
+            runtime: retRt,
+            rawProgress: 1,
+            timeSec: 20 + 17.0,
+            scene: plum,
+            drifters: [],
+            reducedMotion: false,
+            embedded: false,
+        }),
+        true,
+        "Returning sparrow must be active during final 1.5s arc landing",
+    );
+
+    // 4. Firefly simulation clock advances only by dt (no teleport after 20s sleep)
+    const ffRt = createBotanicalRuntimeState();
+    const darkPal = buildBotanicalPalette(true, "#fb7185", "#f5f5f7");
+    const { ctx: ffCtx } = createMockCanvasContext();
+    renderBotanicalFrame({
+        ctx: ffCtx,
+        scene: plum,
+        width: 1440,
+        height: 900,
+        timeSec: 10,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: false,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: darkPal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 999,
+        frameSeq: 1,
+        runtime: ffRt,
+    });
+    const simBeforeSleep = ffRt.fireflySimSec;
+    renderBotanicalFrame({
+        ctx: ffCtx,
+        scene: plum,
+        width: 1440,
+        height: 900,
+        timeSec: 30,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: false,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: darkPal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 999,
+        frameSeq: 2,
+        runtime: ffRt,
+    });
+    assert(
+        Math.abs(ffRt.fireflySimSec - (simBeforeSleep + 0.016)) < 1e-6,
+        "fireflySimSec must advance by dt, not wall-clock sleep delta",
+    );
+
+    // 5. worldCache zero-allocation reuse & scene.bounds mirrored correctly
+    const firstWorldRef = plum.branches[0].worldCache;
+    const firstSampleRef = firstWorldRef?.[0];
+    assert(firstWorldRef && firstSampleRef);
+    renderBotanicalFrame({
+        ctx: ffCtx,
+        scene: plum,
+        width: 1440,
+        height: 900,
+        timeSec: 30.1,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: false,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: darkPal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 999,
+        frameSeq: 3,
+        runtime: ffRt,
+    });
+    assertEquals(
+        plum.branches[0].worldCache,
+        firstWorldRef,
+        "Expected worldCache array to be reused in-place",
+    );
+    assertEquals(
+        plum.branches[0].worldCache?.[0],
+        firstSampleRef,
+        "Expected WorldSample elements to be reused in-place",
+    );
+    assert(plum.bounds && plum.bounds.minX > 400 && plum.bounds.maxX >= 1400);
+    const leftPlum = generateBotanicalScene(
+        modules.plum,
+        1440,
+        900,
+        "2026-11-28",
+        false,
+        undefined,
+        { sceneSide: "left" },
+    );
+    assert(
+        leftPlum.bounds && leftPlum.bounds.minX < 100 &&
+            leftPlum.bounds.maxX < 1040,
+        "Expected left-side scene.bounds to be mirrored",
+    );
+
+    // 6. Offscreen render cache: bakes atmosphere, rocks & finished ornaments once, stamps on subsequent frames, invalidates on palette swap
+    const fern = generateBotanicalScene(
+        modules.fern,
+        1440,
+        900,
+        "2026-07-10",
+        false,
+    );
+    let surfacesCreated = 0;
+    const mockFactory: SurfaceFactory = (w, h) => {
+        surfacesCreated++;
+        const { ctx: sCtx } = createMockCanvasContext();
+        return {
+            canvas: { width: w, height: h } as unknown as HTMLCanvasElement,
+            ctx: sCtx,
+        };
+    };
+    const renderCache = createBotanicalRenderCache(mockFactory);
+    const palA = buildBotanicalPalette(false, "#be123c", "#1d1d1f");
+    const palB = buildBotanicalPalette(true, "#fb7185", "#f5f5f7");
+    let drawImageCalls = 0;
+    const { ctx: mainCtx } = createMockCanvasContext();
+    mainCtx.drawImage = () => {
+        drawImageCalls++;
+    };
+    const cacheArgs = {
+        ctx: mainCtx,
+        scene: fern,
+        width: 1440,
+        height: 900,
+        timeSec: 12,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: true,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: palA,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 0,
+        frameSeq: 1,
+        cache: renderCache,
+        dpr: 2,
+    };
+    renderBotanicalFrame(cacheArgs);
+    const bakedAfterFrame1 = surfacesCreated;
+    assert(
+        bakedAfterFrame1 >= 2 + fern.ornaments.length,
+        `Expected atmosphere + rocks + ornaments baked, got ${bakedAfterFrame1}`,
+    );
+    assert(drawImageCalls >= bakedAfterFrame1);
+
+    // Frame 2 with same palette must reuse all cached surfaces (0 new surfaces created)
+    renderBotanicalFrame({ ...cacheArgs, frameSeq: 2 });
+    assertEquals(
+        surfacesCreated,
+        bakedAfterFrame1,
+        "Frame 2 must hit offscreen cache without allocating new surfaces",
+    );
+
+    // Frame 3 with new palette must invalidate and re-bake
+    renderBotanicalFrame({ ...cacheArgs, palette: palB, frameSeq: 3 });
+    assert(
+        surfacesCreated > bakedAfterFrame1,
+        "Palette change must invalidate and re-bake offscreen cache",
+    );
 });

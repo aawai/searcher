@@ -13,8 +13,6 @@ export const DEFAULT_WALLPAPER_COMPOSITION: WallpaperComposition = Object
 
 export const BOTANICAL_SPECIES = [
     "auto",
-    "orchid",
-    "bamboo",
     "ginkgo",
     "maple",
     "eucalyptus",
@@ -26,15 +24,20 @@ export type BotanicalSpecies = typeof BOTANICAL_SPECIES[number];
 
 const BOTANICAL_SCENE_PREFIX = "scene:botanical:";
 const BOTANICAL_SPECIES_SET: ReadonlySet<string> = new Set(BOTANICAL_SPECIES);
+const LEGACY_BOTANICAL_ALIASES: Readonly<Record<string, BotanicalSpecies>> = {
+    orchid: "fern",
+    bamboo: "eucalyptus",
+};
 
 export function normalizeBotanicalSpecies(
     raw: unknown,
 ): BotanicalSpecies | null {
     if (typeof raw !== "string") return null;
     const normalized = raw.trim().toLowerCase();
-    return BOTANICAL_SPECIES_SET.has(normalized)
-        ? normalized as BotanicalSpecies
-        : null;
+    if (BOTANICAL_SPECIES_SET.has(normalized)) {
+        return normalized as BotanicalSpecies;
+    }
+    return LEGACY_BOTANICAL_ALIASES[normalized] ?? null;
 }
 
 export function parseBotanicalSceneSource(

@@ -70,8 +70,6 @@ export const BOTANICAL_SCENE_CHOICES: ReadonlyArray<
     readonly [BotanicalSpecies, string]
 > = [
     ["auto", "每日"],
-    ["orchid", "春兰"],
-    ["bamboo", "夏竹"],
     ["ginkgo", "银杏"],
     ["maple", "红枫"],
     ["eucalyptus", "尤加利"],
@@ -79,12 +77,32 @@ export const BOTANICAL_SCENE_CHOICES: ReadonlyArray<
     ["fern", "蕨类"],
 ];
 
+export const BOTANICAL_SPECIES_LABELS: Readonly<
+    Record<BotanicalSpecies, string>
+> = {
+    auto: "每日",
+    ginkgo: "银杏",
+    maple: "红枫",
+    eucalyptus: "尤加利",
+    plum: "寒梅",
+    fern: "蕨类",
+};
+
+export const BOTANICAL_SPECIES_SHORT_NOTES: Readonly<
+    Record<BotanicalSpecies, string>
+> = {
+    auto: "随节气每日轮换",
+    ginkgo: "金扇没骨 · 草虫",
+    maple: "高崖霜枝 · 宿雀",
+    eucalyptus: "青灰圆叶 · 晨露",
+    plum: "铁干疏影 · 覆雪",
+    fern: "兰竹飞白 · 晨露",
+};
+
 export const BOTANICAL_SPECIES_NOTES: Readonly<
     Record<BotanicalSpecies, string>
 > = {
     auto: "依二十四节气择枝轮换，每日一景。",
-    orchid: "坡石幽兰，长锋破凤眼，粉蝶停驻。",
-    bamboo: "分节立竿，贯顶破边，偶立红衣豆娘。",
     ginkgo: "金扇没骨，水渍凝边，偶栖七星草虫。",
     maple: "高崖垂挂，霜枝红叶，偶有寒雀驻足。",
     eucalyptus: "青灰圆叶，昼凝晨露，夜起微萤。",

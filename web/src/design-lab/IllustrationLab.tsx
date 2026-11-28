@@ -12,9 +12,12 @@ import {
     type BotanicalPointerState,
     type BotanicalScene,
     buildBotanicalPalette,
+    createBotanicalRenderCache,
     createBotanicalRuntimeState,
     generateBotanicalScene,
+    invalidateBotanicalCache,
     isBotanicalSceneActive,
+    loadBotanicalSpecies,
     renderBotanicalFrame,
     resolveBotanicalArchetype,
     resolveBotanicalSpecies,
@@ -23,7 +26,7 @@ import {
     SOLAR_TERMS_BY_MMDD,
     triggerBotanicalGust,
     triggerBotanicalResonance,
-} from "../components/wallpaper/botanical-engine.ts";
+} from "../components/wallpaper/botanical/index.ts";
 import type { BotanicalResonanceKind } from "../components/wallpaper/botanical-resonance.ts";
 import { BOTANICAL_SCENE_CHOICES } from "../components/wallpaper/wallpaper-choices.ts";
 import { PageHeader } from "../components/searcher/PageHeader.tsx";
@@ -150,39 +153,10 @@ function BotanicalCanvasWorkbench({
             { photoSpread, solidSurface },
         );
 
-        const scene = generateBotanicalScene(
-            concreteSpecies,
-            STAGE_WIDTH,
-            STAGE_HEIGHT,
-            dateKey,
-            false,
-            undefined,
-            { sceneSide, archetype: resolvedArchetype },
-        );
-        sceneRef.current = scene;
-        runtimeRef.current = createBotanicalRuntimeState();
-        driftersRef.current = [];
-        const prefersReduced = globalThis.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-        growthStartRef.current = prefersReduced
-            ? performance.now() / 1000 - GROWTH_DURATION_SEC - 1
-            : performance.now() / 1000;
-
-        const pointer: BotanicalPointerState = {
-            x: -9999,
-            y: -9999,
-            vx: 0,
-            vy: 0,
-            lastT: 0,
-            lastRustleSpawn: 0,
-        };
-        const windCalm = resolveDiurnalWindScale(localHour);
-        let frameSeq = 0;
-        let prevSec = 0;
-        let lastDriftSpawn = growthStartRef.current + GROWTH_DURATION_SEC + 1;
+        let cancelled = false;
         let rafId: number | null = null;
         let wakeTimer: ReturnType<typeof setTimeout> | null = null;
+        const renderCache = createBotanicalRenderCache();
 
         const cancel = () => {
             if (rafId !== null) {
@@ -195,83 +169,125 @@ function BotanicalCanvasWorkbench({
             }
         };
 
-        const tick = (nowMs: number) => {
-            rafId = null;
-            const timeSec = nowMs / 1000;
-            const dt = prevSec > 0 ? Math.min(timeSec - prevSec, 0.05) : 0.016;
-            prevSec = timeSec;
-            frameSeq++;
-            const rawProgress = Math.max(
-                0,
-                Math.min(
-                    1,
-                    (timeSec - growthStartRef.current) / GROWTH_DURATION_SEC,
-                ),
-            );
-
-            lastDriftSpawn = renderBotanicalFrame({
-                ctx,
-                scene,
-                width: STAGE_WIDTH,
-                height: STAGE_HEIGHT,
-                timeSec,
-                dt,
-                rawProgress,
-                reducedMotion: false,
-                windCalm,
-                searchFocused: false,
-                embedded: false,
-                palette,
-                pointer,
-                drifters: driftersRef.current,
-                lastDriftSpawn,
-                frameSeq,
-                runtime: runtimeRef.current,
-                sceneSide,
+        void loadBotanicalSpecies(concreteSpecies).then((speciesModule) => {
+            if (cancelled) return;
+            const scene = generateBotanicalScene(
+                speciesModule,
+                STAGE_WIDTH,
+                STAGE_HEIGHT,
                 dateKey,
-                localHour,
-                forceVisitor,
-            });
+                false,
+                undefined,
+                { sceneSide, archetype: resolvedArchetype },
+            );
+            sceneRef.current = scene;
+            runtimeRef.current = createBotanicalRuntimeState();
+            driftersRef.current = [];
+            const prefersReduced = globalThis.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            ).matches;
+            growthStartRef.current = prefersReduced
+                ? performance.now() / 1000 - GROWTH_DURATION_SEC - 1
+                : performance.now() / 1000;
 
-            const active = isBotanicalSceneActive({
-                runtime: runtimeRef.current,
-                rawProgress,
-                timeSec,
-                scene,
-                drifters: driftersRef.current,
-                reducedMotion: false,
-                embedded: false,
-            });
+            const pointer: BotanicalPointerState = {
+                x: -9999,
+                y: -9999,
+                vx: 0,
+                vy: 0,
+                lastT: 0,
+                lastRustleSpawn: 0,
+            };
+            const windCalm = resolveDiurnalWindScale(localHour);
+            let frameSeq = 0;
+            let prevSec = 0;
+            let lastDriftSpawn = growthStartRef.current + GROWTH_DURATION_SEC +
+                1;
 
-            if (rawProgress < 1) {
-                setMotionLabel("生长绘制中");
-            } else if (active) {
-                setMotionLabel("阵风拂动中");
-            } else {
-                setMotionLabel("静息零功耗休眠");
-            }
+            const tick = (nowMs: number) => {
+                rafId = null;
+                if (cancelled) return;
+                const timeSec = nowMs / 1000;
+                const dt = prevSec > 0
+                    ? Math.min(timeSec - prevSec, 0.05)
+                    : 0.016;
+                prevSec = timeSec;
+                frameSeq++;
+                const rawProgress = Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        (timeSec - growthStartRef.current) /
+                            GROWTH_DURATION_SEC,
+                    ),
+                );
 
-            if (active) {
-                rafId = requestAnimationFrame(tick);
-            } else {
+                lastDriftSpawn = renderBotanicalFrame({
+                    ctx,
+                    scene,
+                    width: STAGE_WIDTH,
+                    height: STAGE_HEIGHT,
+                    timeSec,
+                    dt,
+                    rawProgress,
+                    reducedMotion: false,
+                    windCalm,
+                    searchFocused: false,
+                    embedded: false,
+                    palette,
+                    pointer,
+                    drifters: driftersRef.current,
+                    lastDriftSpawn,
+                    frameSeq,
+                    runtime: runtimeRef.current,
+                    sceneSide,
+                    forceVisitor,
+                    cache: renderCache,
+                    dpr,
+                });
+
+                const active = isBotanicalSceneActive({
+                    runtime: runtimeRef.current,
+                    rawProgress,
+                    timeSec,
+                    scene,
+                    drifters: driftersRef.current,
+                    reducedMotion: false,
+                    embedded: false,
+                });
+
+                if (rawProgress < 1) {
+                    setMotionLabel("生长绘制中");
+                } else if (active) {
+                    setMotionLabel("阵风拂动中");
+                } else {
+                    setMotionLabel("静息零功耗休眠");
+                }
+
+                if (active) {
+                    rafId = requestAnimationFrame(tick);
+                } else {
+                    prevSec = 0;
+                    wakeTimer = globalThis.setTimeout(() => {
+                        wakeTimer = null;
+                        schedule();
+                    }, 12_000);
+                }
+            };
+
+            const schedule = () => {
+                cancel();
                 prevSec = 0;
-                wakeTimer = globalThis.setTimeout(() => {
-                    wakeTimer = null;
-                    schedule();
-                }, 12_000);
-            }
-        };
-
-        const schedule = () => {
-            cancel();
-            prevSec = 0;
-            rafId = requestAnimationFrame(tick);
-        };
-        scheduleRef.current = schedule;
-        schedule();
+                rafId = requestAnimationFrame(tick);
+            };
+            scheduleRef.current = schedule;
+            schedule();
+        });
 
         return () => {
+            cancelled = true;
             cancel();
+            invalidateBotanicalCache(renderCache);
             scheduleRef.current = null;
         };
     }, [
@@ -286,6 +302,9 @@ function BotanicalCanvasWorkbench({
     ]);
 
     const triggerResonance = (kind: BotanicalResonanceKind) => {
+        const isDark = surfaceMode === "dark" ||
+            surfaceMode === "overPhotoSilk" ||
+            surfaceMode === "overPhotoGongbi";
         triggerBotanicalResonance(
             runtimeRef.current,
             kind,
@@ -294,6 +313,7 @@ function BotanicalCanvasWorkbench({
             driftersRef.current,
             resolveDiurnalWindScale(localHour),
             1,
+            { isDark, forceVisitor },
         );
         scheduleRef.current?.();
     };
@@ -330,11 +350,6 @@ function BotanicalCanvasWorkbench({
                     title="二十四节气与物候"
                     description={`${solarInfo.season.toUpperCase()} · ${
                         PHENOLOGY_LABELS[solarInfo.phenologyStage]
-                    } · ${
-                        solarInfo.season === "spring" ||
-                            solarInfo.season === "summer"
-                            ? "朱文阳刻闲章"
-                            : "白文阴刻闲章"
                     }${solarInfo.isSnowSeason ? " · 寒梅覆雪" : ""}`}
                 >
                     <NativeSelect
@@ -429,7 +444,7 @@ function BotanicalCanvasWorkbench({
                                 右侧生长
                             </RadioGroupItem>
                             <RadioGroupItem value="left">
-                                左侧镜像
+                                左侧生长
                             </RadioGroupItem>
                         </RadioGroup>
                     </div>
@@ -441,7 +456,7 @@ function BotanicalCanvasWorkbench({
                         aria-label="显示首页安全区参考线"
                     />
                 </SettingsRow>
-                <SettingsRow title="强制显示偶遇生灵（宿雀/蝶/豆娘）">
+                <SettingsRow title="强制显示偶遇生灵（宿雀/草虫）">
                     <Switch
                         checked={forceVisitor}
                         onCheckedChange={setForceVisitor}
