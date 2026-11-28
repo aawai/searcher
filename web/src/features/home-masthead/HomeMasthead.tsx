@@ -312,6 +312,22 @@ export function HomeMasthead(props: HomeMastheadProps): JSX.Element | null {
         (peekMetrics?.hidden ?? false);
 
     useLayoutEffect(() => {
+        const desktopHidden = Boolean(
+            contentRef.current?.closest("[hidden]") ??
+                sideColumnRef.current?.closest("[hidden]") ??
+                sideStampRef.current?.closest("[hidden]"),
+        );
+        if (!desktopHidden && placement.mode === "side") {
+            document.documentElement.dataset.mastheadSide = placement.side;
+        } else {
+            delete document.documentElement.dataset.mastheadSide;
+        }
+        return () => {
+            delete document.documentElement.dataset.mastheadSide;
+        };
+    }, [hostActive, placement, effectiveSideCollapsed]);
+
+    useLayoutEffect(() => {
         const sheet = sheetRef.current;
         if (!sheet) return;
         if (isNarrow && effectiveCollapsed) {

@@ -1,5 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import {
+    BOTANICAL_ARCHETYPE_NAMES,
+    type BotanicalArchetype,
     buildBotanicalPalette,
     type ConcreteBotanicalSpecies,
     createBotanicalRuntimeState,
@@ -8,6 +10,8 @@ import {
     isBotanicalSceneActive,
     nextBotanicalWakeDelayMs,
     renderBotanicalFrame,
+    resolveBotanicalArchetype,
+    resolveBotanicalBackdropAdaptation,
     resolveBotanicalSpecies,
     resolveBotanicalViewport,
     resolveDiurnalWindScale,
@@ -1326,4 +1330,265 @@ Deno.test("minimalist折枝 atmosphere: renders contourless air washes with zero
             );
         }
     }
+});
+
+Deno.test("phase 1+2 contract: all 7 species clear wide search zone, local band adaptation & gongbi-line, solidSurface suppresses air wash", () => {
+    // 1. All 7 species at 1440x900 must keep non-ghost branches clear of the central search bar [420, 1020] x [315, 420]
+    for (const species of SPECIES) {
+        const scene = generateBotanicalScene(
+            species,
+            1440,
+            900,
+            "2026-06-21",
+            false,
+        );
+        for (const b of scene.branches) {
+            if (b.ghost) continue;
+            for (const p of b.points) {
+                const insideSearch = p.x >= 420 && p.x <= 1020 &&
+                    p.y >= 315 && p.y <= 420;
+                assert(
+                    !insideSearch,
+                    `${species}: non-ghost branch point (${p.x.toFixed(1)}, ${
+                        p.y.toFixed(1)
+                    }) intruded wide search zone`,
+                );
+            }
+        }
+    }
+
+    // 2. Local band adaptation: split-tone wallpaper (bright left, dark textured right)
+    const splitBands = {
+        left: { lightness: 0.78, spread: 0.10 },
+        right: { lightness: 0.24, spread: 0.25 },
+    };
+    const rightOnLightTheme = resolveBotanicalBackdropAdaptation({
+        overPhoto: true,
+        scheme: "light",
+        sceneSide: "right",
+        backdropBands: splitBands,
+    });
+    assertEquals(rightOnLightTheme.isDark, true);
+    assertEquals(rightOnLightTheme.photoStyle, "gongbi-line");
+
+    const leftOnDarkTheme = resolveBotanicalBackdropAdaptation({
+        overPhoto: true,
+        scheme: "dark",
+        sceneSide: "left",
+        backdropBands: splitBands,
+    });
+    assertEquals(leftOnDarkTheme.isDark, false);
+    assertEquals(leftOnDarkTheme.photoStyle, "silk-wash");
+
+    const plainCanvas = resolveBotanicalBackdropAdaptation({
+        overPhoto: false,
+        scheme: "light",
+        sceneSide: "right",
+        backdropBands: splitBands,
+        solidSurface: true,
+    });
+    assertEquals(plainCanvas.isDark, false);
+    assertEquals(plainCanvas.photoStyle, "xuan");
+    assertEquals(plainCanvas.solidSurface, true);
+
+    // 3. gongbi-line reduces fill/wash opacity vs silk-wash
+    const silkPal = buildBotanicalPalette(
+        true,
+        "#fb7185",
+        "#f5f5f7",
+        true,
+        12,
+        "plum",
+        { photoSpread: 0.08 },
+    );
+    const gongbiPal = buildBotanicalPalette(
+        true,
+        "#fb7185",
+        "#f5f5f7",
+        true,
+        12,
+        "plum",
+        { photoSpread: 0.25 },
+    );
+    assertEquals(silkPal.photoStyle, "silk-wash");
+    assertEquals(gongbiPal.photoStyle, "gongbi-line");
+    const alphaOf = (s: string) => Number(s.match(/,([^,)]+)\)$/)?.[1] ?? "0");
+    assert(
+        alphaOf(gongbiPal.wash("accent")) < alphaOf(silkPal.wash("accent")),
+        "Expected gongbi-line to soften wash alpha over busy photos",
+    );
+
+    // 4. solidSurface suppresses atmospheric bokeh washes in renderBotanicalFrame
+    const solidPal = buildBotanicalPalette(
+        false,
+        "#be123c",
+        "#1d1d1f",
+        false,
+        12,
+        "plum",
+        { solidSurface: true },
+    );
+    assertEquals(solidPal.solidSurface, true);
+    const { ctx: solidCtx } = createMockCanvasContext();
+    let solidLargeEllipses = 0;
+    const origArc = solidCtx.arc;
+    solidCtx.arc = (x: number, y: number, r: number, s: number, e: number) => {
+        if (r >= 120) solidLargeEllipses++;
+        origArc(x, y, r, s, e);
+    };
+    const plum = generateBotanicalScene("plum", 1440, 900, "2026-11-22", false);
+    renderBotanicalFrame({
+        ctx: solidCtx,
+        scene: plum,
+        width: 1440,
+        height: 900,
+        timeSec: 12,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: true,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: solidPal,
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 0,
+        frameSeq: 1,
+    });
+    assertEquals(
+        solidLargeEllipses,
+        0,
+        "Expected solidSurface to suppress atmospheric bokeh washes",
+    );
+});
+
+Deno.test("phase 3 contract: non-mirrored left-side geometry, 7x3 archetypes, serendipity visitor, and AI resonance", () => {
+    // 1. Parameter-level left-side generation without ctx.scale(-1, 1)
+    const leftPlum = generateBotanicalScene(
+        "plum",
+        1440,
+        900,
+        "2026-11-27",
+        false,
+        undefined,
+        { sceneSide: "left" },
+    );
+    assertEquals(leftPlum.side, "left");
+    const leftHero = leftPlum.branches.find((b) => !b.ghost && !b.parentRef);
+    assert(leftHero, "Expected hero branch in left-side plum");
+    assert(
+        leftHero.points[0].x < 720,
+        `Expected left-side plum root x < 720, got ${leftHero.points[0].x}`,
+    );
+
+    const { ctx: leftCtx, assertFiniteCoords: checkLeft } =
+        createMockCanvasContext();
+    let fullCanvasMirrorTranslates = 0;
+    const origTranslate = leftCtx.translate;
+    leftCtx.translate = (x: number, y: number) => {
+        if (x === 1440 && y === 0) fullCanvasMirrorTranslates++;
+        origTranslate(x, y);
+    };
+    renderBotanicalFrame({
+        ctx: leftCtx,
+        scene: leftPlum,
+        width: 1440,
+        height: 900,
+        timeSec: 12,
+        dt: 0.016,
+        rawProgress: 1,
+        reducedMotion: true,
+        windCalm: 1,
+        searchFocused: false,
+        embedded: false,
+        palette: buildBotanicalPalette(false, "#be123c", "#1d1d1f"),
+        pointer: {
+            x: -9999,
+            y: -9999,
+            vx: 0,
+            vy: 0,
+            lastT: 0,
+            lastRustleSpawn: 0,
+        },
+        drifters: [],
+        lastDriftSpawn: 0,
+        frameSeq: 1,
+        sceneSide: "left",
+        forceVisitor: true,
+    });
+    checkLeft();
+    assertEquals(
+        fullCanvasMirrorTranslates,
+        0,
+        "Expected parameter-level left-side scene to render without full-canvas mirror translate(width, 0)",
+    );
+
+    // 2. 7 species x 3 archetypes all satisfy search clearance & core species invariants
+    for (const species of SPECIES) {
+        assertEquals(BOTANICAL_ARCHETYPE_NAMES[species].length, 3);
+        for (
+            const arch of [
+                0,
+                1,
+                2,
+            ] as const satisfies readonly BotanicalArchetype[]
+        ) {
+            assertEquals(
+                resolveBotanicalArchetype(species, "2026-11-27", arch),
+                arch,
+            );
+            const scene = generateBotanicalScene(
+                species,
+                1440,
+                900,
+                "2026-11-27",
+                false,
+                undefined,
+                { archetype: arch },
+            );
+            assertEquals(scene.archetype, arch);
+            for (const b of scene.branches) {
+                if (b.ghost) continue;
+                for (const p of b.points) {
+                    const insideSearch = p.x >= 420 && p.x <= 1020 &&
+                        p.y >= 315 && p.y <= 420;
+                    assert(
+                        !insideSearch,
+                        `${species} arch=${arch}: branch point (${
+                            p.x.toFixed(1)
+                        }, ${p.y.toFixed(1)}) intruded search zone`,
+                    );
+                }
+            }
+            if (species === "bamboo") {
+                assert(
+                    scene.branches.some((b) => b.points.some((p) => p.y < 0)),
+                    `bamboo arch=${arch}: expected top-piercing culm`,
+                );
+            }
+            if (species === "fern") {
+                assert(
+                    scene.rocks.length >= 1,
+                    `fern arch=${arch}: expected slope rock`,
+                );
+            }
+        }
+    }
+
+    // 3. AI thinking & AI complete resonance
+    const runtime = createBotanicalRuntimeState();
+    triggerBotanicalGust(runtime, 10, 0.9, 4.6);
+    triggerBotanicalResonance(runtime, "ai-thinking", 11, leftPlum, [], 1, 1);
+    assertEquals(runtime.gustDurationSec, 0);
+    assertEquals(runtime.breezeImpulseStrength, 0);
+    triggerBotanicalResonance(runtime, "ai-complete", 14, leftPlum, [], 1, 2);
+    assert(runtime.breezeImpulseStrength > 0);
+    assertEquals(runtime.haloPulseStartSec, 14);
 });

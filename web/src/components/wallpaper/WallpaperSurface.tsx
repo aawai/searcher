@@ -10,7 +10,10 @@ import {
     DEFAULT_WALLPAPER_PRESENTATION,
     type WallpaperPresentation,
 } from "@shared/wallpaper-presentation.ts";
-import type { BackdropPolarity } from "../../design-system/wallpaper-accent.ts";
+import type {
+    BackdropPolarity,
+    MastheadBands,
+} from "../../design-system/wallpaper-accent.ts";
 
 const BotanicalSceneCanvas = lazy(() => import("./BotanicalSceneCanvas.tsx"));
 
@@ -20,6 +23,9 @@ export interface WallpaperSurfaceProps {
     presentation?: WallpaperPresentation | null;
     mode?: "image" | "ambient" | "canvas";
     backdropPolarity?: BackdropPolarity;
+    backdropBands?: MastheadBands | null;
+    scheme?: "light" | "dark";
+    dormant?: boolean;
     className?: string;
     style?: CSSProperties;
     embedded?: boolean;
@@ -52,6 +58,9 @@ export function WallpaperSurface({
     presentation,
     mode,
     backdropPolarity,
+    backdropBands,
+    scheme,
+    dormant = false,
     className,
     style,
     embedded = false,
@@ -122,6 +131,11 @@ export function WallpaperSurface({
                         backdropPolarity={effectiveMode === "image"
                             ? backdropPolarity
                             : undefined}
+                        backdropBands={effectiveMode === "image"
+                            ? backdropBands
+                            : undefined}
+                        scheme={scheme}
+                        dormant={dormant}
                         sceneSide={sceneSide}
                         testId={testId}
                     />

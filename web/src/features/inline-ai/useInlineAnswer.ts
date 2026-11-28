@@ -17,6 +17,7 @@ import type {
     ToolsConfig,
 } from "../ask/types.ts";
 import { deriveInlineAnswer, type InlineAnswerView } from "./inline-answer.ts";
+import { emitBotanicalResonance } from "../../components/wallpaper/botanical-resonance.ts";
 
 interface AnswerSettings {
     capabilities: AiCapabilitiesDto;
@@ -112,6 +113,21 @@ export function useInlineAnswer(
         generationConfig,
         generationEpochRef,
     });
+
+    const wasStreamingRef = useRef(false);
+    useEffect(() => {
+        if (isStreaming && !wasStreamingRef.current) {
+            emitBotanicalResonance("ai-thinking");
+        } else if (!isStreaming && wasStreamingRef.current) {
+            const hasAnswer = Boolean(
+                conversation?.messages.some((m) => m.role === "assistant"),
+            );
+            if (open && !error && hasAnswer) {
+                emitBotanicalResonance("ai-complete");
+            }
+        }
+        wasStreamingRef.current = isStreaming;
+    }, [isStreaming, open, error, conversation]);
 
     // Send once the render that applied the settings and the cleared
     // conversation has committed: the stream hook reads both through refs.
