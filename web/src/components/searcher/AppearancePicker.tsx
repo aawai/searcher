@@ -7,10 +7,7 @@ import {
     normalizeDarkWallpaperMode,
     type ThemeId,
 } from "@shared/contracts.ts";
-import {
-    type BotanicalSpecies,
-    normalizeBotanicalSpecies,
-} from "@shared/wallpaper.ts";
+import type { BotanicalSpecies } from "@shared/wallpaper.ts";
 import { wallpaperPresentation } from "@shared/wallpaper-presentation.ts";
 import { routes } from "../../app/routes.ts";
 import {
@@ -22,10 +19,11 @@ import { runThemeIrisTransition } from "../../design-system/theme-transition.ts"
 import { api } from "../../lib/api.ts";
 import { ThemeCelestialIcon } from "./ThemeCelestialIcon.tsx";
 import { accentLabel, AccentSwatches } from "./AccentSwatches.tsx";
+import { BotanicalSceneChoices } from "./BotanicalSceneChoices.tsx";
 import { ThemeChoices } from "./ThemeChoices.tsx";
 import {
-    BOTANICAL_SCENE_CHOICES,
-    BOTANICAL_SPECIES_NOTES,
+    BOTANICAL_SPECIES_LABELS,
+    BOTANICAL_SPECIES_SHORT_NOTES,
     buildDarkWallpaperSelectionPatch,
     buildWallpaperHistoryItems,
     buildWallpaperSelectionPatch,
@@ -35,8 +33,9 @@ import {
 } from "../wallpaper/wallpaper-choices.ts";
 import {
     formatLocalDateKey,
+    resolveBotanicalSpecies,
     resolveSolarTerm,
-} from "../wallpaper/botanical-engine.ts";
+} from "../wallpaper/solar-terms.ts";
 import { Button } from "../ui/button.tsx";
 import {
     Popover,
@@ -151,6 +150,9 @@ export function AppearancePicker(
     },
 ) {
     const [open, setOpen] = useState(false);
+    const [hoveredSpecies, setHoveredSpecies] = useState<
+        BotanicalSpecies | null
+    >(null);
     const [lastBotanicalSpecies, setLastBotanicalSpecies] = useState<
         BotanicalSpecies
     >(botanicalScene ?? "auto");
@@ -159,6 +161,9 @@ export function AppearancePicker(
             setLastBotanicalSpecies(botanicalScene);
         }
     }, [botanicalScene]);
+    useEffect(() => {
+        if (!open) setHoveredSpecies(null);
+    }, [open]);
 
     const [recentWallpapers, setRecentWallpapers] = useState<
         WallpaperHistoryRecord[]
@@ -200,6 +205,20 @@ export function AppearancePicker(
             ? (darkWallpaper ? "深色独立" : "未设置")
             : (wallpaper ? "跟随浅色" : "未设置")
         : (wallpaper ? "已启用" : "已停用");
+    const todayDateKey = formatLocalDateKey(new Date());
+    const solarTerm = resolveSolarTerm(todayDateKey).term;
+    const todayAutoSpecies = resolveBotanicalSpecies("auto", todayDateKey);
+    const botanicalStatusLabel = hoveredSpecies
+        ? (hoveredSpecies === "auto"
+            ? `今日${BOTANICAL_SPECIES_LABELS[todayAutoSpecies]} · ${solarTerm}`
+            : `${BOTANICAL_SPECIES_LABELS[hoveredSpecies]} · ${
+                BOTANICAL_SPECIES_SHORT_NOTES[hoveredSpecies]
+            }`)
+        : botanicalScene === null
+        ? "已关闭"
+        : botanicalScene === "auto"
+        ? `今日${BOTANICAL_SPECIES_LABELS[todayAutoSpecies]} · ${solarTerm}`
+        : `${BOTANICAL_SPECIES_LABELS[botanicalScene]} · ${solarTerm}`;
     const label = `外观：${THEME_LABELS[theme]}，${accentLabel(accent)}`;
 
     return (
@@ -280,64 +299,41 @@ export function AppearancePicker(
                 </section>
                 <section className="appearance-picker-section">
                     <div className="appearance-picker-heading appearance-picker-heading--control">
-                        <span aria-hidden="true">
-                            内置插画
+                        <span aria-hidden="true">内置插画</span>
+                        <span className="appearance-picker-heading-actions">
                             <span
-                                style={{
-                                    marginInlineStart: "var(--space-2)",
-                                    fontWeight: "var(--font-body-weight)",
-                                    color: "var(--muted)",
-                                    fontSize: "var(--font-metadata-size)",
-                                }}
+                                className="appearance-picker-heading-meta"
+                                aria-hidden="true"
                             >
-                                {botanicalScene === null
-                                    ? `今日 · ${
-                                        resolveSolarTerm(
-                                            formatLocalDateKey(new Date()),
-                                        ).term
-                                    }`
-                                    : resolveSolarTerm(
-                                        formatLocalDateKey(new Date()),
-                                    ).term}
+                                {botanicalStatusLabel}
                             </span>
+                            <Switch
+                                size="sm"
+                                checked={botanicalScene !== null}
+                                onCheckedChange={(checked) => {
+                                    onBotanicalSceneChange(
+                                        checked ? lastBotanicalSpecies : null,
+                                    );
+                                }}
+                                aria-label="启用内置插画"
+                                data-testid="appearance-picker-scene-switch"
+                            />
                         </span>
-                        <Switch
-                            size="sm"
-                            checked={botanicalScene !== null}
-                            onCheckedChange={(checked) => {
-                                onBotanicalSceneChange(
-                                    checked ? lastBotanicalSpecies : null,
-                                );
-                            }}
-                            aria-label="启用内置插画"
-                            data-testid="appearance-picker-scene-switch"
-                        />
                     </div>
-                    <RadioGroup
-                        variant="segmented"
-                        className="appearance-picker-botanical"
-                        value={botanicalScene ?? ""}
-                        onValueChange={(next) => {
-                            const species = normalizeBotanicalSpecies(next);
-                            if (!species) return;
-                            setLastBotanicalSpecies(species);
-                            if (species !== botanicalScene) {
-                                onBotanicalSceneChange(species);
-                            }
-                        }}
-                        aria-label="插画枝型"
-                    >
-                        {BOTANICAL_SCENE_CHOICES.map(([id, text]) => (
-                            <RadioGroupItem
-                                key={id}
-                                value={id}
-                                title={BOTANICAL_SPECIES_NOTES[id]}
-                                data-testid={`appearance-picker-scene-${id}`}
-                            >
-                                {text}
-                            </RadioGroupItem>
-                        ))}
-                    </RadioGroup>
+                    {botanicalScene !== null && (
+                        <BotanicalSceneChoices
+                            value={botanicalScene}
+                            onValueChange={(species) => {
+                                setLastBotanicalSpecies(species);
+                                if (species !== botanicalScene) {
+                                    onBotanicalSceneChange(species);
+                                }
+                            }}
+                            onPreviewSpecies={setHoveredSpecies}
+                            className="appearance-picker-botanical"
+                            itemTestIdPrefix="appearance-picker-scene"
+                        />
+                    )}
                 </section>
                 {showWallpaperSection && (
                     <section className="appearance-picker-section">

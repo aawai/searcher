@@ -261,3 +261,81 @@ Deno.test("EngineSelector: differentiates reachability failure beyond color and 
         dom.restore();
     }
 });
+
+Deno.test("BotanicalSceneChoices: renders 6 specimen SVG tiles, reflects selection, and notifies hover preview", async () => {
+    const dom = setupDom();
+    try {
+        const { BotanicalSceneChoices } = await import(
+            "./BotanicalSceneChoices.tsx"
+        );
+        const container = dom.document.createElement("div");
+        dom.document.body.appendChild(container);
+        const root = createRoot(container as unknown as Element);
+        const selectedCalls: string[] = [];
+        const previewCalls: Array<string | null> = [];
+
+        await act(() => {
+            root.render(
+                <BotanicalSceneChoices
+                    value="maple"
+                    onValueChange={(next) => selectedCalls.push(next)}
+                    onPreviewSpecies={(sp) => previewCalls.push(sp)}
+                    testId="botanical-choices-test"
+                    itemTestIdPrefix="botanical-tile"
+                />,
+            );
+        });
+
+        const tiles = Array.from(
+            dom.document.querySelectorAll(".botanical-choice"),
+        );
+        assertEquals(tiles.length, 6);
+        assertEquals(
+            tiles.every(
+                (t) => t.querySelector("svg.botanical-choice-glyph") !== null,
+            ),
+            true,
+        );
+        const captions = tiles.map((t) =>
+            t.querySelector(".botanical-choice-caption")?.textContent?.trim()
+        );
+        assertEquals(captions, [
+            "每日",
+            "银杏",
+            "红枫",
+            "尤加利",
+            "寒梅",
+            "蕨类",
+        ]);
+
+        const mapleTile = dom.document.querySelector(
+            '[data-testid="botanical-tile-maple"]',
+        ) as HTMLElement | null;
+        const plumTile = dom.document.querySelector(
+            '[data-testid="botanical-tile-plum"]',
+        ) as HTMLElement | null;
+        assertEquals(mapleTile?.hasAttribute("data-checked"), true);
+        assertEquals(plumTile?.hasAttribute("data-checked"), false);
+
+        await act(() => {
+            plumTile?.dispatchEvent(
+                new globalThis.MouseEvent("mouseover", { bubbles: true }),
+            );
+            plumTile?.dispatchEvent(
+                new globalThis.MouseEvent("click", { bubbles: true }),
+            );
+            plumTile?.dispatchEvent(
+                new globalThis.MouseEvent("mouseout", { bubbles: true }),
+            );
+        });
+
+        assertEquals(selectedCalls, ["plum"]);
+        assertEquals(previewCalls.includes("plum"), true);
+
+        await act(() => {
+            root.unmount();
+        });
+    } finally {
+        dom.restore();
+    }
+});

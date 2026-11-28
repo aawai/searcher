@@ -747,41 +747,152 @@
 .appearance-picker-heading--control > span {
     font-weight: var(--font-label-weight);
 }
-.appearance-picker [data-slot="radio-group"][data-variant="segmented"].appearance-picker-botanical {
-    width: 100%;
+.appearance-picker-heading-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     min-width: 0;
+}
+.appearance-picker-heading-meta {
+    font-weight: var(--font-body-weight);
+    color: var(--muted);
+    font-size: var(--font-metadata-size);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Botanical scene choices (BotanicalSceneChoices): six specimen preview tiles
+   matching ThemeChoices and the 6-column quick wallpaper strip. */
+[data-slot="radio-group"].botanical-choices {
     display: grid;
-    grid-auto-flow: row;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    min-inline-size: 0;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--space-2);
 }
-[data-shape="pill"] .appearance-picker [data-slot="radio-group"][data-variant="segmented"].appearance-picker-botanical {
-    border-radius: calc(var(--control-compact-height) / 2 + var(--space-half));
+[data-slot="radio-group"].botanical-choices.settings-botanical-group {
+    grid-template-columns: repeat(6, minmax(0, var(--space-10)));
 }
-.appearance-picker [data-slot="radio-group"][data-variant="segmented"].appearance-picker-botanical .radio-item {
+@container settings-panel (max-width: 460px) {
+    [data-slot="radio-group"].botanical-choices.settings-botanical-group {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@media (max-width: 480px) {
+    [data-slot="radio-group"].botanical-choices.settings-botanical-group {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+.botanical-choices .botanical-choice {
+    --botanical-ink: color-mix(in srgb, var(--foreground) 72%, transparent);
+    --botanical-pigment: var(--accent);
+    flex-direction: column;
+    gap: var(--space-1);
     min-width: 0;
-    justify-content: center;
-    padding: 0 var(--space-1);
+    padding: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+}
+.botanical-choices .botanical-choice[data-species="auto"] {
+    --botanical-pigment: var(--accent);
+}
+.botanical-choices .botanical-choice[data-species="ginkgo"] {
+    --botanical-pigment: light-dark(#c68b2c, #e5b75a);
+}
+.botanical-choices .botanical-choice[data-species="maple"] {
+    --botanical-pigment: light-dark(#c84638, #f07668);
+}
+.botanical-choices .botanical-choice[data-species="eucalyptus"] {
+    --botanical-pigment: light-dark(#4e8a78, #74b8a3);
+}
+.botanical-choices .botanical-choice[data-species="plum"] {
+    --botanical-pigment: light-dark(#c43d63, #f27a9b);
+}
+.botanical-choices .botanical-choice[data-species="fern"] {
+    --botanical-pigment: light-dark(#5c7f62, #86b08c);
+}
+.botanical-choices .botanical-choice .radio-circle {
+    display: none;
+}
+.botanical-choice-preview {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 76% 74%,
+            color-mix(in srgb, var(--botanical-pigment) 14%, transparent),
+            transparent 72%
+        ),
+        var(--surface-soft);
+    transition:
+        box-shadow var(--motion-fast) var(--ease-standard),
+        background var(--motion-fast) var(--ease-standard);
+}
+.botanical-choice-preview::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: var(--space-hairline) solid var(--border);
+    border-radius: inherit;
+    pointer-events: none;
+}
+@media (hover: hover) {
+    .botanical-choice:hover .botanical-choice-preview::after {
+        border-color: var(--border-control);
+    }
+}
+.botanical-choice[data-checked] .botanical-choice-preview {
+    box-shadow: var(--shadow-swatch-selected);
+    background:
+        radial-gradient(
+            circle at 76% 74%,
+            color-mix(in srgb, var(--botanical-pigment) 22%, transparent),
+            transparent 74%
+        ),
+        var(--surface-soft);
+}
+.botanical-choice-glyph {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+.botanical-choice-caption {
+    font-size: var(--font-metadata-size);
+    line-height: var(--font-metadata-line-height);
+    color: var(--muted);
+    text-align: center;
     white-space: nowrap;
 }
-.settings-row-control [data-slot="radio-group"][data-variant="segmented"].settings-botanical-group {
-    width: 100%;
-    grid-auto-flow: row;
-    grid-template-columns: repeat(8, minmax(0, 1fr));
+.botanical-choice[data-checked] .botanical-choice-caption {
+    color: var(--foreground);
+    font-weight: var(--font-label-weight);
 }
-@container settings-panel (max-width: 580px) {
-    .settings-row-control [data-slot="radio-group"][data-variant="segmented"].settings-botanical-group {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    [data-shape="pill"] .settings-row-control [data-slot="radio-group"][data-variant="segmented"].settings-botanical-group {
-        border-radius: calc(var(--control-compact-height) / 2 + var(--space-half));
+[data-contrast="more"] .botanical-choices .botanical-choice {
+    --botanical-ink: var(--foreground);
+    --botanical-pigment: var(--foreground);
+}
+[data-contrast="more"] .botanical-choice-preview {
+    background: var(--surface);
+}
+@media (prefers-reduced-motion: reduce) {
+    .botanical-choice-preview {
+        transition: none;
     }
 }
-@media (max-width: 639px) {
-    .settings-row-control [data-slot="radio-group"][data-variant="segmented"].settings-botanical-group {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+@media (forced-colors: active) {
+    .botanical-choice-preview {
+        forced-color-adjust: none;
     }
-    [data-shape="pill"] .settings-row-control [data-slot="radio-group"][data-variant="segmented"].settings-botanical-group {
-        border-radius: calc(var(--control-compact-height) / 2 + var(--space-half));
+    .botanical-choice[data-checked] .botanical-choice-preview {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
     }
 }
 .appearance-picker [data-slot="radio-group"][data-variant="segmented"].appearance-picker-dark-mode {

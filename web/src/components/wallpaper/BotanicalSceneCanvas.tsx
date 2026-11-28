@@ -10,12 +10,16 @@ import {
     type BotanicalPalette,
     type BotanicalPointerState,
     type BotanicalScene,
+    type BotanicalSpeciesModule,
     buildBotanicalPalette,
     type ConcreteBotanicalSpecies,
+    createBotanicalRenderCache,
     createBotanicalRuntimeState,
     formatLocalDateKey,
     generateBotanicalScene,
+    invalidateBotanicalCache,
     isBotanicalSceneActive,
+    loadBotanicalSpecies,
     nextBotanicalWakeDelayMs,
     renderBotanicalFrame,
     resolveBotanicalBackdropAdaptation,
@@ -23,7 +27,7 @@ import {
     resolveBotanicalViewport,
     resolveDiurnalWindScale,
     triggerBotanicalResonance,
-} from "./botanical-engine.ts";
+} from "./botanical/index.ts";
 import {
     BOTANICAL_RESONANCE_EVENT,
     type BotanicalResonanceDetail,
@@ -232,6 +236,8 @@ export default function BotanicalSceneCanvas({
             return side;
         };
 
+        let cancelled = false;
+        let speciesModule: BotanicalSpeciesModule | null = null;
         let width = 0;
         let height = 0;
         let dpr = Math.min(globalThis.devicePixelRatio || 1, 2);
@@ -264,19 +270,14 @@ export default function BotanicalSceneCanvas({
         const playSignature = `${dateKey}:${species}`;
         const shouldAnimateGrowth = !embedded && !reducedMotion &&
             readPlayedKey() !== playSignature;
-        if (shouldAnimateGrowth) {
-            writePlayedKey(playSignature);
-        }
-
         const startSec = performance.now() / 1000;
-        const growthStartSec = shouldAnimateGrowth
-            ? startSec
-            : startSec - GROWTH_DURATION_SEC - 1;
+        let growthStartSec = startSec - GROWTH_DURATION_SEC - 1;
         let lastDriftSpawn = growthStartSec + GROWTH_DURATION_SEC + 1.4;
 
         const drifters: Parameters<typeof renderBotanicalFrame>[0]["drifters"] =
             [];
         const runtime = createBotanicalRuntimeState();
+        const renderCache = createBotanicalRenderCache();
         const pointer: BotanicalPointerState = {
             x: -9999,
             y: -9999,
@@ -341,9 +342,8 @@ export default function BotanicalSceneCanvas({
                 frameSeq,
                 runtime,
                 sceneSide: effectiveSide,
-                dateKey,
-                localHour,
-                dockInsets,
+                cache: embedded ? undefined : renderCache,
+                dpr: dpr * viewport.renderScale,
             });
 
             if (staticMode || pageHidden) {
@@ -371,7 +371,11 @@ export default function BotanicalSceneCanvas({
             } else {
                 canvas.dataset.motionState = "idle";
                 prevFrameSec = 0;
-                const delayMs = nextBotanicalWakeDelayMs(runtime, timeSec);
+                const delayMs = nextBotanicalWakeDelayMs(
+                    runtime,
+                    timeSec,
+                    scene,
+                );
                 if (wakeTimerId !== null) {
                     globalThis.clearTimeout(wakeTimerId);
                 }
@@ -394,6 +398,7 @@ export default function BotanicalSceneCanvas({
         };
 
         const measureAndRebuild = () => {
+            if (!speciesModule) return;
             const host = canvas.parentElement;
             const nextW = Math.round(
                 embedded && host ? host.clientWidth : globalThis.innerWidth,
@@ -433,7 +438,7 @@ export default function BotanicalSceneCanvas({
                 0,
             );
             scene = generateBotanicalScene(
-                concreteSpecies,
+                speciesModule,
                 viewport.sceneWidth,
                 viewport.sceneHeight,
                 dateKey,
@@ -442,6 +447,7 @@ export default function BotanicalSceneCanvas({
                 { sceneSide: effectiveSide },
             );
             drifters.length = 0;
+            invalidateBotanicalCache(renderCache);
             paletteState = readThemePalette(
                 canvas,
                 overPhotoRef.current,
@@ -468,6 +474,7 @@ export default function BotanicalSceneCanvas({
                 measureAndRebuild();
                 return;
             }
+            invalidateBotanicalCache(renderCache);
             paletteState = readThemePalette(
                 canvas,
                 overPhotoRef.current,
@@ -505,6 +512,7 @@ export default function BotanicalSceneCanvas({
 
         const onThemeSync = () => {
             effectiveSide = syncEffectiveSide();
+            invalidateBotanicalCache(renderCache);
             paletteState = readThemePalette(
                 canvas,
                 overPhotoRef.current,
@@ -530,6 +538,7 @@ export default function BotanicalSceneCanvas({
                         drifters,
                         windCalm,
                         frameSeq,
+                        { isDark: paletteState.palette.isDark },
                     );
                 }
                 renderFrame(performance.now());
@@ -551,6 +560,7 @@ export default function BotanicalSceneCanvas({
                 drifters,
                 windCalm,
                 frameSeq,
+                { isDark: paletteState.palette.isDark },
             );
             if (!pageHidden && rafId === null) {
                 scheduleRender();
@@ -598,9 +608,16 @@ export default function BotanicalSceneCanvas({
             pointer.y = e.clientY;
             pointer.lastT = now;
 
-            const inBotanicalZone = effectiveSide === "left"
-                ? e.clientX < width * 0.52
-                : e.clientX > width * 0.48;
+            const pad = 112 * (scene?.scale ?? 1);
+            const bounds = scene?.bounds;
+            const inBotanicalZone = bounds
+                ? e.clientX >= bounds.minX - pad &&
+                    e.clientX <= bounds.maxX + pad &&
+                    e.clientY >= bounds.minY - pad &&
+                    e.clientY <= bounds.maxY + pad
+                : (effectiveSide === "left"
+                    ? e.clientX < width * 0.52
+                    : e.clientX > width * 0.48);
             if (
                 inBotanicalZone &&
                 !reducedMotion &&
@@ -659,10 +676,24 @@ export default function BotanicalSceneCanvas({
             });
         }
 
-        measureAndRebuild();
+        void loadBotanicalSpecies(concreteSpecies).then((mod) => {
+            if (cancelled) return;
+            speciesModule = mod;
+            const readySec = performance.now() / 1000;
+            if (shouldAnimateGrowth) {
+                writePlayedKey(playSignature);
+                growthStartSec = readySec;
+            } else {
+                growthStartSec = readySec - GROWTH_DURATION_SEC - 1;
+            }
+            lastDriftSpawn = growthStartSec + GROWTH_DURATION_SEC + 1.4;
+            measureAndRebuild();
+        });
 
         return () => {
+            cancelled = true;
             cancelLoop();
+            invalidateBotanicalCache(renderCache);
             refreshThemeRef.current = null;
             onDormantChangeRef.current = null;
             themeObserver.disconnect();
