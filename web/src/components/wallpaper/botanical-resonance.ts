@@ -3,7 +3,9 @@ export type BotanicalResonanceKind =
     | "task-completed"
     | "tasks-cleared"
     | "theme-ripple"
-    | "search-submit";
+    | "search-submit"
+    | "ai-thinking"
+    | "ai-complete";
 
 export interface BotanicalResonanceDetail {
     readonly kind: BotanicalResonanceKind;

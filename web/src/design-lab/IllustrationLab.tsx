@@ -7,6 +7,8 @@ import {
     ILLUSTRATION_CATALOG,
 } from "../components/illustrations/Illustration.tsx";
 import {
+    BOTANICAL_ARCHETYPE_NAMES,
+    type BotanicalArchetype,
     type BotanicalPointerState,
     type BotanicalScene,
     buildBotanicalPalette,
@@ -14,6 +16,7 @@ import {
     generateBotanicalScene,
     isBotanicalSceneActive,
     renderBotanicalFrame,
+    resolveBotanicalArchetype,
     resolveBotanicalSpecies,
     resolveDiurnalWindScale,
     resolveSolarTerm,
@@ -64,12 +67,20 @@ function BotanicalCanvasWorkbench({
     previewAccent: AccentId | "inherit";
 }) {
     const [species, setSpecies] = useState<BotanicalSpecies>("plum");
+    const [archetypeMode, setArchetypeMode] = useState<
+        "auto" | "0" | "1" | "2"
+    >("auto");
     const [termIndex, setTermIndex] = useState(21); // 小雪
     const [localHour, setLocalHour] = useState(12);
     const [surfaceMode, setSurfaceMode] = useState<
-        "light" | "dark" | "overPhotoDark"
+        | "light"
+        | "dark"
+        | "overPhotoSilk"
+        | "overPhotoGongbi"
+        | "solidLight"
     >("light");
     const [sceneSide, setSceneSide] = useState<"right" | "left">("right");
+    const [forceVisitor, setForceVisitor] = useState(true);
     const [showGuides, setShowGuides] = useState(true);
     const [motionLabel, setMotionLabel] = useState<
         "生长绘制中" | "阵风拂动中" | "静息零功耗休眠"
@@ -93,6 +104,17 @@ function BotanicalCanvasWorkbench({
         () => resolveBotanicalSpecies(species, dateKey),
         [species, dateKey],
     );
+    const resolvedArchetype = useMemo<BotanicalArchetype>(
+        () =>
+            resolveBotanicalArchetype(
+                concreteSpecies,
+                dateKey,
+                archetypeMode === "auto"
+                    ? undefined
+                    : (Number(archetypeMode) as BotanicalArchetype),
+            ),
+        [concreteSpecies, dateKey, archetypeMode],
+    );
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -105,8 +127,13 @@ function BotanicalCanvasWorkbench({
         canvas.height = STAGE_HEIGHT * dpr;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        const isDark = surfaceMode !== "light";
-        const overPhoto = surfaceMode === "overPhotoDark";
+        const isDark = surfaceMode === "dark" ||
+            surfaceMode === "overPhotoSilk" ||
+            surfaceMode === "overPhotoGongbi";
+        const overPhoto = surfaceMode === "overPhotoSilk" ||
+            surfaceMode === "overPhotoGongbi";
+        const photoSpread = surfaceMode === "overPhotoGongbi" ? 0.25 : 0.08;
+        const solidSurface = surfaceMode === "solidLight";
         const root = document.documentElement;
         const stageHost = canvas.parentElement;
         const accentCss =
@@ -120,6 +147,7 @@ function BotanicalCanvasWorkbench({
             overPhoto,
             localHour,
             concreteSpecies,
+            { photoSpread, solidSurface },
         );
 
         const scene = generateBotanicalScene(
@@ -128,6 +156,8 @@ function BotanicalCanvasWorkbench({
             STAGE_HEIGHT,
             dateKey,
             false,
+            undefined,
+            { sceneSide, archetype: resolvedArchetype },
         );
         sceneRef.current = scene;
         runtimeRef.current = createBotanicalRuntimeState();
@@ -200,6 +230,7 @@ function BotanicalCanvasWorkbench({
                 sceneSide,
                 dateKey,
                 localHour,
+                forceVisitor,
             });
 
             const active = isBotanicalSceneActive({
@@ -249,6 +280,8 @@ function BotanicalCanvasWorkbench({
         localHour,
         surfaceMode,
         sceneSide,
+        resolvedArchetype,
+        forceVisitor,
         previewAccent,
     ]);
 
@@ -319,14 +352,46 @@ function BotanicalCanvasWorkbench({
                         ))}
                     </NativeSelect>
                 </SettingsRow>
+                <SettingsRow
+                    title="章法势态（每品种三势轮换）"
+                    description={`当前势态：${
+                        BOTANICAL_ARCHETYPE_NAMES[concreteSpecies][
+                            resolvedArchetype
+                        ]
+                    }`}
+                >
+                    <RadioGroup
+                        variant="segmented"
+                        value={archetypeMode}
+                        onValueChange={(v) =>
+                            setArchetypeMode(v as "auto" | "0" | "1" | "2")}
+                    >
+                        <RadioGroupItem value="auto">跟随日期</RadioGroupItem>
+                        <RadioGroupItem value="0">
+                            {BOTANICAL_ARCHETYPE_NAMES[concreteSpecies][0]}
+                        </RadioGroupItem>
+                        <RadioGroupItem value="1">
+                            {BOTANICAL_ARCHETYPE_NAMES[concreteSpecies][1]}
+                        </RadioGroupItem>
+                        <RadioGroupItem value="2">
+                            {BOTANICAL_ARCHETYPE_NAMES[concreteSpecies][2]}
+                        </RadioGroupItem>
+                    </RadioGroup>
+                </SettingsRow>
                 <SettingsRow title="画布底色与晨昏">
                     <div className="design-lab-row">
                         <RadioGroup
                             variant="segmented"
                             value={surfaceMode}
-                            onValueChange={(v) => setSurfaceMode(
-                                v as "light" | "dark" | "overPhotoDark",
-                            )}
+                            onValueChange={(v) =>
+                                setSurfaceMode(
+                                    v as
+                                        | "light"
+                                        | "dark"
+                                        | "overPhotoSilk"
+                                        | "overPhotoGongbi"
+                                        | "solidLight",
+                                )}
                         >
                             <RadioGroupItem value="light">
                                 浅色宣纸
@@ -334,8 +399,14 @@ function BotanicalCanvasWorkbench({
                             <RadioGroupItem value="dark">
                                 深色曜石
                             </RadioGroupItem>
-                            <RadioGroupItem value="overPhotoDark">
-                                叠图柔化
+                            <RadioGroupItem value="overPhotoSilk">
+                                净底叠图·丝绢
+                            </RadioGroupItem>
+                            <RadioGroupItem value="overPhotoGongbi">
+                                繁底叠图·双勾
+                            </RadioGroupItem>
+                            <RadioGroupItem value="solidLight">
+                                实色笺谱
                             </RadioGroupItem>
                         </RadioGroup>
                         <RadioGroup
@@ -370,6 +441,13 @@ function BotanicalCanvasWorkbench({
                         aria-label="显示首页安全区参考线"
                     />
                 </SettingsRow>
+                <SettingsRow title="强制显示偶遇生灵（宿雀/蝶/豆娘）">
+                    <Switch
+                        checked={forceVisitor}
+                        onCheckedChange={setForceVisitor}
+                        aria-label="强制显示偶遇生灵"
+                    />
+                </SettingsRow>
             </SettingsGroup>
 
             <div
@@ -380,9 +458,11 @@ function BotanicalCanvasWorkbench({
                     borderRadius: "var(--radius-sheet)",
                     overflow: "hidden",
                     border: "1px solid var(--border)",
-                    background: surfaceMode === "light"
+                    background: surfaceMode === "light" ||
+                            surfaceMode === "solidLight"
                         ? "#F4F4F5"
-                        : surfaceMode === "overPhotoDark"
+                        : surfaceMode === "overPhotoSilk" ||
+                                surfaceMode === "overPhotoGongbi"
                         ? "linear-gradient(135deg, #1b2232 0%, #2c2538 52%, #141922 100%)"
                         : "#07080C",
                     color: "var(--accent)",
@@ -447,7 +527,10 @@ function BotanicalCanvasWorkbench({
                 >
                     <Badge variant="secondary">{motionLabel}</Badge>
                     <Badge variant="default">
-                        {concreteSpecies} · {solarInfo.term}
+                        {concreteSpecies} ·{" "}
+                        {BOTANICAL_ARCHETYPE_NAMES[concreteSpecies][
+                            resolvedArchetype
+                        ]} · {solarInfo.term}
                     </Badge>
                 </div>
             </div>
@@ -505,6 +588,13 @@ function BotanicalCanvasWorkbench({
                     onClick={() => triggerResonance("search-submit")}
                 >
                     搜索惊鸿
+                </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => triggerResonance("ai-complete")}
+                >
+                    AI 落墨微澜
                 </Button>
             </div>
         </div>

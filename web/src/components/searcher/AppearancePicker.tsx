@@ -33,6 +33,10 @@ import {
     type WallpaperHistoryRecord,
     type WallpaperPresentationMap,
 } from "../wallpaper/wallpaper-choices.ts";
+import {
+    formatLocalDateKey,
+    resolveSolarTerm,
+} from "../wallpaper/botanical-engine.ts";
 import { Button } from "../ui/button.tsx";
 import {
     Popover,
@@ -276,7 +280,27 @@ export function AppearancePicker(
                 </section>
                 <section className="appearance-picker-section">
                     <div className="appearance-picker-heading appearance-picker-heading--control">
-                        <span aria-hidden="true">内置插画</span>
+                        <span aria-hidden="true">
+                            内置插画
+                            <span
+                                style={{
+                                    marginInlineStart: "var(--space-2)",
+                                    fontWeight: "var(--font-body-weight)",
+                                    color: "var(--muted)",
+                                    fontSize: "var(--font-metadata-size)",
+                                }}
+                            >
+                                {botanicalScene === null
+                                    ? `今日 · ${
+                                        resolveSolarTerm(
+                                            formatLocalDateKey(new Date()),
+                                        ).term
+                                    }`
+                                    : resolveSolarTerm(
+                                        formatLocalDateKey(new Date()),
+                                    ).term}
+                            </span>
+                        </span>
                         <Switch
                             size="sm"
                             checked={botanicalScene !== null}

@@ -226,6 +226,7 @@ function Layout() {
         appearance,
         resolvedScheme,
         effectiveWallpaper,
+        wallpaperMastheadBands,
         wallpaperLightness,
         wallpaperTopBand,
         setAppearance,
@@ -236,6 +237,9 @@ function Layout() {
     } = useAppState();
     const hasVisibleDesktop = isHomePage ||
         Boolean(user && windowForLocation(location) !== null);
+    const desktopOccluded = Boolean(
+        user && windowForLocation(location) !== null,
+    );
     const showWallpaper = hasVisibleDesktop || isAuthPage;
     // Signed-in desktops reach AI and settings through the dock and the user
     // menu; the top bar keeps only theme and identity whichever window is open.
@@ -350,6 +354,11 @@ function Layout() {
                         source={effectiveWallpaper.source}
                         mode={effectiveWallpaper.renderMode}
                         backdropPolarity={wallpaperPolarity}
+                        backdropBands={effectiveWallpaper.hasImageOverlay
+                            ? wallpaperMastheadBands
+                            : null}
+                        scheme={resolvedScheme}
+                        dormant={desktopOccluded}
                         botanicalScene={appearance.botanicalScene}
                         presentation={presentation}
                         derived={!hasVisibleDesktop && isAuthPage}

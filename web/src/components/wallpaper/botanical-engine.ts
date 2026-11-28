@@ -1,6 +1,9 @@
 import type { BotanicalSpecies } from "@shared/wallpaper.ts";
 import {
+    type BackdropPolarity,
+    type MastheadBands,
     oklchToSrgb,
+    resolveMastheadBackdrop,
     srgbToOklch,
 } from "../../design-system/wallpaper-accent.ts";
 import type { BotanicalResonanceKind } from "./botanical-resonance.ts";
@@ -362,8 +365,35 @@ export function nextBotanicalWakeDelayMs(
     return Math.round(clamp(Math.min(...candidates), 250, 18_000));
 }
 
+export type BotanicalArchetype = 0 | 1 | 2;
+
+export const BOTANICAL_ARCHETYPE_NAMES: Readonly<
+    Record<ConcreteBotanicalSpecies, readonly [string, string, string]>
+> = {
+    plum: ["横斜疏影", "昂霄双干", "临水倒挂"],
+    orchid: ["坡石幽兰", "悬崖垂兰", "临风劲兰"],
+    bamboo: ["双竿贯顶", "风竹斜拂", "晴篁疏影"],
+    ginkgo: ["斜柯金扇", "高枝垂荫", "交枝掩映"],
+    maple: ["高崖横柯", "霜林双枝", "飞崖探秋"],
+    eucalyptus: ["丛枝清露", "修枝独秀", "双株交映"],
+    fern: ["兰竹三叠", "坡石双清", "临涧舒卷"],
+};
+
+export function resolveBotanicalArchetype(
+    species: ConcreteBotanicalSpecies,
+    dateKey: string,
+    override?: BotanicalArchetype,
+): BotanicalArchetype {
+    if (override === 0 || override === 1 || override === 2) return override;
+    return (hashString(`${dateKey}:${species}:archetype`) %
+        3) as BotanicalArchetype;
+}
+
 export interface BotanicalScene {
     species: ConcreteBotanicalSpecies;
+    side: "left" | "right";
+    archetype: BotanicalArchetype;
+    visitorPresent: boolean;
     branches: BranchData[];
     ornaments: BotanicalOrnament[];
     rocks: RockStroke[];
@@ -400,9 +430,13 @@ export function resolveBotanicalViewport(
     };
 }
 
+export type BotanicalPhotoStyle = "xuan" | "silk-wash" | "gongbi-line";
+
 export interface BotanicalPalette {
     isDark: boolean;
     overPhoto: boolean;
+    photoStyle: BotanicalPhotoStyle;
+    solidSurface: boolean;
     stroke: (tint: TintRole, alpha?: number) => string;
     vein: (tint: TintRole, alpha?: number) => string;
     fill: (tint: TintRole, alpha?: number) => string;
@@ -455,6 +489,7 @@ export interface BotanicalRenderParams {
     dateKey?: string;
     localHour?: number;
     dockInsets?: BotanicalDockInsets;
+    forceVisitor?: boolean;
 }
 
 export type PhenologyStage = "budding" | "lush" | "turning" | "frost";
@@ -743,6 +778,61 @@ function blendOklabRgb(
     return oklchToSrgb(clamp(targetL, 0.2, 0.92), c, h);
 }
 
+export interface BotanicalBackdropAdaptation {
+    readonly isDark: boolean;
+    readonly photoSpread: number;
+    readonly photoStyle: BotanicalPhotoStyle;
+    readonly solidSurface: boolean;
+}
+
+export function resolveBotanicalBackdropAdaptation(input: {
+    overPhoto: boolean;
+    scheme: "light" | "dark";
+    sceneSide: "left" | "right";
+    backdropBands?: MastheadBands | null;
+    fallbackPolarity?: BackdropPolarity;
+    solidSurface?: boolean;
+}): BotanicalBackdropAdaptation {
+    const solidSurface = Boolean(input.solidSurface);
+    if (!input.overPhoto) {
+        return {
+            isDark: input.scheme === "dark",
+            photoSpread: 0,
+            photoStyle: "xuan",
+            solidSurface,
+        };
+    }
+    const band = input.backdropBands?.[input.sceneSide] ?? null;
+    if (
+        band && Number.isFinite(band.lightness) && Number.isFinite(band.spread)
+    ) {
+        const { polarity } = resolveMastheadBackdrop({
+            scheme: input.scheme,
+            band,
+        });
+        return {
+            isDark: polarity === "dark",
+            photoSpread: band.spread,
+            photoStyle: band.spread > 0.16 ? "gongbi-line" : "silk-wash",
+            solidSurface,
+        };
+    }
+    const isDark = input.fallbackPolarity
+        ? input.fallbackPolarity === "dark"
+        : input.scheme === "dark";
+    return {
+        isDark,
+        photoSpread: 0,
+        photoStyle: "silk-wash",
+        solidSurface,
+    };
+}
+
+export interface BotanicalPaletteOptions {
+    photoSpread?: number;
+    solidSurface?: boolean;
+}
+
 export function buildBotanicalPalette(
     isDark: boolean,
     accentCss: string,
@@ -750,6 +840,7 @@ export function buildBotanicalPalette(
     overPhoto = false,
     localHour?: number,
     species?: ConcreteBotanicalSpecies,
+    options?: BotanicalPaletteOptions,
 ): BotanicalPalette {
     const fallbackAccent: Rgb = isDark ? [93, 169, 255] : [10, 102, 194];
     const fallbackInk: Rgb = isDark ? [232, 234, 240] : [28, 30, 34];
@@ -964,19 +1055,29 @@ export function buildBotanicalPalette(
     );
 
     const highlightRgb: Rgb = isDark ? [18, 19, 22] : [250, 248, 243];
+    const photoSpread = options?.photoSpread ?? 0;
+    const solidSurface = Boolean(options?.solidSurface);
+    const photoStyle: BotanicalPhotoStyle = !overPhoto
+        ? "xuan"
+        : photoSpread > 0.16
+        ? "gongbi-line"
+        : "silk-wash";
+    const isGongbi = photoStyle === "gongbi-line";
     const harmony = isDark && overPhoto ? 0.52 : overPhoto ? 0.86 : 1;
+    const washAtten = isGongbi ? 0.30 : 1;
+    const lineBoost = isGongbi ? 1.18 : 1;
 
-    const strokeA = (isDark ? 0.78 : 0.88) * harmony;
-    const veinA = (isDark ? 0.30 : 0.36) * harmony;
-    const fillA = (isDark ? 0.13 : 0.145) * harmony;
-    const accA = (isDark ? 0.84 : 0.80) * harmony;
-    const accFill = (isDark ? 0.32 : 0.28) * harmony;
-    const subA = (isDark ? 0.68 : 0.66) * harmony;
-    const subFill = (isDark ? 0.24 : 0.22) * harmony;
+    const strokeA = clamp((isDark ? 0.78 : 0.88) * harmony * lineBoost, 0, 1);
+    const veinA = clamp((isDark ? 0.30 : 0.36) * harmony * lineBoost, 0, 1);
+    const fillA = (isDark ? 0.13 : 0.145) * harmony * washAtten;
+    const accA = clamp((isDark ? 0.84 : 0.80) * harmony * lineBoost, 0, 1);
+    const accFill = (isDark ? 0.32 : 0.28) * harmony * washAtten;
+    const subA = clamp((isDark ? 0.68 : 0.66) * harmony * lineBoost, 0, 1);
+    const subFill = (isDark ? 0.24 : 0.22) * harmony * washAtten;
 
-    const accWash = (isDark ? 0.44 : 0.42) * harmony;
-    const subWash = (isDark ? 0.33 : 0.30) * harmony;
-    const inkWash = (isDark ? 0.22 : 0.24) * harmony;
+    const accWash = (isDark ? 0.44 : 0.42) * harmony * washAtten;
+    const subWash = (isDark ? 0.33 : 0.30) * harmony * washAtten;
+    const inkWash = (isDark ? 0.22 : 0.24) * harmony * washAtten;
 
     const gradeMap: Record<"jiao" | "nong" | "zhong" | "dan" | "qing", number> =
         {
@@ -990,6 +1091,8 @@ export function buildBotanicalPalette(
     return {
         isDark,
         overPhoto,
+        photoStyle,
+        solidSurface,
         stroke: (tint, a = 1) => {
             if (tint === "accent") return rgba(accRgb, accA * a);
             if (tint === "sub") return rgba(subRgb, subA * a);
@@ -1115,9 +1218,12 @@ function sampleBranch(
         const pt = cubicPoint(p0, p1, p2, p3, u);
         const ang = cubicTangent(p0, p1, p2, p3, u);
         const env = Math.sin(u * Math.PI);
-        const off = wobble
-            ? Math.sin(u * Math.PI * 2.8 + phaseW) * wobble * env
+        const ironKick = opts.brushStyle === "iron-plum"
+            ? Math.sin(u * Math.PI * 3.6 + phaseW * 0.7) * 1.45 * env
             : 0;
+        const off = wobble
+            ? Math.sin(u * Math.PI * 2.8 + phaseW) * wobble * env + ironKick
+            : ironKick;
         const rx = pt.x - Math.sin(ang) * off;
         const ry = pt.y + Math.cos(ang) * off;
         points.push({
@@ -1150,6 +1256,11 @@ function sampleBranch(
     };
 }
 
+export interface GenerateBotanicalSceneOptions {
+    sceneSide?: "left" | "right";
+    archetype?: BotanicalArchetype;
+}
+
 export function generateBotanicalScene(
     species: ConcreteBotanicalSpecies,
     w: number,
@@ -1157,12 +1268,22 @@ export function generateBotanicalScene(
     dateKey: string,
     embedded = false,
     dockInsets?: BotanicalDockInsets,
+    options?: GenerateBotanicalSceneOptions,
 ): BotanicalScene {
-    const rng = mulberry32(hashString(`${dateKey}:${species}:v7`));
-    const rand = (lo: number, hi: number) => lo + rng() * (hi - lo);
-    const solar = resolveSolarTerm(dateKey);
     const isNarrow = !embedded && w < 720;
     const isWide = embedded || w >= 1024;
+    const archetype: BotanicalArchetype = !isNarrow && !embedded
+        ? resolveBotanicalArchetype(species, dateKey, options?.archetype)
+        : 0;
+    const targetSide: "left" | "right" =
+        !embedded && options?.sceneSide === "left" && w >= 768
+            ? "left"
+            : "right";
+    const rng = mulberry32(
+        hashString(`${dateKey}:${species}:v7:a${archetype}`),
+    );
+    const rand = (lo: number, hi: number) => lo + rng() * (hi - lo);
+    const solar = resolveSolarTerm(dateKey);
     const S = isNarrow
         ? clamp(Math.min(w / 500, h / 860), 0.62, 0.82)
         : clamp(Math.min(w / 1440, h / 900), 0.56, 1.18);
@@ -1170,8 +1291,12 @@ export function generateBotanicalScene(
     const branches: BranchData[] = [];
     const ornaments: BotanicalOrnament[] = [];
     const rocks: RockStroke[] = [];
-    const dockRight = dockInsets?.right ?? 0;
+    const dockTop = dockInsets?.top ?? 0;
+    const dockRight = targetSide === "left"
+        ? (dockInsets?.left ?? 0)
+        : (dockInsets?.right ?? 0);
     const dockBottom = dockInsets?.bottom ?? 0;
+    const topShift = !embedded && !isNarrow ? dockTop * 0.75 : 0;
     const narrowRootY = h - Math.max(92, h * 0.115) - dockBottom;
     const rootX = isNarrow ? w + 10 * S : w + 16 * S - dockRight * 0.4;
     const rootY = isNarrow ? narrowRootY : h + 16 * S - dockBottom * 0.3;
@@ -1182,8 +1307,8 @@ export function generateBotanicalScene(
         const tr0 = isNarrow
             ? { x: w + 8, y: rand(215, 235) * S }
             : isWideMaple
-            ? { x: w - 180 * S, y: Math.max(48, 52 * S) }
-            : { x: w + 10, y: rand(96, 118) * S };
+            ? { x: w - 180 * S, y: Math.max(48, 52 * S) + topShift }
+            : { x: w + 10, y: rand(96, 118) * S + topShift };
         const tr3 = isNarrow
             ? {
                 x: w - rand(130, 158) * S,
@@ -1561,17 +1686,32 @@ export function generateBotanicalScene(
             });
         });
 
-        const mainLen = (isNarrow ? 250 : 590) * S;
-        const p0 = isNarrow
-            ? { x: rootX - rand(10, 22) * S, y: rootY }
-            : { x: rootX - rand(52, 95) * S, y: rootY };
+        const mainLen = (isNarrow
+            ? 250
+            : archetype === 1
+            ? 635
+            : archetype === 2
+            ? 545
+            : 590) * S;
+        const p0 = isNarrow ? { x: rootX - rand(10, 22) * S, y: rootY } : {
+            x: rootX -
+                rand(
+                        archetype === 2 ? 78 : 52,
+                        archetype === 2 ? 120 : 95,
+                    ) * S,
+            y: rootY,
+        };
         const p3 = isNarrow
             ? {
                 x: w - rand(225, 260) * S,
                 y: rootY - rand(195, 225) * S,
             }
             : {
-                x: w - rand(300, 375) * S,
+                x: w -
+                    rand(
+                            archetype === 1 ? 265 : 300,
+                            archetype === 1 ? 335 : 375,
+                        ) * S,
                 y: h - mainLen * rand(0.75, 0.85),
             };
         const p1 = {
@@ -1922,10 +2062,10 @@ export function generateBotanicalScene(
                 },
                 {
                     ghost: false,
-                    len: 645,
-                    rx: 98,
-                    tx: 445,
-                    ty: 0.72,
+                    len: archetype === 1 ? 680 : archetype === 2 ? 600 : 645,
+                    rx: archetype === 1 ? 68 : archetype === 2 ? 124 : 98,
+                    tx: archetype === 1 ? 410 : archetype === 2 ? 475 : 445,
+                    ty: archetype === 1 ? 0.78 : archetype === 2 ? 0.66 : 0.72,
                     count: 10,
                     t0: 0.00,
                 },
@@ -2103,9 +2243,10 @@ export function generateBotanicalScene(
             });
         });
 
-        const p0 = isNarrow
-            ? { x: rootX - rand(8, 20) * S, y: rootY }
-            : { x: rootX - rand(40, 72) * S, y: rootY - rand(6, 26) * S };
+        const p0 = isNarrow ? { x: rootX - rand(8, 20) * S, y: rootY } : {
+            x: rootX - rand(40, 72) * S,
+            y: archetype === 2 ? h * 0.24 : rootY - rand(6, 26) * S,
+        };
         const mid1 = isNarrow
             ? {
                 x: w - rand(110, 132) * S,
@@ -2113,7 +2254,11 @@ export function generateBotanicalScene(
             }
             : {
                 x: w - rand(195, 232) * S,
-                y: h - rand(165, 200) * S,
+                y: archetype === 2 ? h * 0.34 : h -
+                    rand(
+                            archetype === 1 ? 195 : 165,
+                            archetype === 1 ? 235 : 200,
+                        ) * S,
             };
         const mid2 = isNarrow
             ? {
@@ -2122,7 +2267,11 @@ export function generateBotanicalScene(
             }
             : {
                 x: w - rand(285, 332) * S,
-                y: h - rand(320, 360) * S,
+                y: archetype === 2 ? h * 0.48 : h -
+                    rand(
+                            archetype === 1 ? 355 : 320,
+                            archetype === 1 ? 405 : 360,
+                        ) * S,
             };
         const tip = isNarrow
             ? {
@@ -2130,8 +2279,16 @@ export function generateBotanicalScene(
                 y: rootY - rand(182, 210) * S,
             }
             : {
-                x: w - rand(515, 575) * S,
-                y: h - rand(365, 405) * S,
+                x: w -
+                    rand(
+                            archetype === 1 ? 465 : 515,
+                            archetype === 1 ? 525 : 575,
+                        ) * S,
+                y: archetype === 2 ? h * 0.56 : h -
+                    rand(
+                            archetype === 1 ? 410 : 365,
+                            archetype === 1 ? 455 : 405,
+                        ) * S,
             };
 
         const seg1 = sampleBranch(
@@ -2676,10 +2833,10 @@ export function generateBotanicalScene(
                 {
                     ghost: false,
                     role: "hero",
-                    len: 640,
-                    rx: 96,
-                    tx: 482,
-                    ty: 0.66,
+                    len: archetype === 1 ? 670 : archetype === 2 ? 610 : 640,
+                    rx: archetype === 1 ? 82 : archetype === 2 ? 112 : 96,
+                    tx: archetype === 1 ? 445 : archetype === 2 ? 515 : 482,
+                    ty: archetype === 1 ? 0.71 : archetype === 2 ? 0.61 : 0.66,
                     pairs: 6,
                     pinnaBase: 142,
                     tipLen: 94,
@@ -3175,9 +3332,10 @@ export function generateBotanicalScene(
             x: rootX - (isNarrow ? 42 : 76) * S,
             y: isNarrow ? rootY + 2 * S : rootY - 10 * S,
         };
-        const scapeP3 = isNarrow
-            ? { x: w - 265 * S, y: rootY - 215 * S }
-            : { x: w - 425 * S, y: h - 485 * S };
+        const scapeP3 = isNarrow ? { x: w - 265 * S, y: rootY - 215 * S } : {
+            x: w - (archetype === 1 ? 375 : archetype === 2 ? 465 : 425) * S,
+            y: h - (archetype === 1 ? 525 : archetype === 2 ? 445 : 485) * S,
+        };
         const scape = sampleBranch(
             scapeP0,
             {
@@ -3302,8 +3460,10 @@ export function generateBotanicalScene(
                 {
                     ghost: false,
                     midground: false,
-                    rx: 108,
-                    tx: pierceTop ? 385 : 295,
+                    rx: archetype === 1 ? 84 : archetype === 2 ? 124 : 108,
+                    tx: pierceTop
+                        ? (archetype === 1 ? 335 : archetype === 2 ? 260 : 295)
+                        : 265,
                     topY: pierceTop ? -26 * S : 52,
                     w0: 5.6,
                     nodes: [0.16, 0.34, 0.52, 0.70, 0.86],
@@ -3312,8 +3472,10 @@ export function generateBotanicalScene(
                 {
                     ghost: false,
                     midground: true,
-                    rx: 190,
-                    tx: pierceTop ? 505 : 455,
+                    rx: archetype === 1 ? 155 : archetype === 2 ? 215 : 190,
+                    tx: pierceTop
+                        ? (archetype === 1 ? 390 : archetype === 2 ? 325 : 365)
+                        : 345,
                     topY: pierceTop ? -10 * S : Math.max(60, h - 520 * S),
                     w0: 3.8,
                     nodes: [0.20, 0.42, 0.66, 0.86],
@@ -3530,11 +3692,16 @@ export function generateBotanicalScene(
         const mapleScale = isNarrow ? 0.84 : 1;
         const mainP0 = isNarrow ? { x: rootX - 6 * S, y: rootY - 12 * S } : {
             x: rootX + 18 * S,
-            y: embedded ? Math.max(56, 92 * S) : Math.max(68 * S, h * 0.085),
+            y: (embedded ? Math.max(56, 92 * S) : Math.max(68 * S, h * 0.085)) +
+                topShift,
         };
         const mainP3 = isNarrow ? { x: w - 265 * S, y: rootY - 195 * S } : {
-            x: w - rand(380, 425) * S,
-            y: embedded ? 275 * S : h * 0.31,
+            x: w -
+                rand(archetype === 1 ? 335 : 380, archetype === 1 ? 380 : 425) *
+                    S,
+            y: embedded
+                ? 275 * S
+                : h * (archetype === 1 ? 0.27 : archetype === 2 ? 0.35 : 0.31),
         };
         const main = sampleBranch(
             mainP0,
@@ -3818,38 +3985,17 @@ export function generateBotanicalScene(
         }
     }
 
-    // Soft potential-field clearance around center search bar on wide desktop
-    if (!isNarrow && !embedded && species !== "bamboo") {
-        const cx = w * 0.50;
-        const cy = h * 0.43;
-        const rx = 315 * S;
-        const ry = 130 * S;
-        for (const b of branches) {
-            if (b.parentRef || b.ghost) continue;
-            for (const pt of b.points) {
-                const dx = (pt.x - cx) / rx;
-                const dy = (pt.y - cy) / ry;
-                const d2 = dx * dx + dy * dy;
-                if (d2 < 1.0 && d2 > 1e-4) {
-                    const pushOut = (1.0 - d2) * 32 * S;
-                    const invLen = 1 / Math.hypot(dx, dy);
-                    pt.x += dx * invLen * pushOut;
-                    pt.y += dy * invLen * pushOut;
-                }
-            }
-            if (b.points.length > 1) {
-                const p0 = b.points[0];
-                for (let i = 0; i < b.points.length; i++) {
-                    b.points[i].lx = b.points[i].x - p0.x;
-                    b.points[i].ly = b.points[i].y - p0.y;
-                }
-            }
-        }
+    // Dual-envelope workspace clearance around central search bar & inline AI / app plate on wide desktop
+    if (!isNarrow && !embedded) {
+        applyWorkspaceClearance(branches, w, h, S);
     }
 
     if (embedded) {
         return {
             species,
+            side: "right",
+            archetype,
+            visitorPresent: false,
             branches,
             ornaments,
             rocks,
@@ -4048,8 +4194,13 @@ export function generateBotanicalScene(
         };
     }
 
-    return {
+    const visitorPresent =
+        (hashString(`${dateKey}:${species}:serendipity`) % 100) < 45;
+    const builtScene: BotanicalScene = {
         species,
+        side: "right",
+        archetype,
+        visitorPresent,
         branches,
         ornaments,
         rocks,
@@ -4057,6 +4208,142 @@ export function generateBotanicalScene(
         visitorAnchor,
         rewardAnchor,
     };
+    if (targetSide === "left") {
+        mirrorSceneGeometryToLeft(builtScene, w);
+    }
+    return builtScene;
+}
+
+function mirrorSceneGeometryToLeft(scene: BotanicalScene, width: number): void {
+    scene.side = "left";
+    for (const b of scene.branches) {
+        for (const pt of b.points) {
+            pt.x = width - pt.x;
+            pt.lx = -pt.lx;
+            const rawA = Math.PI - pt.angle;
+            pt.angle = Math.atan2(Math.sin(rawA), Math.cos(rawA));
+        }
+        b.frameId = -1;
+        b.worldCache = null;
+    }
+    for (const r of scene.rocks) {
+        for (const pt of r.points) {
+            pt.x = width - pt.x;
+        }
+        for (const m of r.mossDots) {
+            m.x = width - m.x;
+            m.rot = -m.rot;
+        }
+    }
+    for (const o of scene.ornaments) {
+        o.angleOffset = -o.angleOffset;
+        if (o.kind === "fernPinna") {
+            o.side = o.side === 1 ? -1 : 1;
+            o.curve = -o.curve;
+            o.whip = -o.whip;
+        } else if (o.kind === "bambooLeaf") {
+            o.curve = -o.curve;
+        } else if (
+            o.kind === "plumBlossom" || o.kind === "plumBud" ||
+            o.kind === "orchidBlossom" || o.kind === "mapleLeaf"
+        ) {
+            o.rotation = -o.rotation;
+        }
+    }
+    if (scene.visitorAnchor) {
+        for (const ff of scene.visitorAnchor.fireflies) {
+            (ff as { x: number }).x = width - ff.x;
+        }
+        if (scene.visitorAnchor.kind === "ladybug") {
+            (scene.visitorAnchor as { angleOffset: number }).angleOffset =
+                -scene.visitorAnchor.angleOffset;
+        } else if (scene.visitorAnchor.kind === "dew-or-firefly") {
+            (scene.visitorAnchor as { tipOffsetX: number }).tipOffsetX = -scene
+                .visitorAnchor.tipOffsetX;
+        }
+    }
+}
+
+function applyWorkspaceClearance(
+    branches: BranchData[],
+    w: number,
+    h: number,
+    scale: number,
+): void {
+    const searchCx = w * 0.50;
+    const searchCy = h * 0.405;
+    const searchRx = Math.max(356 * scale, Math.min(370, w * 0.255));
+    const searchRy = 106 * scale;
+
+    const plateCx = w * 0.50;
+    const plateCy = h * 0.56;
+    const plateRx = Math.min(340 * scale, w * 0.24);
+    const plateRy = 128 * scale;
+
+    const pushPointOut = (pt: BranchSample) => {
+        const dxA = (pt.x - searchCx) / searchRx;
+        const dyA = (pt.y - searchCy) / searchRy;
+        const d2A = dxA * dxA + dyA * dyA;
+        if (d2A < 1.0) {
+            if (d2A > 1e-4) {
+                const invA = 1 / Math.hypot(dxA, dyA);
+                pt.x = searchCx + dxA * invA * searchRx +
+                    dxA * invA * 18 * scale * (1 - d2A);
+                pt.y = searchCy + dyA * invA * searchRy +
+                    dyA * invA * 10 * scale * (1 - d2A);
+            } else {
+                pt.x = searchCx + searchRx + 18 * scale;
+            }
+        }
+        const dxB = (pt.x - plateCx) / plateRx;
+        const dyB = (pt.y - plateCy) / plateRy;
+        const d2B = dxB * dxB + dyB * dyB;
+        if (d2B < 1.0 && d2B > 1e-4) {
+            const pushB = (1 - d2B) * 26 * scale;
+            const invB = 1 / Math.hypot(dxB, dyB);
+            pt.x += dxB * invB * pushB;
+            pt.y += dyB * invB * pushB * 0.4;
+        }
+    };
+
+    const refreshBranchMetrics = (b: BranchData) => {
+        if (b.points.length < 2) return;
+        const p0 = b.points[0];
+        for (let i = 0; i < b.points.length; i++) {
+            b.points[i].lx = b.points[i].x - p0.x;
+            b.points[i].ly = b.points[i].y - p0.y;
+            const prev = b.points[Math.max(0, i - 1)];
+            const next = b.points[Math.min(b.points.length - 1, i + 1)];
+            b.points[i].angle = Math.atan2(next.y - prev.y, next.x - prev.x);
+        }
+    };
+
+    for (const b of branches) {
+        if (b.parentRef || b.ghost) continue;
+        for (const pt of b.points) {
+            pushPointOut(pt);
+        }
+        refreshBranchMetrics(b);
+    }
+
+    for (const b of branches) {
+        if (!b.parentRef || b.ghost) continue;
+        const anchor = b.parentRef.branch.points[b.parentRef.idx];
+        if (anchor && b.points.length > 0) {
+            const dx = anchor.x - b.points[0].x;
+            const dy = anchor.y - b.points[0].y;
+            if (Math.abs(dx) > 1e-3 || Math.abs(dy) > 1e-3) {
+                for (const pt of b.points) {
+                    pt.x += dx;
+                    pt.y += dy;
+                }
+            }
+        }
+        for (let i = 1; i < b.points.length; i++) {
+            pushPointOut(b.points[i]);
+        }
+        refreshBranchMetrics(b);
+    }
 }
 
 function computeBranchWorldPoints(
@@ -4200,31 +4487,33 @@ function drawRockBase(
         ctx.closePath();
     };
 
-    // 1. 浑厚没骨石体晕染（偏心径向渐变：有顶无脚，石根化入画布）
+    // 1. 浑厚没骨石体晕染（偏心径向渐变：有顶无脚，石根化入画布；复杂壁纸下大幅收敛防脏）
     ctx.save();
-    traceSmoothRock();
-    const focalX = lerp(minX, maxX, 0.42);
-    const focalY = lerp(minY, maxY, 0.22);
-    const rockR = Math.max(8, (maxX - minX) * 0.85);
-    const washGrad = ctx.createRadialGradient(
-        focalX,
-        focalY,
-        Math.max(1, rockR * 0.08),
-        focalX,
-        lerp(minY, maxY, 0.48),
-        rockR,
-    );
-    washGrad.addColorStop(
-        0,
-        pal.inkGrade("zhong", (pal.isDark ? 0.26 : 0.36) * rp),
-    );
-    washGrad.addColorStop(
-        0.55,
-        pal.wash("sub", (pal.isDark ? 0.16 : 0.24) * rp),
-    );
-    washGrad.addColorStop(1, pal.inkGrade("qing", 0));
-    ctx.fillStyle = washGrad;
-    ctx.fill();
+    if (pal.photoStyle !== "gongbi-line") {
+        traceSmoothRock();
+        const focalX = lerp(minX, maxX, 0.42);
+        const focalY = lerp(minY, maxY, 0.22);
+        const rockR = Math.max(8, (maxX - minX) * 0.85);
+        const washGrad = ctx.createRadialGradient(
+            focalX,
+            focalY,
+            Math.max(1, rockR * 0.08),
+            focalX,
+            lerp(minY, maxY, 0.48),
+            rockR,
+        );
+        washGrad.addColorStop(
+            0,
+            pal.inkGrade("zhong", (pal.isDark ? 0.26 : 0.36) * rp),
+        );
+        washGrad.addColorStop(
+            0.55,
+            pal.wash("sub", (pal.isDark ? 0.16 : 0.24) * rp),
+        );
+        washGrad.addColorStop(1, pal.inkGrade("qing", 0));
+        ctx.fillStyle = washGrad;
+        ctx.fill();
+    }
 
     // 2. 破墨内层石腹体量
     ctx.save();
@@ -4368,6 +4657,25 @@ function drawRockBase(
             : pal.inkGrade("jiao", (pal.isDark ? 0.56 : 0.82) * rp);
         ctx.fill();
     }
+    ctx.restore();
+}
+
+function strokeGongbiOutline(
+    ctx: CanvasRenderingContext2D,
+    tint: TintRole,
+    pal: BotanicalPalette,
+    alpha: number,
+    width = 0.72,
+): void {
+    if (pal.photoStyle !== "gongbi-line") return;
+    ctx.save();
+    ctx.strokeStyle = pal.isDark
+        ? pal.goldDust(0.76 * alpha)
+        : pal.stroke(tint === "ink" ? "ink" : tint, 0.72 * alpha);
+    ctx.lineWidth = width;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.stroke();
     ctx.restore();
 }
 
@@ -4518,8 +4826,11 @@ function drawTaperedBranch(
     }
     if (spine.length < 2) return;
 
-    // Layer A: Soft wet-ink bleed on Xuan paper (skip for ghost/midground/segmented bamboo)
-    if (!branch.ghost && !branch.midground && !branch.bambooNodes) {
+    // Layer A: Soft wet-ink bleed on Xuan paper (skip for ghost/midground/segmented bamboo/gongbi-line)
+    if (
+        !branch.ghost && !branch.midground && !branch.bambooNodes &&
+        pal.photoStyle !== "gongbi-line"
+    ) {
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(spine[0].x, spine[0].y);
@@ -4801,6 +5112,45 @@ function drawTaperedBranch(
         ctx.fill();
     }
 
+    // 木本分枝「岐出顿节（上掖下托）」与腋芽苔点，消除圆头直线拼接感
+    if (
+        branch.parentRef !== null &&
+        !branch.ghost &&
+        !isFern &&
+        !isOrchidBlade &&
+        !branch.bambooNodes &&
+        spine.length > 2
+    ) {
+        const s0 = spine[0];
+        const nx = -Math.sin(s0.angle);
+        const ny = Math.cos(s0.angle);
+        const collarR = Math.max(1.2, s0.hw * 1.32);
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(
+            s0.x,
+            s0.y,
+            collarR * 0.72,
+            collarR * 1.05,
+            s0.angle,
+            0,
+            Math.PI * 2,
+        );
+        ctx.fillStyle = pal.inkGrade("jiao", 0.78 * layerA);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(
+            s0.x + nx * s0.hw * 1.15,
+            s0.y + ny * s0.hw * 1.15,
+            Math.max(0.75, 1.05 * scale),
+            0,
+            Math.PI * 2,
+        );
+        ctx.fillStyle = pal.inkGrade("jiao", 0.68 * layerA);
+        ctx.fill();
+        ctx.restore();
+    }
+
     // Horizontal moss dots (taidian) along main branch turns
     if (
         !isFern &&
@@ -5020,6 +5370,8 @@ function drawGinkgoLeaf(
 
     if (!o.ghost && washP > 0.35) {
         strokeWaterline(ctx, o.tint, pal, 1, 0.66 * washP * layerA, s);
+        traceFan();
+        strokeGongbiOutline(ctx, o.tint, pal, washP * layerA, 0.72);
     }
 
     // Boneless side-brush splash 2: slightly offset overlapping brushstroke
@@ -5155,6 +5507,8 @@ function drawEucalyptusLeaf(
     ctx.fill();
     if (!o.ghost && washP > 0.35) {
         strokeWaterline(ctx, o.tint, pal, 1, 0.56 * washP * layerA, rx * 1.4);
+        traceLeaf();
+        strokeGongbiOutline(ctx, o.tint, pal, washP * layerA, 0.68);
     }
 
     if (!o.ghost) {
@@ -5303,6 +5657,9 @@ function drawPlumBlossom(
         }
         if (!o.ghost && washP > 0.45 && i % 2 === 0) {
             strokeWaterline(ctx, o.tint, pal, 1, 0.54 * washP * layerA, pLen);
+        }
+        if (!o.ghost && washP > 0.35) {
+            strokeGongbiOutline(ctx, o.tint, pal, washP * layerA, 0.66);
         }
         ctx.restore();
     }
@@ -5570,6 +5927,9 @@ function drawFernPinna(
 
     ctx.fillStyle = grad;
     ctx.fill(useFeibai ? "evenodd" : "nonzero");
+    if (!o.ghost && strokeP > 0.35) {
+        strokeGongbiOutline(ctx, o.tint, pal, strokeP * layerA, 0.58);
+    }
 
     // Half-length calligraphic midrib fading into the boneless whip tip
     if (veinP > 0.02) {
@@ -5609,11 +5969,12 @@ function spawnDrifter(
         scene.scale,
         frameSeq,
     )[cand.idx];
+    const driftDir = scene.side === "left" ? 1 : -1;
     drifters.push({
         species: scene.species,
         x: wp.x,
         y: wp.y,
-        vx: -14 - Math.random() * 14,
+        vx: driftDir * (14 + Math.random() * 14),
         vy: 15 + Math.random() * 11,
         rot: Math.random() * Math.PI * 2,
         vrot: (Math.random() - 0.5) * 0.8,
@@ -5779,6 +6140,9 @@ function drawOrchidBlossom(
         grad.addColorStop(1, pal.fill(o.tint, 0.36 * washP * layerA));
         ctx.fillStyle = grad;
         ctx.fill();
+        if (!o.ghost && washP > 0.35) {
+            strokeGongbiOutline(ctx, o.tint, pal, washP * layerA, 0.64);
+        }
         ctx.restore();
     }
 
@@ -5923,8 +6287,12 @@ function drawBambooLeaf(
     }
     ctx.fillStyle = grad;
     ctx.fill(useFeibai ? "evenodd" : "nonzero");
+    if (!o.ghost && strokeP > 0.35) {
+        strokeGongbiOutline(ctx, o.tint, pal, strokeP * layerA, 0.58);
+    }
     if (!o.ghost && strokeP > 0.45) {
         strokeWaterline(ctx, o.tint, pal, 1, 0.46 * strokeP * layerA, len);
+        strokeGongbiOutline(ctx, o.tint, pal, strokeP * layerA, 0.60);
     }
 
     // Crisp central vein
@@ -6062,6 +6430,8 @@ function drawMapleLeaf(
 
     if (!o.ghost && washP > 0.4) {
         strokeWaterline(ctx, o.tint, pal, 1, 0.56 * washP * layerA, s);
+        traceMaple();
+        strokeGongbiOutline(ctx, o.tint, pal, washP * layerA, 0.72);
     }
 
     // 放射掌脉与细微侧脉
@@ -6187,6 +6557,18 @@ export function triggerBotanicalResonance(
             }
             break;
         }
+        case "ai-thinking": {
+            runtime.gustDurationSec = 0;
+            runtime.breezeImpulseStrength = 0;
+            break;
+        }
+        case "ai-complete": {
+            runtime.breezeImpulseStartSec = timeSec;
+            runtime.breezeImpulseStrength = 0.42;
+            runtime.haloPulseStartSec = timeSec;
+            runtime.fireflyBoostStartSec = timeSec;
+            break;
+        }
     }
 }
 
@@ -6200,6 +6582,7 @@ function drawSparrow(
     flapping: boolean,
     timeSec: number,
     reducedMotion: boolean,
+    facingRight = false,
 ): void {
     if (alpha <= 0.02) return;
     const s = scale;
@@ -6212,6 +6595,7 @@ function drawSparrow(
 
     ctx.save();
     ctx.translate(x, y);
+    if (facingRight) ctx.scale(-1, 1);
 
     if (!flapping) {
         ctx.strokeStyle = pal.inkGrade("jiao", 0.85 * alpha);
@@ -6656,6 +7040,7 @@ function drawButterfly(
     flying: boolean,
     timeSec: number,
     reducedMotion: boolean,
+    facingRight = false,
 ): void {
     if (alpha <= 0.02) return;
     const s = scale;
@@ -6667,6 +7052,7 @@ function drawButterfly(
 
     ctx.save();
     ctx.translate(x, y);
+    if (facingRight) ctx.scale(-1, 1);
     ctx.rotate(-0.35);
 
     for (const side of [-1, 1] as const) {
@@ -6737,6 +7123,7 @@ function drawDragonfly(
     flying: boolean,
     timeSec: number,
     reducedMotion: boolean,
+    facingRight = false,
 ): void {
     if (alpha <= 0.02) return;
     const s = scale;
@@ -6748,6 +7135,7 @@ function drawDragonfly(
 
     ctx.save();
     ctx.translate(x, y);
+    if (facingRight) ctx.scale(-1, 1);
     ctx.rotate(-0.48);
 
     // 4 translucent veined gossamer wings
@@ -7367,6 +7755,22 @@ function drawSolarTermSeal(
         ctx.stroke();
     }
 
+    // 实色笺谱模式下在闲章外围点缀博物铜版四角准星细丝，呼应窗口内系统插画语言
+    if (pal.solidSurface && !pal.overPhoto) {
+        const tickOff = 3.2 * s;
+        const tickLen = 3.0 * s;
+        ctx.strokeStyle = pal.inkGrade("zhong", 0.36 * alpha);
+        ctx.lineWidth = Math.max(0.45, 0.55 * s);
+        ctx.beginPath();
+        ctx.moveTo(-hw - tickOff, -hh - tickOff + tickLen);
+        ctx.lineTo(-hw - tickOff, -hh - tickOff);
+        ctx.lineTo(-hw - tickOff + tickLen, -hh - tickOff);
+        ctx.moveTo(hw + tickOff - tickLen, hh + tickOff);
+        ctx.lineTo(hw + tickOff, hh + tickOff);
+        ctx.lineTo(hw + tickOff, hh + tickOff - tickLen);
+        ctx.stroke();
+    }
+
     const chars = Array.from(term).slice(0, 2);
     const glyphColor = isIntaglio
         ? pal.highlight(pal.isDark ? 0.90 * alpha : 0.95 * alpha)
@@ -7675,18 +8079,21 @@ function drawAtmosphericStage(
     pal: BotanicalPalette,
     rawProgress: number,
     embedded: boolean,
+    sceneSide: "left" | "right" = "right",
 ): void {
-    if (pal.overPhoto || rawProgress <= 0.06) return;
+    if (pal.overPhoto || pal.solidSurface || rawProgress <= 0.06) return;
     const stageFade = easeOutCubic(clamp((rawProgress - 0.06) / 0.58, 0, 1)) *
         (embedded ? 0.68 : 1);
     if (stageFade <= 0.01) return;
 
     const isNarrow = !embedded && width < 720;
+    const sideX = (rightOffset: number) =>
+        sceneSide === "left" ? rightOffset : width - rightOffset;
 
-    // 宋元折枝「计白当黑 · 无痕烘染」：去除具象远山与月轮轮廓，仅在生长侧远近两处铺设极微无边气韵微晕
+    // 宋元折枝「计白当黑 · 无痕烘染」：去除具象远山与月轮轮廓，在生长侧与中轴外肩铺设无边气韵微晕，供毛玻璃折射温润植物玉色
     const bokashiZones = [
         {
-            x: width - (isNarrow ? 88 : 165) * scale,
+            x: sideX((isNarrow ? 88 : 165) * scale),
             y: (isNarrow ? 132 : 112) * scale,
             rx: (isNarrow ? 190 : 420) * scale,
             ry: (isNarrow ? 120 : 240) * scale,
@@ -7694,9 +8101,10 @@ function drawAtmosphericStage(
             lightPaperA: 0.24,
             darkAirA: 0.022,
             darkSubA: 0.010,
+            useAccentWash: false,
         },
         {
-            x: width - (isNarrow ? 96 : 190) * scale,
+            x: sideX((isNarrow ? 96 : 190) * scale),
             y: height - (isNarrow ? 120 : 145) * scale,
             rx: (isNarrow ? 195 : 440) * scale,
             ry: (isNarrow ? 125 : 250) * scale,
@@ -7704,6 +8112,18 @@ function drawAtmosphericStage(
             lightPaperA: 0.18,
             darkAirA: 0.016,
             darkSubA: 0.014,
+            useAccentWash: false,
+        },
+        {
+            x: sideX((isNarrow ? 148 : 455) * scale),
+            y: height * 0.41,
+            rx: (isNarrow ? 180 : 360) * scale,
+            ry: (isNarrow ? 102 : 198) * scale,
+            lightInkA: 0.012,
+            lightPaperA: 0.14,
+            darkAirA: 0.012,
+            darkSubA: 0.018,
+            useAccentWash: true,
         },
     ];
 
@@ -7722,7 +8142,17 @@ function drawAtmosphericStage(
             0,
             Math.max(2, z.rx),
         );
-        if (pal.isDark) {
+        if (z.useAccentWash) {
+            g.addColorStop(
+                0,
+                pal.wash("accent", (pal.isDark ? 0.036 : 0.028) * stageFade),
+            );
+            g.addColorStop(
+                0.52,
+                pal.wash("sub", (pal.isDark ? 0.020 : 0.016) * stageFade),
+            );
+            g.addColorStop(1, pal.wash("sub", 0));
+        } else if (pal.isDark) {
             g.addColorStop(
                 0,
                 `rgba(214,226,246,${(z.darkAirA * stageFade).toFixed(4)})`,
@@ -7766,8 +8196,9 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
     } = params;
     let nextDriftSpawn = params.lastDriftSpawn;
 
-    const mirrorLeft = !embedded && sceneSide === "left" && width >= 768;
-    const pointer: BotanicalPointerState = mirrorLeft
+    const legacyMirrorLeft = !embedded && sceneSide === "left" &&
+        width >= 768 && scene.side !== "left";
+    const pointer: BotanicalPointerState = legacyMirrorLeft
         ? {
             ...rawPointer,
             x: rawPointer.x > -1000 ? width - rawPointer.x : rawPointer.x,
@@ -7794,7 +8225,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
     }
 
     ctx.clearRect(0, 0, width, height);
-    if (mirrorLeft) {
+    if (legacyMirrorLeft) {
         ctx.save();
         ctx.translate(width, 0);
         ctx.scale(-1, 1);
@@ -7808,6 +8239,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         palette,
         rawProgress,
         embedded,
+        legacyMirrorLeft ? "right" : sceneSide,
     );
 
     // Precompute ornament world transforms & interactive physics once per frame
@@ -7985,6 +8417,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 palette.isDark &&
                 !embedded &&
                 !palette.overPhoto &&
+                !palette.solidSurface &&
                 item.o.tint === "accent"
             ) {
                 const isFernPinna = item.o.kind === "fernPinna";
@@ -8040,8 +8473,8 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         }
     }
 
-    // Layer 4: 泥金砂子与飞墨微尘（点亮主景花簇周边空间）
-    if (rawProgress > 0.72) {
+    // Layer 4: 泥金砂子与飞墨微尘（点亮主景花簇周边空间；繁底双勾模式收敛防脏）
+    if (rawProgress > 0.72 && palette.photoStyle !== "gongbi-line") {
         const speckFade = easeOutCubic(
             clamp((rawProgress - 0.72) / 0.28, 0, 1),
         );
@@ -8063,7 +8496,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             if (pts.length < 3) continue;
             const anchorIdx = Math.floor(pts.length * (bi === 0 ? 0.84 : 0.68));
             const anchor = pts[anchorIdx];
-            const speckCount = bi === 0 ? 5 : 4;
+            const speckCount = bi === 0 ? 3 : 2;
             for (let k = 0; k < speckCount; k++) {
                 const seedAngle = b.phase * 3.1 + k * 1.38 + bi * 1.4;
                 const dist = (12 + k * 15) * scene.scale;
@@ -8110,9 +8543,13 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         drawDrifters(ctx, drifters, height, timeSec, dt, palette);
     }
 
-    // Layer 6: Micro-ecology visitors & tasks-cleared reward blooms
+    // Layer 6: Micro-ecology visitors (serendipity ~45% or awakened) & tasks-cleared reward blooms
     if (!embedded && runtime && rawProgress > 0.78) {
         const visFade = easeOutCubic(clamp((rawProgress - 0.78) / 0.22, 0, 1));
+        const showVisitor = params.forceVisitor ??
+            (scene.visitorPresent || Boolean(runtime.awakened));
+        const facingRight = scene.side === "left" && !legacyMirrorLeft;
+        const flyDir = facingRight ? 1 : -1;
         if (scene.visitorAnchor) {
             const va = scene.visitorAnchor;
             const anchorPt = computeBranchWorldPoints(
@@ -8126,7 +8563,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                 runtime,
             )[va.idx];
 
-            if (va.kind === "sparrow") {
+            if (va.kind === "sparrow" && showVisitor) {
                 if (runtime.visitorMode === "perched") {
                     if (
                         !reducedMotion &&
@@ -8140,7 +8577,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorStateStartSec = timeSec;
                         runtime.visitorX = anchorPt.x;
                         runtime.visitorY = anchorPt.y;
-                        runtime.visitorVx = -74;
+                        runtime.visitorVx = 74 * flyDir;
                         runtime.visitorVy = -62;
                     } else {
                         runtime.visitorX = anchorPt.x;
@@ -8155,6 +8592,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             false,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 } else if (runtime.visitorMode === "departing") {
@@ -8165,7 +8603,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                     } else {
                         // Accelerating flap into upward parabolic glide arc
                         const lift = dAge < 0.45 ? -48 * dt : -14 * dt;
-                        runtime.visitorVx -= 18 * dt;
+                        runtime.visitorVx += 18 * flyDir * dt;
                         runtime.visitorVy += lift;
                         runtime.visitorX += runtime.visitorVx * scene.scale *
                             dt;
@@ -8182,6 +8620,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             dAge < 0.55 || Math.floor(dAge * 5) % 2 === 0,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 } else {
@@ -8201,10 +8640,11 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             false,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 }
-            } else if (va.kind === "ladybug") {
+            } else if (va.kind === "ladybug" && showVisitor) {
                 const lx = anchorPt.x +
                     Math.cos(anchorPt.angle + va.angleOffset) * va.leafSize *
                         0.72;
@@ -8222,7 +8662,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorStateStartSec = timeSec;
                         runtime.visitorX = lx;
                         runtime.visitorY = ly;
-                        runtime.visitorVx = -52;
+                        runtime.visitorVx = 52 * flyDir;
                         runtime.visitorVy = -46;
                     } else {
                         drawLadybug(
@@ -8281,7 +8721,10 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         );
                     }
                 }
-            } else if (va.kind === "butterfly" || va.kind === "dragonfly") {
+            } else if (
+                (va.kind === "butterfly" || va.kind === "dragonfly") &&
+                showVisitor
+            ) {
                 const drawInsect = va.kind === "butterfly"
                     ? drawButterfly
                     : drawDragonfly;
@@ -8298,7 +8741,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                         runtime.visitorStateStartSec = timeSec;
                         runtime.visitorX = anchorPt.x;
                         runtime.visitorY = anchorPt.y;
-                        runtime.visitorVx = -64;
+                        runtime.visitorVx = 64 * flyDir;
                         runtime.visitorVy = -54;
                     } else {
                         drawInsect(
@@ -8311,6 +8754,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             false,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 } else if (runtime.visitorMode === "departing") {
@@ -8334,6 +8778,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             true,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 } else {
@@ -8351,10 +8796,11 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
                             false,
                             timeSec,
                             reducedMotion,
+                            facingRight,
                         );
                     }
                 }
-            } else {
+            } else if (va.kind === "dew-or-firefly") {
                 const tipX = anchorPt.x + va.tipOffsetX;
                 const tipY = anchorPt.y + va.tipOffsetY;
                 if (!palette.isDark) {
@@ -8413,7 +8859,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
         }
     }
 
-    if (mirrorLeft) {
+    if (legacyMirrorLeft) {
         ctx.restore();
     }
 
@@ -8427,7 +8873,7 @@ export function renderBotanicalFrame(params: BotanicalRenderParams): number {
             scene.scale,
             term,
             season,
-            mirrorLeft ? "left" : "right",
+            scene.side === "left" || legacyMirrorLeft ? "left" : "right",
             palette,
             sealFade,
             dockInsets,

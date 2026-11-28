@@ -133,6 +133,12 @@ Deno.test("WallpaperSurface: substrate classifies image and rejected sources", (
             source: "/api/wallpaper/12345678-1234-1234-1234-123456789abc",
             mode: "image",
             backdropPolarity: "light",
+            scheme: "dark",
+            dormant: true,
+            backdropBands: {
+                left: { lightness: 0.78, spread: 0.10 },
+                right: { lightness: 0.24, spread: 0.25 },
+            },
         }),
     );
     assertMatch(imagePolaritySurface, /data-substrate="image"/);

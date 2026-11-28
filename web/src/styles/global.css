@@ -372,6 +372,12 @@ a {
     :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface__scene {
         opacity: 0.76;
     }
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has([data-masthead-sheet="open"]) .wallpaper-surface__scene {
+        opacity: 0.38;
+    }
+    :root:not([data-theme="dark"]):not([data-contrast="more"]) .app-shell[data-home="true"]:has([data-inline-answer="open"]) .wallpaper-surface__scene {
+        opacity: 0.72;
+    }
     :root:not([data-theme="dark"]):not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
         opacity: 0.78;
     }
@@ -396,6 +402,12 @@ a {
     }
     [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) .wallpaper-surface__scene {
         opacity: 0.55;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has([data-masthead-sheet="open"]) .wallpaper-surface__scene {
+        opacity: 0.30;
+    }
+    [data-theme="dark"]:not([data-contrast="more"]) .app-shell[data-home="true"]:has([data-inline-answer="open"]) .wallpaper-surface__scene {
+        opacity: 0.56;
     }
     [data-theme="dark"]:not([data-contrast="more"]):not([data-glass="off"]) .app-shell[data-home="true"]:has(.search-frame:focus-within) :is(.home-masthead__column, .home-masthead__stamp, .launcher-plate) {
         opacity: 0.40;
